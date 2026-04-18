@@ -1,2 +1,39 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # geozarr
-R library for the GeoZarr extension on top of the Zarr specification
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+The `geozarr` package implements a set of conventions for geospatial
+data on top of the Zarr specification. It builds on the `zarr` package,
+a native R implementation of the Zarr specification that can read and
+write Zarr v.3 stores in memory, on the local file system and over HTTP.
+
+## Development
+
+Given that GeoZarr is currently under active development, this package
+is similarly in flux. The conventions implemented in this package will
+remain available unless the convention is deprecated due to any reason
+that would recommend against continuing to use the convention.
+
+This package should currently not be used for production environments.
+Things may fail and you are advised to ensure that you have backups of
+all data that you put in a Zarr store with this package.
+
+Like GeoZarr itself, this package is modular and allows for additional
+conventions to be added to this basic implementation. If you have
+specific needs, open an [issue on
+Github](https://github.com/R-CF/geozarr/issues) or, better yet, fork the
+code and submit code suggestions via a pull request. Specific guidance
+for developers is being drafted.
+
+You can install the development version of `geozarr` from
+[GitHub](https://github.com/R-CF/geozarr) with:
+
+    # install.packages("devtools")
+    devtools::install_github("R-CF/geozarr")
+
+The package will be made available on CRAN as soon as possible.

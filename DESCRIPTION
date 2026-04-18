@@ -1,0 +1,21 @@
+Package: geozarr
+Title: GeoZarr Conventions for Geospatial Data in Zarr Stores
+Version: 0.0.0.9000
+Authors@R: 
+    person("Patrick", "Van Laake", , "patrick@vanlaake.net", role = c("aut", "cre"))
+Description: GeoZarr is being defined in terms of a number of community 
+    conventions built on top of the Zarr specification. These conventions
+    specify how Zarr metadata is to be interpreted to attach semantic meaning to
+    the data in the Zarr array providing the metadata. This package implements a
+    number of community conventions enabling the R community to use geospatial
+    data stored in Zarr.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: 
+    R6
+Depends:
+    zarr
+Suggests: 
+    CFtime

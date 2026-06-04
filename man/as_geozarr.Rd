@@ -5,33 +5,38 @@
 \alias{as_geozarr}
 \title{Convert an R object into a GeoZarr array}
 \usage{
-as_geozarr(x, name, location = NULL, registration = "node")
+as_geozarr(x, name = NULL, location = NULL, registration = "pixel")
 }
 \arguments{
 \item{x}{The R object to convert. Must be a matrix or array of a numeric or
 logical type.}
 
-\item{name}{The name of the GeoZarr array to be created.}
+\item{name}{Optional. The name of the GeoZarr array to be created. If
+omitted, an array will be created at the root of the Zarr store.}
 
-\item{location}{Optional. If supplied, either an existing \link[zarr:zarr_group]{zarr::zarr_group} in a
-Zarr object, or a character string giving the location on a local file
-system where to persist the data. If the argument gives the location for a
+\item{location}{Optional. If supplied, either an existing \link[zarr:zarr_group]{zarr_group} in a
+\link[zarr:zarr]{zarr} object, or a character string giving the location on a local file
+system where to persist the data. If the argument is a \code{zarr_group},
+argument \code{name} must be provided. If the argument gives the location for a
 new Zarr store then the location must be writable by the calling code. As
 per the Zarr specification, it is recommended to use a location that ends
-in ".zarr" when providing a location for a new store. If the \code{location}
-argument is not given, a Zarr object is created in memory.}
+in ".zarr" when providing a location for a new store. If argument \code{name} is
+given then the \code{geozarr_array} will be created in the root of the \code{zarr}
+store with that name. If the \code{name} argument is not given, a single-array
+Zarr store will be created. If the \code{location} argument is not given, a
+\code{zarr} object is created in memory.}
 
 \item{registration}{Either "pixel" (the default) or "node". Pixel
 registration interprets the coordinates in the "dimnames" of argument \code{x}
 as being the upper-left corner of each grid cell. Node registration
-interprets them as the centers of grid cells. In all cases the elements in
+interprets them as the centers of grid cells. In both cases the elements in
 the array are assumed to represent an area.}
 }
 \value{
-If the \code{location} argument is a \code{zarr_group}, the new GeoZarr array
-is returned. Otherwise, the GeoZarr object that is newly created and which
-contains the GeoZarr array, or an error if the GeoZarr object could not be
-created.
+If the \code{location} argument is a \code{zarr_group}, the new \code{geozarr_array}
+instance is returned. Otherwise, the \code{zarr} object that is newly created
+and which contains the GeoZarr array in the root group, or an error if the
+\code{zarr} object could not be created.
 }
 \description{
 This function creates a GeoZarr object from an R matrix or array. A GeoZarr
@@ -42,13 +47,15 @@ is smaller) and compressed.
 }
 \details{
 Depending on the properties of the R object, the GeoZarr object may use the
-"spatial:" or "crs" convention for encoding. The "spatial:" encoding is the
-most compact and it will be used for R objects that have at most 3
-dimensions, which must include an identifiable X and Y axis and which do not
-include a Z or T axis, with any third axis being non-spatial (categorical).
-The coordinates must be numeric and regularly spaced. For all other
-cases the "crs" convention will be used, including for time and vertical
-axes.
+"spatial" or "cs" convention for encoding. The "spatial" encoding is the most
+compact and it will be used for R objects that have at most 2 dimensions,
+which must be identifiable X and Y axis. While the "spatial" convention does
+work on Zarr arrays with more dimensions, there is no mechanism to attach
+coordinates to any additional axes. The coordinates must be numeric and
+regularly spaced and the Y coordinates must be decreasing. In other words,
+the "spatial" convention will be used for imagery style, north-up arrays with
+a coordinate system tied to the top-left corner of the array space. For all
+other cases the "cs" convention will be used.
 
 If the coordinates along the axes (the \code{dimnames} of the R object) are not
 regularly spaced, secondary Zarr arrays will be created with the axis
@@ -61,7 +68,7 @@ object from R objects.
 }
 \examples{
 x <- array(1:400, c(5, 20, 4))
-dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, cls = letters[1:4])
+dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
 z <- as_geozarr(x, "my_data")
 z
 }

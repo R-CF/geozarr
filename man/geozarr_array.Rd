@@ -12,52 +12,57 @@ provide a coordinate system for the array.
 \section{Super classes}{
 \code{\link[zarr:zarr_node]{zarr::zarr_node}} -> \code{\link[zarr:zarr_array]{zarr::zarr_array}} -> \code{geozarr_array}
 }
+\section{Active bindings}{
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{coordinate_system}}{(read-only) Retrieve the coordinate system of
+this array.}
+  }
+  \if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-geozarr_array-new}{\code{geozarr_array$new()}}
+  \itemize{
+    \item \href{#method-geozarr_array-initialize}{\code{geozarr_array$new()}}
+  }
 }
-}
-\if{html}{\out{
-<details><summary>Inherited methods</summary>
+\if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy'><code>zarr::zarr_array$hierarchy()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="read"><a href='../../zarr/html/zarr_array.html#method-zarr_array-read'><code>zarr::zarr_array$read()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="write"><a href='../../zarr/html/zarr_array.html#method-zarr_array-write'><code>zarr::zarr_array$write()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy'><code>zarr::zarr_array$hierarchy()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="read"><a href='../../zarr/html/zarr_array.html#method-zarr_array-read'><code>zarr::zarr_array$read()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="write"><a href='../../zarr/html/zarr_array.html#method-zarr_array-write'><code>zarr::zarr_array$write()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-geozarr_array-new"></a>}}
-\if{latex}{\out{\hypertarget{method-geozarr_array-new}{}}}
-\subsection{Method \code{new()}}{
-Initialize a new GeoZarr array. The array must
-already exist in the store
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{geozarr_array$new(name, metadata, parent, store)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name}}{The name of the GeoZarr array.}
-
-\item{\code{metadata}}{List with the metadata of the array.}
-
-\item{\code{parent}}{The parent \code{zarr_group} instance of this new array, can be
+\if{html}{\out{<a id="method-geozarr_array-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-initialize}{}}}
+\subsection{\code{geozarr_array$new()}}{
+  Initialize a new GeoZarr array. The array must already exist
+in the store.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$new(name, metadata, parent, store)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{The name of the GeoZarr array.}
+      \item{\code{metadata}}{List with the metadata of the array.}
+      \item{\code{parent}}{The parent \code{zarr_group} instance of this new array, can be
 missing or \code{NULL} if the Zarr object should have just this array.}
+      \item{\code{store}}{The \link[zarr:zarr_store]{zarr_store} instance to persist data in.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An instance of \code{geozarr_array}.
+  }
+}
 
-\item{\code{store}}{The \link[zarr:zarr_store]{zarr::zarr_store} instance to persist data in.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-An instance of \code{geozarr_array}.
-}
-}
 }

@@ -14,55 +14,52 @@ GeoZarr group is a container for other groups and arrays.
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-geozarr_group-new}{\code{geozarr_group$new()}}
+  \itemize{
+    \item \href{#method-geozarr_group-initialize}{\code{geozarr_group$new()}}
+  }
 }
-}
-\if{html}{\out{
-<details><summary>Inherited methods</summary>
+\if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_array"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_array'><code>zarr::zarr_group$add_array()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_group"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_group'><code>zarr::zarr_group$add_group()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="build_hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-build_hierarchy'><code>zarr::zarr_group$build_hierarchy()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="count_arrays"><a href='../../zarr/html/zarr_group.html#method-zarr_group-count_arrays'><code>zarr::zarr_group$count_arrays()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete'><code>zarr::zarr_group$delete()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete_all"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete_all'><code>zarr::zarr_group$delete_all()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="get_node"><a href='../../zarr/html/zarr_group.html#method-zarr_group-get_node'><code>zarr::zarr_group$get_node()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy'><code>zarr::zarr_group$hierarchy()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="print"><a href='../../zarr/html/zarr_group.html#method-zarr_group-print'><code>zarr::zarr_group$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_array"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_array'><code>zarr::zarr_group$add_array()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_group"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_group'><code>zarr::zarr_group$add_group()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="build_hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-build_hierarchy'><code>zarr::zarr_group$build_hierarchy()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="count_arrays"><a href='../../zarr/html/zarr_group.html#method-zarr_group-count_arrays'><code>zarr::zarr_group$count_arrays()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete'><code>zarr::zarr_group$delete()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete_all"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete_all'><code>zarr::zarr_group$delete_all()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="get_node"><a href='../../zarr/html/zarr_group.html#method-zarr_group-get_node'><code>zarr::zarr_group$get_node()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy'><code>zarr::zarr_group$hierarchy()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="print"><a href='../../zarr/html/zarr_group.html#method-zarr_group-print'><code>zarr::zarr_group$print()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-geozarr_group-new"></a>}}
-\if{latex}{\out{\hypertarget{method-geozarr_group-new}{}}}
-\subsection{Method \code{new()}}{
-Open a GeoZarr group in a Zarr hierarchy.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{geozarr_group$new(name, metadata, parent, store)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name}}{The name of the group. For a root group, this is the empty
+\if{html}{\out{<a id="method-geozarr_group-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_group-initialize}{}}}
+\subsection{\code{geozarr_group$new()}}{
+  Open a GeoZarr group in a Zarr hierarchy.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_group$new(name, metadata, parent, store)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{The name of the group. For a root group, this is the empty
 string \code{""}.}
-
-\item{\code{metadata}}{List with the metadata of the group.}
-
-\item{\code{parent}}{The parent Zarr group instance of this new group, can be
+      \item{\code{metadata}}{List with the metadata of the group.}
+      \item{\code{parent}}{The parent Zarr group instance of this new group, can be
 missing or \code{NULL} for the root group.}
+      \item{\code{store}}{The \link[zarr:zarr_store]{zarr_store} instance to persist data in.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An instance of \code{geozarr_group}.
+  }
+}
 
-\item{\code{store}}{The \link[zarr:zarr_store]{zarr::zarr_store} instance to persist data in.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-An instance of \code{geozarr_group}.
-}
-}
 }

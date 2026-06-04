@@ -4,65 +4,73 @@
 \name{zarr_domain_geozarr}
 \alias{zarr_domain_geozarr}
 \title{GeoZarr domain object}
-\value{
-A \code{zar_domain_geozarr} object.
-}
 \description{
 This class implements a GeoZarr domain object. A GeoZarr domain
 object is a \code{zarr_domain} descendant object identifying groups and arrays
 in a \code{zarr} object that are formatted using GeoZarr conventions.
+
+This domain supports the standard conventions for GeoZarr data sets,
+specifically the \code{cs} and \code{spatial} conventions, as well as two other
+formats for geospatial Zarr data that predate GeoZarr: the format used by
+the Python XArray library (Zarr v.2 and v.3) and the NCZarr format (Zarr
+v.2).
 }
 \section{Super class}{
 \code{\link[zarr:zarr_domain]{zarr::zarr_domain}} -> \code{zarr_domain_geozarr}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-zarr_domain_geozarr-new}{\code{zarr_domain_geozarr$new()}}
-\item \href{#method-zarr_domain_geozarr-build}{\code{zarr_domain_geozarr$build()}}
-}
+  \itemize{
+    \item \href{#method-zarr_domain_geozarr-initialize}{\code{zarr_domain_geozarr$new()}}
+    \item \href{#method-zarr_domain_geozarr-build}{\code{zarr_domain_geozarr$build()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-zarr_domain_geozarr-new"></a>}}
-\if{latex}{\out{\hypertarget{method-zarr_domain_geozarr-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new GeoZarr domain instance. The GeoZarr domain
+\if{html}{\out{<a id="method-zarr_domain_geozarr-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-zarr_domain_geozarr-initialize}{}}}
+\subsection{\code{zarr_domain_geozarr$new()}}{
+  Create a new GeoZarr domain instance. The GeoZarr domain
 instance manages the groups and arrays in the Zarr store that it refers
 to. This instance provides access to all objects in the Zarr store.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{zarr_domain_geozarr$new()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{zarr_domain_geozarr$new()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{zar_domain_geozarr} object.
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-zarr_domain_geozarr-build"></a>}}
 \if{latex}{\out{\hypertarget{method-zarr_domain_geozarr-build}{}}}
-\subsection{Method \code{build()}}{
-This method will create a \code{geozarr_array} for an array node
+\subsection{\code{zarr_domain_geozarr$build()}}{
+  This method will create a \code{geozarr_array} for an array node
 and a \code{geozarr_group} for a group node with GeoZarr conventions
-declared in its attributes. Either the "spatial:" or "crs" convention
-has to be declared or this domain will decline to manage the node.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{zarr_domain_geozarr$build(name, metadata, parent, store)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name}}{The name of the node.}
-
-\item{\code{metadata}}{List with the metadata of the node.}
-
-\item{\code{parent}}{The parent node of this new node. May be \code{NULL} for a root
+declared in its attributes. Either the "spatial" or "cs" convention
+has to be declared or the Zarr store has to be formatted using XArray
+or NCZarr or this domain will decline to manage the node.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{zarr_domain_geozarr$build(name, metadata, parent, store)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{The name of the node.}
+      \item{\code{metadata}}{List with the metadata of the node.}
+      \item{\code{parent}}{The parent node of this new node. May be \code{NULL} for a root
 node.}
+      \item{\code{store}}{The store to persist data in.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{geozarr_array} or \code{geozarr_group} instance if supported,
+\code{FALSE} otherwise.
+  }
+}
 
-\item{\code{store}}{The store to persist data in.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A \code{geozarr_array} or \code{geozarr_group} instance if GeoZarr
-conventions are found, \code{FALSE} otherwise.
-}
-}
 }

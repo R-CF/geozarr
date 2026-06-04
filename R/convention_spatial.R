@@ -1,6 +1,6 @@
-#' GeoZarr "spatial:" convention
+#' GeoZarr "spatial" convention
 #'
-#' @description This class implements the GeoZarr "spatial:" convention. In
+#' @description This class implements the GeoZarr "spatial" convention. In
 #'   particular, the following convention is implemented here:
 #'
 #' ```{r schema, eval = FALSE}
@@ -8,7 +8,7 @@
 #'   "schema_url": "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json",
 #'   "spec_url": "https://github.com/zarr-conventions/spatial/blob/v1/README.md",
 #'   "uuid": "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4",
-#'   "name": "spatial:",
+#'   "name": "spatial",
 #'   "description": "Spatial coordinate information"
 #' }
 #' ```
@@ -22,9 +22,8 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     # "dimension_names" attribute of arrays.
     .dimensions = character(0),
 
-    # Optional: Coordinates of the outer boundaries of the array. Either 4
-    # values for a 2D array `[xmin, ymin, xmax, ymax]`, or 6 for a 3D array
-    # `[xmin, ymin, zmin, xmax, ymax, zmax]`.
+    # Optional: Coordinates of the outer boundaries of the array, `[xmin, ymin,
+    # xmax, ymax]`.
     .bbox = numeric(0),
 
     # Optional: Type of transformation. Currently only "affine" is supported.
@@ -48,7 +47,7 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     #' @description Create a new instance of a "spatial" convention agent.
     #' @return A new instance of a "spatial" convention agent.
     initialize = function() {
-      super$initialize(name   = 'spatial:',
+      super$initialize(name   = 'spatial',
                        schema = 'https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json',
                        uuid   = '689b58e2-cf7b-45e0-9fff-9cfc0883d6b4')
       private$.spec <- 'https://github.com/zarr-conventions/spatial/blob/v1/README.md'
@@ -58,25 +57,21 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     #' @description Set the coordinate system for this instance. This method
     #'   sets the affine transform coefficients, as well as the grid cell
     #'   registration and the bounding box.
-    #' @param x,y,z Coordinates for the `X`, `Y` and `Z` (or band) axes, as a
-    #'   numeric vector of two values: the coordinate of the top-left grid cell
-    #'   and the resolution along the axis, respectively. Note that for `y` this
-    #'   is typically the largest coordinate value and a negative resolution.
-    #'   Coordinates for `x` and `y` must be provided; `z` may be missing or
-    #'   `NULL`.
-    #' @param shape The length of each axis `x`, `y` and `z`.
+    #' @param x,y Coordinates for the `X` and `Y` axes, as a numeric vector of
+    #'   two values: the coordinate of the top-left grid cell and the resolution
+    #'   along the axis, respectively. Note that for `y` this must be the
+    #'   largest coordinate value and a negative resolution.
+    #' @param shape The length of each axis `x` and `y`.
     #' @param registration Grid cell registration. "pixel" (the default) means
-    #'   that the coordinates in `x`, `y` and `z` are interpreted as the UL
-    #'   corner of each grid cell; "node" means that the coordinates are
-    #'   interpreted as the center of each grid cell.
+    #'   that the coordinates in `x` and `y` are interpreted as the UL corner of
+    #'   each grid cell; "node" means that the coordinates are interpreted as
+    #'   the center of each grid cell.
     #' @return Self, invisibly.
-    set_coordinates = function(x, y, z, shape, registration = 'pixel') {
+    set_coordinates = function(x, y, shape, registration = 'pixel') {
       if (!is.numeric(x) || !length(x) == 2L || !is.numeric(y) || !length(y) == 2L)
         stop('Must supply `x` and `y` coordinates and resolution.', call. = FALSE)
-      if (!is.null(z) && (!is.numeric(z) || !length(z) == 2L))
-        stop('When given, must supply `z` coordinates and resolution.', call. = FALSE)
-      if (!is.integer(shape) || !length(shape) %in% 2:3)
-        stop('`shape` parameter must be an integer vector of length 2 or 3.', call. = FALSE)
+      if (!is.integer(shape) || !length(shape) == 2)
+        stop('`shape` parameter must be an integer vector of length 2', call. = FALSE)
       if (!registration %in% c('node', 'pixel'))
         stop('Argument `registration` must be "node" or "pixel"', call. = FALSE)
 
@@ -117,28 +112,28 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
   ),
   active = list(
     #' @field dimensions The "spatial:dimensions" attribute, a character vector
-    #'   of dimension names for the X, Y and possible third axes. These names
-    #'   must correspond to the names in the "dimension_names" attribute of the
-    #'   array that this convention relates to.
+    #'   of dimension names for the X and Y axes. These names must correspond to
+    #'   the names in the "dimension_names" attribute of the array that this
+    #'   convention relates to.
     dimensions = function(value) {
       if (missing(value))
         private$.dimensions
-      else if (is.character(value) && length(value) %in% 1:3)
+      else if (is.character(value) && length(value) %in% 1:2)
         private$.dimensions <- value
       else
-        stop('`spatial:dimensions` must be character vector with 1, 2 or 3 dimension names.', call. = FALSE)
+        stop('`spatial:dimensions` must be character vector with 1 or 2 dimension names', call. = FALSE)
     },
 
-    #' @field bbox The "spatial:bbox" attribute, a numeric vector of 4 or 6
-    #'   values in order `xmin, ymin, zmin, xmax, ymax, zmax` (with `zmin` and
-    #'   `zmax` optional) giving the boundary coordinates of the data array.
+    #' @field bbox The "spatial:bbox" attribute, a numeric vector of 4 values in
+    #'   order `xmin, ymin, xmax, ymax` giving the boundary coordinates of the
+    #'   data array.
     bbox = function(value) {
       if (missing(value))
         private$.bbox
-      else if (is.numeric(value) && length(value) == 2L * length(private$.dimensions))
+      else if (is.numeric(value) && length(value) == 4L)
         private$.bbox <- value
       else
-        stop('`spatial:bbox` must be a numeric vector with 2 values for each dimension.', call. = FALSE)
+        stop('`spatial:bbox` must be a numeric vector with 4 values', call. = FALSE)
     },
 
     #' @field transform_type (read-only) The "spatial:transform_type" attribute,
@@ -158,14 +153,14 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     transform = function(value) {
       if (missing(value))
         private$.transform
-      else if (is.numeric(value) && length(value) %in% c(6L, 12L))
+      else if (is.numeric(value) && length(value) == 6L)
         private$.transform <- value
       else
-        stop('`spatial:transform` must be a numeric vector of length 6 (2D) or 12 (3D).', call. = FALSE)
+        stop('`spatial:transform` must be a numeric vector of 6 values', call. = FALSE)
     },
 
     #' @field shape The "spatial:shape" attribute, an integer vector of length 2
-    #'   or 3, giving the length of the X, Y and Z dimensions.
+    #'   giving the length of the X and Y dimensions.
     shape = function(value) {
       if (missing(value))
         private$.shape

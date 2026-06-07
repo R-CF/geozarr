@@ -32,7 +32,7 @@ this array.}
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy'><code>zarr::zarr_array$hierarchy()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy_nodes'><code>zarr::zarr_array$hierarchy_nodes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="read"><a href='../../zarr/html/zarr_array.html#method-zarr_array-read'><code>zarr::zarr_array$read()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="write"><a href='../../zarr/html/zarr_array.html#method-zarr_array-write'><code>zarr::zarr_array$write()</code></a></span></li>

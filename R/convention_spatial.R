@@ -18,8 +18,8 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
   inherit = zarr_convention,
   cloneable = FALSE,
   private = list(
-    # Required: Vector of names of spatial dimensions, must be present in the
-    # "dimension_names" attribute of arrays.
+    # Required: Vector of names of spatial dimensions y and X, in that order,
+    # must be present in the "dimension_names" attribute of arrays.
     .dimensions = character(0),
 
     # Optional: Coordinates of the outer boundaries of the array, `[xmin, ymin,
@@ -58,9 +58,9 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     #'   sets the affine transform coefficients, as well as the grid cell
     #'   registration and the bounding box.
     #' @param x,y Coordinates for the `X` and `Y` axes, as a numeric vector of
-    #'   two values: the coordinate of the top-left grid cell and the resolution
-    #'   along the axis, respectively. Note that for `y` this must be the
-    #'   largest coordinate value and a negative resolution.
+    #'   two values: the top-left coordinate of the top-left grid cell and the
+    #'   resolution along the axis, respectively. Note that for `y` the
+    #'   resolution must be negative.
     #' @param shape The length of each axis `x` and `y`.
     #' @param registration Grid cell registration. "pixel" (the default) means
     #'   that the coordinates in `x` and `y` are interpreted as the UL corner of
@@ -112,9 +112,9 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
   ),
   active = list(
     #' @field dimensions The "spatial:dimensions" attribute, a character vector
-    #'   of dimension names for the X and Y axes. These names must correspond to
-    #'   the names in the "dimension_names" attribute of the array that this
-    #'   convention relates to.
+    #'   of dimension names for the Y and X axes, in that order. These names
+    #'   must correspond to the names in the "dimension_names" attribute of the
+    #'   array that this convention relates to.
     dimensions = function(value) {
       if (missing(value))
         private$.dimensions

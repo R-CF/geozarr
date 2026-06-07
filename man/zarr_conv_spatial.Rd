@@ -24,9 +24,9 @@ particular, the following convention is implemented here:
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
     \item{\code{dimensions}}{The "spatial:dimensions" attribute, a character vector
-of dimension names for the X and Y axes. These names must correspond to
-the names in the "dimension_names" attribute of the array that this
-convention relates to.}
+of dimension names for the Y and X axes, in that order. These names
+must correspond to the names in the "dimension_names" attribute of the
+array that this convention relates to.}
 
     \item{\code{bbox}}{The "spatial:bbox" attribute, a numeric vector of 4 values in
 order \verb{xmin, ymin, xmax, ymax} giving the boundary coordinates of the
@@ -96,9 +96,9 @@ registration and the bounding box.
     \if{html}{\out{<div class="arguments">}}
     \describe{
       \item{\code{x, y}}{Coordinates for the \code{X} and \code{Y} axes, as a numeric vector of
-two values: the coordinate of the top-left grid cell and the resolution
-along the axis, respectively. Note that for \code{y} this must be the
-largest coordinate value and a negative resolution.}
+two values: the top-left coordinate of the top-left grid cell and the
+resolution along the axis, respectively. Note that for \code{y} the
+resolution must be negative.}
       \item{\code{shape}}{The length of each axis \code{x} and \code{y}.}
       \item{\code{registration}}{Grid cell registration. "pixel" (the default) means
 that the coordinates in \code{x} and \code{y} are interpreted as the UL corner of

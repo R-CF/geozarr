@@ -233,13 +233,12 @@ geozarr_array <- R6::R6Class('geozarr_array',
       if (is.null(dimension_names))
         stop('Required top-level metadata item "dimension_names" not found', call. = FALSE)
 
-      dimensions <- atts$`spatial:dimensions` %||% parent_atts$`spatial:dimensions`
+      dimensions <- atts$`spatial:dimensions` %||% parent_atts$`spatial:dimensions` # Y,X order
       if (is.null(dimensions))
         stop('Required attribute "spatial:dimensions" not found in metadata', call. = FALSE)
       dims <- length(dimensions)
       if (dims != 2L)
         stop('Attribute "spatial:dimensions" has wrong number of items', call. = FALSE)
-      dimensions <- rev(dimensions) # Get dimensions in regular order
 
       dim_order <- match(dimensions, dimension_names)
       if (any(is.na(dim_order)))
@@ -269,20 +268,20 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # Build the coordinate system
       # X and Y coordinates are always numeric and always present
-      elem <- private$.metadata$shape[dim_order[1L]]
+      elem <- private$.metadata$shape[dim_order[2L]]
       values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[3L], transform[1L]))
-      coords <- Coordinates$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'EAST',
+      coords <- Coordinates$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'EAST',
                                 unit = '', values = values,
                                 bounds = if (registration == 'pixel') c(transform[1L], 0) else NULL)
-      X_axis <- CoordinateSystemAxis$new(name = dimensions[1L], abbreviation = 'X',
+      X_axis <- CoordinateSystemAxis$new(name = dimensions[2L], abbreviation = 'X',
                                          coordinates = list(X_coordinates = coords))
 
-      elem <- private$.metadata$shape[dim_order[2L]]
+      elem <- private$.metadata$shape[dim_order[1L]]
       values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[6L], transform[5L]))
-      coords <- Coordinates$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'NORTH',
+      coords <- Coordinates$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'NORTH',
                                 unit = '', values = values,
                                 bounds = if (registration == 'pixel') c(transform[5L], 0) else NULL)
-      Y_axis <- CoordinateSystemAxis$new(name = dimensions[2L], abbreviation = 'Y',
+      Y_axis <- CoordinateSystemAxis$new(name = dimensions[1L], abbreviation = 'Y',
                                          coordinates = list(Y_coordinates = coords))
 
       # Add any other axes, if present. These will all be ordinal axes as there

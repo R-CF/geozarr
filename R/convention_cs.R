@@ -210,7 +210,7 @@ zarr_conv_cs <- R6::R6Class('zarr_conv_cs',
       stop('`name` must be a non-empty character string.', call. = FALSE)
     coords$name <- name
   }
-  if (!is.null(unit)) {
+  if (is.null(time) && !is.null(unit)) {
     if (!is.character(unit) || length(unit) != 1L)
       stop('`unit` must be a single character string.', call. = FALSE)
     coords$unit <- unit

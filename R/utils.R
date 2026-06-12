@@ -16,15 +16,24 @@
 .conventions_supported <- function(metadata) {
   listed <- metadata$attributes$zarr_conventions
   if (!length(listed)) return(NA_character_)
-  listed_names <- vapply(listed, function(conv) conv$name, character(1L), USE.NAMES = FALSE)
 
   avail <- GeoZarr.options$conventions
 
-  supported <- vapply(listed, function(cv) cv$uuid %in% avail$uuid, logical(1L), USE.NAMES = FALSE) |
-               vapply(listed, function(cv) cv$schema %in% avail$schema, logical(1L), USE.NAMES = FALSE) |
-               vapply(listed, function(cv) cv$spec %in% avail$spec, logical(1L), USE.NAMES = FALSE)
+  # Discovery is by uuid or schema_url only; name is not a discovery field.
+  # A convention is supported if at least one present discovery field matches.
+  # If neither field is present the entry cannot be identified: unsupported.
+  supported <- vapply(listed, function(cv) {
+    if (!is.null(cv$uuid)       && cv$uuid       %in% avail$uuid)   return(TRUE)
+    if (!is.null(cv$schema_url) && cv$schema_url %in% avail$schema) return(TRUE)
+    FALSE
+  }, FUN.VALUE = logical(1L), USE.NAMES = FALSE)
+
+  listed_names <- vapply(listed, function(cv) cv$name %||% cv$uuid %||% '(unknown)',
+                         FUN.VALUE = character(1L), USE.NAMES = FALSE)
+
   if (!all(supported))
-    stop('Metadata lists unsupported conventions: ', paste(listed_names[which(!supported)], sep = ', '), call. = FALSE)
+    stop('Metadata lists unsupported conventions: ',
+         paste(listed_names[!supported], collapse = ', '), call. = FALSE)
 
   if ('cs' %in% listed_names) 'cs'
   else if ('spatial' %in% listed_names) 'spatial'
@@ -56,6 +65,16 @@
 #' @noRd
 .near <- function(x, y) {
   abs(x - y) <= max(GeoZarr.options$eps * max(abs(x), abs(y)), 1e-12)
+}
+
+#' Test if vector `x` is monotonic, either increasing or decreasing. Return value
+#' is -1L for monotonic decreasing, 0L for not monotonic, and 1L for monotonic
+#' increasing.
+#' @noRd
+.monotonicity <- function(x) {
+  if (!is.unsorted(x, na.rm = TRUE, strictly = TRUE)) 1L
+  else if(!is.unsorted(-x, na.rm = TRUE, strictly = TRUE)) -1L
+  else 0L
 }
 
 # There are formats out there that implicitly attach meaning to the name of a

@@ -66,14 +66,16 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
   abbreviation   <- c('X', 'X', 'X', 'X', 'Y', 'Y', 'Y', 'Y', 'Z', 'Z', 'Z', 'T', 'T')
   axis_names <- names(coordinates)
   axes <- lapply(axis_names, function(nm) {
-    # name and direction
+    # Name and direction
     ndx <- which(valid_names == tolower(nm))
-    abbr <- if (length(ndx)) abbreviation[ndx] else ''
+    abbr <- if (length(ndx)) abbreviation[ndx] else 'O' # Use O as sentinel abbreviation for OTHER
 
-    # values
+    # Values
     v <- suppressWarnings(as.numeric(coordinates[[nm]]))
     len <- length(v)
     if (any(is.na(v))) {
+      if (!requireNamespace('CFtime', quietly = TRUE))
+        stop('You must install package `CFtime` for this functionality.', call. = FALSE)
       t <- try(CFtime::CFtime('days since 1970-01-01', 'proleptic_gregorian', coordinates[[nm]]), silent = TRUE)
       if (inherits(t, 'try-error')) {
         dt <- 'character'
@@ -117,7 +119,7 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
     # output
     list(name = nm, abbreviation = abbr, length = len, data_type = dt, data_arr = dseq, data_values = dv)
   })
-  ax_abbr <- sapply(axes, function(ax) ax$abbreviation)
+  ax_abbr <- vapply(axes, function(ax) ax$abbreviation, FUN.VALUE = character(1), USE.NAMES = FALSE)
   if (anyDuplicated(ax_abbr) > 0L)
     stop('Duplicate axes detected', call. = FALSE)
   names(axes) <- ax_abbr
@@ -152,66 +154,62 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
     atts <- spatial$write(atts)
   } else {
     # cs convention
-    cs <- zarr_conv_cs$new()
-    atts <- cs$register(atts)
+    # At least 1 of X, Y, any others
+    cs_conv <- zarr_conv_cs$new()
+    atts    <- cs_conv$register(atts)
 
-    # Direction lookup by axis abbreviation (for simple R array conversion).
-    cs_direction <- c(X = 'EAST', Y = 'NORTH', Z = 'UP', T = 'FUTURE')
-
-    # Coordinate values with more than this many elements are written to a
-    # sibling Zarr array and referenced via `external` rather than embedded
-    # inline in the metadata. For in-memory stores secondary arrays are not
-    # supported; explicit coordinates are always inlined regardless of length.
-    INLINE_MAX  <- 30L
-    can_sibling <- !is.null(location)  # file path or zarr_group
+    # Direction lookup by axis abbreviation
+    cs_direction <- c(X = 'EAST', Y = 'NORTH', Z = 'UP', T = 'FUTURE', O = 'OTHER')
 
     axis_defs <- lapply(axes, function(ax) {
-      nm   <- ax$name
-      abbr <- ax$abbreviation
-      len  <- ax$length
-      dseq <- ax$data_arr
-      dv   <- ax$data_values
-      dt   <- ax$data_type
-
-      # --- values ---
-      values_def <- if (dseq == 'regular') {
+      # Values
+      dv <- ax$data_values
+      values_def <- if (ax$data_arr == 'regular')
         .cs_values_regular(dv[1L], dv[2L])
-      } else if (!can_sibling || len <= INLINE_MAX) {
+      else if (is.null(location) || ax$length <= 30L) # FIXME: Make GeoZarr.option
         .cs_values_explicit(dv)
-      } else {
+      else {
         # Write coordinate values to a sibling array in the same group as the
         # data array. The sibling name is <axis_name>_coord. The ref path is
         # relative to the data array (its sibling), so just the bare name.
-        sibling_name <- paste0(nm, '_coord')
+        sibling_name <- paste0(ax$name, '_coord')
         grp <- if (inherits(location, 'zarr_group')) location else z[['/']]
-        sibling_arr  <- grp$create_array(
-          name        = sibling_name,
-          data_type   = if (dt == 'character') 'S' else 'float64',
-          shape       = len,
-          chunk_shape = min(len, 100L)
-        )
+        ab <- zarr::define_array(data_type = if (ax$data_type == 'character') 'string' else 'float64',
+                                 shape = ax$length)
+        sibling_arr <- grp$add_array(sibling_name, ab)
         sibling_arr[] <- dv
         .cs_values_external(sibling_name)
       }
 
-      # --- time reference ---
-      time_def <- if (dt == 'time')
+      # Time
+      time_def <- if (ax$data_type == 'time')
         .cs_time(unit = 'days', epoch = '1970-01-01', calendar = 'proleptic_gregorian')
       else
         NULL
 
-      # --- coordinates and axis ---
-      coords_def <- .cs_coordinates(values_def, unit = '', time = time_def)
-      direction  <- cs_direction[[abbr]]
-      if (is.null(direction) || is.na(direction)) direction <- 'OTHER'
+      # Coordinates and axis
+      coords_def <- .cs_coordinates(values_def, unit = NULL, time = time_def)
+      direction  <- cs_direction[[ax$abbreviation]]
+      abbr <- ax$abbreviation
+      if (abbr == 'O') abbr <- ''
       .cs_axis(list(coords_def), abbreviation = abbr, direction = direction)
     })
-    names(axis_defs) <- sapply(axes, function(ax) ax$name)
+    names(axis_defs) <- vapply(axes, function(ax) ax$name, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
-    cs$add_crs(axes = axis_defs)
-    atts <- cs$write(atts)
+    # Group axes into separate CRS objects by axis category
+    cs_conv$add_crs(axes = axis_defs[vapply(axes[ax_abbr %in% c('X', 'Y')], function(ax) ax$name, FUN.VALUE = character(1))])
+    vert <- axes[['Z']]
+    if (!is.null(vert))
+      cs_conv$add_crs(axes = axis_defs[vert$name])
+    temp <- axes[['T']]
+    if (!is.null(temp))
+      cs_conv$add_crs(axes = axis_defs[temp$name])
+    other <- axes[['O']]
+    if (!is.null(other))
+      cs_conv$add_crs(axes = axis_defs[other$name])
+
+    atts <- cs_conv$write(atts)
   }
-
   meta$attributes <- atts
   arr$metadata <- meta
   arr$save()

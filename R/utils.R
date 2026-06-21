@@ -40,6 +40,29 @@
   else NA_character_
 }
 
+#' GeoZarr package options
+#'
+#' Use this function to read or modify package options.
+#'
+#' @param key Character. A key whose value to modify. If missing, all options
+#'   are returned.
+#' @param value The new value for the option.
+#' @return A list with all options if argument `key` is not provided,
+#'   nothing otherwise.
+#' @export
+#' @examples
+#' geozarr_options()
+geozarr_options <- function(key, value) {
+  if (missing(key))
+    as.list(GeoZarr.options)
+  else {
+    switch(key,
+           'max_explicit' = {
+             if (is.numeric(value)) GeoZarr.options$max_explicit <- as.integer(value)
+           })
+  }
+}
+
 #' Make a data.frame slimmer by shortening long strings. List elements are
 #' pasted together.
 #' @param df A data.frame
@@ -77,11 +100,11 @@
   else 0L
 }
 
-# There are formats out there that implicitly attach meaning to the name of a
-# dimension. This named vector makes an effort to find the axis abbreviation
+# There are formats out there that implicitly attach meaning to the name of an
+# axis. This named vector makes an effort to find the axis abbreviation
 # from the name. This is heuristics and a fallback option when no explicit
 # attributes are found in the array metadata.
-.common_dimension_axes <- c(
+.common_axis_abbr <- c(
   # X - longitude / easting
   "x"                       = "X",
   "lon"                     = "X",

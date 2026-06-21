@@ -36,7 +36,9 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
       else
         stop('Axis abbreviation must be a character string', call. = FALSE)
 
-      if (is.list(coordinates) && length(coordinates)) {
+      if (!is.list(coordinates))
+        coordinates <- list(coordinates)
+      if (length(coordinates)) {
         private$.coordinates <- coordinates
         private$.active_coordinates <- private$.coordinates[[1L]]
       } else
@@ -114,10 +116,28 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     }
   ),
   active = list(
+    #' @field abbreviation Set or retrieve the abbreviation of the axis.
+    abbreviation = function(value) {
+      if (missing(value))
+        private$.abbreviation
+      else if (is.character(value))
+        private$.abbreviation <- value[1L]
+    },
+
     #' @field coordinates (read-only) Retrieve the currently active coordinates.
     coordinates = function(value) {
       if (missing(value))
         private$.active_coordinates
+    },
+
+    #' @field length (read-only) Retrieve the length of the axis.
+    length = function(value) {
+      if (missing(value)) {
+        if (is.null(private$.active_coordinates))
+          0L
+        else
+          private$.active_coordinates$values_object$length
+      }
     }
   )
 )

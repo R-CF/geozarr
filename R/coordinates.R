@@ -185,10 +185,25 @@ Coordinates <- R6::R6Class('Coordinates',
         private$.name <- value[1L]
     },
 
+    #' @field direction Set or retrieve the direction of the coordinates.
+    direction = function(value) {
+      if (missing(value))
+        private$.direction
+      else if (value[1L] %in% AxisDirection)
+        private$.direction <- value[1L]
+    },
+
+    #' @field values_object (read-only) Retrieve the object that manages the
+    #'   coordinate values.
+    values_object = function(value) {
+      if (missing(value))
+        private$.values
+    },
+
     #' @field values (read-only) Retrieve the coordinate values.
     values = function(value) {
       if (missing(value))
-        private$.values
+        private$.values$values
     },
 
     #' @field range (read-only) Retrieve the extreme values of the coordinates.
@@ -234,7 +249,7 @@ Coordinates <- R6::R6Class('Coordinates',
       }
       return(CoordinateValuesNumeric$new(values))
     },
-    'character' = return(CoordinateValuesCharacter$new(values)),
+    'character' = return(CoordinateValuesString$new(values)),
     NULL
   )
 }

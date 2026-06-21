@@ -21,7 +21,8 @@ GeoZarr group is a container for other groups and arrays.
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="append_array_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-append_array_attribute'><code>zarr::zarr_node$append_array_attribute()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-attribute'><code>zarr::zarr_node$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attribute'><code>zarr::zarr_node$delete_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
@@ -35,6 +36,7 @@ GeoZarr group is a container for other groups and arrays.
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy'><code>zarr::zarr_group$hierarchy()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy_nodes'><code>zarr::zarr_group$hierarchy_nodes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="print"><a href='../../zarr/html/zarr_group.html#method-zarr_group-print'><code>zarr::zarr_group$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="set_node"><a href='../../zarr/html/zarr_group.html#method-zarr_group-set_node'><code>zarr::zarr_group$set_node()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}

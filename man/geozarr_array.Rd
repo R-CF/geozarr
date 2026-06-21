@@ -24,12 +24,15 @@ this array.}
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-geozarr_array-initialize}{\code{geozarr_array$new()}}
+    \item \href{#method-geozarr_array-post_open}{\code{geozarr_array$post_open()}}
+    \item \href{#method-geozarr_array-build_coordsys}{\code{geozarr_array$build_coordsys()}}
   }
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="append_array_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-append_array_attribute'><code>zarr::zarr_node$append_array_attribute()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attributes'><code>zarr::zarr_node$delete_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-attribute'><code>zarr::zarr_node$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attribute'><code>zarr::zarr_node$delete_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
@@ -43,11 +46,10 @@ this array.}
 \if{html}{\out{<a id="method-geozarr_array-initialize"></a>}}
 \if{latex}{\out{\hypertarget{method-geozarr_array-initialize}{}}}
 \subsection{\code{geozarr_array$new()}}{
-  Initialize a new GeoZarr array. The array must already exist
-in the store.
+  Initialize a new GeoZarr array.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_array$new(name, metadata, parent, store)}
+    \preformatted{geozarr_array$new(name, metadata, parent, store, coord_sys)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -58,11 +60,49 @@ in the store.
       \item{\code{parent}}{The parent \code{zarr_group} instance of this new array, can be
 missing or \code{NULL} if the Zarr object should have just this array.}
       \item{\code{store}}{The \link[zarr:zarr_store]{zarr_store} instance to persist data in.}
+      \item{\code{coord_sys}}{Optional, an instance of \link{CoordinateSystem} providing
+the coordinate system of the array. If not provided, the coordinate
+system is constructed from the metadata of the array persisted in the
+store.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
     An instance of \code{geozarr_array}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-post_open"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-post_open}{}}}
+\subsection{\code{geozarr_array$post_open()}}{
+  Perform any processing after the Zarr hierarchy is in place
+and out-of-group references can be resolved.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$post_open()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Self, invisibly.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-build_coordsys"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-build_coordsys}{}}}
+\subsection{\code{geozarr_array$build_coordsys()}}{
+  Build the coordinate system of the GeoZarr array if it has
+not been set yet. This should only be called when the Zarr hierarchy is
+in place and out-of-group references can be resolved, particularly for
+the \code{cs} convention.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$build_coordsys()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Self, invisibly.
   }
 }
 

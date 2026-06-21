@@ -31,6 +31,11 @@ value (in the columns).
   \describe{
     \item{\code{name}}{Set or retrieve the name of the coordinate set.}
 
+    \item{\code{direction}}{Set or retrieve the direction of the coordinates.}
+
+    \item{\code{values_object}}{(read-only) Retrieve the object that manages the
+coordinate values.}
+
     \item{\code{values}}{(read-only) Retrieve the coordinate values.}
 
     \item{\code{range}}{(read-only) Retrieve the extreme values of the coordinates.}

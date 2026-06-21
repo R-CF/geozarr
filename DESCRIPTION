@@ -19,3 +19,6 @@ Imports:
 Depends:
     R (>= 4.2),
     zarr (>= 0.4.0)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

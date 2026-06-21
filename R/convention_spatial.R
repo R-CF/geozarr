@@ -143,7 +143,7 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
       if (missing(value))
         private$.transform_type
       else
-        stop("Can't change the value of `spatial:transform_type`.", call. = FALSE)
+        stop("Can't change the value of `spatial:transform_type`", call. = FALSE)
     },
 
     #' @field transform The "spatial:transform" attribute, a numeric vector of 6
@@ -167,7 +167,7 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
       else if (is.integer(value) && length(value) == length(private$.dimensions))
         private$.shape <- value
       else
-        stop('`spatial:shape` must be a numeric vector the same length as `spatial:dimensions`.', call. = FALSE)
+        stop('`spatial:shape` must be a numeric vector the same length as `spatial:dimensions`', call. = FALSE)
     },
 
     #' @field registration The "spatial:registration" attribute, a string with
@@ -181,7 +181,7 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
       else if (value %in% c('node', 'pixel'))
         private$.registration <- value
       else
-        stop('Bad value for `spatial:registration`.', call. = FALSE)
+        stop('Bad value for `spatial:registration`', call. = FALSE)
     }
   )
 )

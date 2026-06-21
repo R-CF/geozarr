@@ -10,7 +10,8 @@ GeoZarr.options <- new.env(parent = emptyenv())
   # Register this profile with zarr
   zarr::zarr_register_domain(zarr_domain_geozarr$new())
 
-  assign("eps", .Machine$double.eps^0.5, envir = GeoZarr.options)
+  assign('eps', .Machine$double.eps^0.5, envir = GeoZarr.options)
+  assign('max_explicit', 30L, envir = GeoZarr.options)
 
   # Register the conventions supported by GeoZarr (and Zarr)
   assign('conventions', rbind(data.frame(

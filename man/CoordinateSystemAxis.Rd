@@ -18,7 +18,11 @@ thus not with the axis.
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
+    \item{\code{abbreviation}}{Set or retrieve the abbreviation of the axis.}
+
     \item{\code{coordinates}}{(read-only) Retrieve the currently active coordinates.}
+
+    \item{\code{length}}{(read-only) Retrieve the length of the axis.}
   }
   \if{html}{\out{</div>}}
 }

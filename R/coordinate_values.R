@@ -249,7 +249,7 @@ CoordinateValuesNumericPacked <- R6::R6Class('CoordinateValuesNumericPacked',
 #'   String-valued coordinate values are very commonly used for categorical
 #'   data.
 #' @docType class
-CoordinateValuesCharacter <- R6::R6Class('CoordinateValuesCharacter',
+CoordinateValuesString <- R6::R6Class('CoordinateValuesString',
   inherit = CoordinateValues,
   cloneable = FALSE,
   private = list(

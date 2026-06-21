@@ -58,5 +58,12 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
       if (inherits(private$.time, 'try-error'))
         stop('Arguments do not form a valid calendar definition', call. = FALSE)
     }
+  ),
+  active = list(
+    #' @field values (read-only) Retrieve the coordinate values as timestamps.
+    values = function(value) {
+      if (missing(value))
+        private$.time$format()
+    }
   )
 )

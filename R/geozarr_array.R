@@ -27,17 +27,53 @@ geozarr_array <- R6::R6Class('geozarr_array',
       atts[!(startsWith(nms, 'spatial:') | (nms %in% c('zarr_conventions', 'cs')))]
     },
 
+    # This function resolves a `ref` element in the array attributes. Argument
+    # `node` is a path (character string) from this array to the desired node,
+    # required. The path is relative from this array if argument `uri` is not
+    # provided, or an absolute path from the root of the `uri` store otherwise.
+    # Arguments `attribute` and `uri` are optional. The return value is a JSON
+    # schema in the form of a list (possibly a scalar value) if argument
+    # `attribute` is provided, or a `zarr_array` if not. If the arguments do not
+    # point to anything an error is thrown.
+    resolve_external_node = function(node, attribute, uri) {
+      if (missing(uri) || is.null(uri) || !nzchar(uri)) {
+        # Local reference: Resolve the path relative to this array
+        parts <- strsplit(node, split = '/', fixed = TRUE)[[1L]]
+        if ((len <- length(parts)) < 2L)
+          stop('Argument `node` must be a relative path from the referring array or group', call. = FALSE)
+        referred_node <- self
+        ndx <- 1L
+        while (ndx <= len && !is.null(referred_node)) {
+          referred_node <- if (parts[ndx] == '..') referred_node$parent
+                           else referred_node$children[[parts[ndx]]]
+          ndx <- ndx + 1L
+        }
+      } else {
+        # External store: Load the store and grab the node indicated
+        # FIXME
+        stop('Not yet supported', call. = FALSE)
+      }
+
+      if (missing(attribute))
+        referred_node
+      else {
+        # Get the requested attribute from referred_node
+        # FIXME
+        stop('Not yet supported', call. = FALSE)
+      }
+    },
+
     # Create a coordinate system using the cs convention.
-    build_cs = function() {
-      atts            <- self$attributes
-      dimension_names <- private$.metadata$dimension_names
-      shape           <- private$.metadata$shape
+    build_cs = function(meta) {
+      atts            <- meta$attributes
+      dimension_names <- meta$dimension_names
+      shape           <- meta$shape
 
       cs <- atts$cs
       if (is.null(cs))
-        stop('Required attribute "cs" not found in array metadata.', call. = FALSE)
+        stop('Required attribute "cs" not found in array metadata', call. = FALSE)
       if (!length(cs$crs))
-        stop('Attribute "cs" must contain at least one CRS object.', call. = FALSE)
+        stop('Attribute "cs" must contain at least one CRS object', call. = FALSE)
 
       # Collect all axis definitions from all CRS objects, keyed by dimension
       # name. Later CRS objects win on name collision (should not occur in a
@@ -48,20 +84,16 @@ geozarr_array <- R6::R6Class('geozarr_array',
           all_axes[names(crs$axes)] <- crs$axes
       }
 
-      # Helper: build one CoordinateSystemAxis from an axis definition.
+      # Internal function: Build one CoordinateSystemAxis from an axis definition.
       # dim_length is the number of elements along this dimension in the array;
       # pass 1L for scalar axes not present in dimension_names.
-      # direction_override, when non-NULL, replaces whatever the metadata says.
-      build_one_axis <- function(dim_name, ax_def, dim_length, direction_override = NULL) {
+      build_one_axis <- function(dim_name, ax_def, dim_length) {
         if (is.null(ax_def))
           return(private$cs_ordinal_axis(dim_name, dim_length))
 
         abbr <- ax_def$abbreviation %||% ''
-        direction <- if (is.null(direction_override)) {
-          d <- toupper(ax_def$direction %||% 'OTHER')
-          if (!d %in% AxisDirection) 'OTHER' else d
-        } else
-          direction_override
+        direction <- toupper(ax_def$direction %||% 'OTHER')
+        if (!direction %in% AxisDirection) direction <- 'OTHER'
 
         coord_defs <- ax_def$coordinates
         if (!is.list(coord_defs) || !length(coord_defs))
@@ -72,9 +104,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         })
         names(coords_list) <- vapply(coords_list, function(cd) cd$name, FUN.VALUE = character(1L))
 
-        CoordinateSystemAxis$new(name         = dim_name,
-                                 abbreviation = abbr,
-                                 coordinates  = coords_list)
+        CoordinateSystemAxis$new(name = dim_name, abbreviation = abbr, coordinates = coords_list)
       }
 
       # 1. Dimensional axes, in dimension_names order.
@@ -92,7 +122,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
       scalar_names <- setdiff(names(all_axes), dimension_names)
       if (length(scalar_names)) {
         scalar_axes <- lapply(scalar_names, function(nm) {
-          build_one_axis(nm, all_axes[[nm]], 1L, direction_override = 'OTHER')
+          ax <- build_one_axis(nm, all_axes[[nm]], 1L)
+          ax$coordinates$direction <- 'OTHER'
+          ax
         })
         names(scalar_axes) <- scalar_names
         axes <- c(axes, scalar_axes)
@@ -105,13 +137,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # array in the cs attribute.
     cs_build_coordinates = function(coord_def, dim_name, index, dim_length, direction) {
       # Coordinate set name: use declared name or synthesise one
-      crd_name <- coord_def$name %||% paste0(dim_name, '_coordinates',
-                                             if (index > 1L) index else '')
-
-      # --- values ---
+      crd_name <- coord_def$name %||% paste0(dim_name, '_coordinates', if (index > 1L) index else '')
       cv <- private$cs_build_values(coord_def$values, dim_name, dim_length)
 
-      # --- boundaries ---
       bounds <- if (!is.null(coord_def$boundaries))
         private$cs_build_bounds(coord_def$boundaries, dim_name)
       else
@@ -127,17 +155,15 @@ geozarr_array <- R6::R6Class('geozarr_array',
                             values = cv, bounds = bounds)
     },
 
-    # Resolve a `values` object into a CoordinateValues* instance.
+    # Resolve a `values` object into an instance inheriting from CoordinateValues
     cs_build_values = function(values_def, dim_name, dim_length) {
       if (is.null(values_def))
-        stop('Axis "', dim_name, '": coordinate set is missing required "values" element.',
-             call. = FALSE)
+        stop('Axis "', dim_name, '": coordinate set is missing required "values" element', call. = FALSE)
 
       if (!is.null(values_def$regular)) {
         rv <- unlist(values_def$regular)
         if (length(rv) != 2L)
-          stop('Axis "', dim_name, '": "values.regular" must have exactly 2 elements.',
-               call. = FALSE)
+          stop('Axis "', dim_name, '": "values.regular" must have exactly 2 elements', call. = FALSE)
         return(CoordinateValuesNumericPacked$new(values = rv, length = dim_length))
       }
 
@@ -162,74 +188,48 @@ geozarr_array <- R6::R6Class('geozarr_array',
       if (!is.null(bounds_def$regular)) {
         bv <- unlist(bounds_def$regular)
         if (length(bv) != 2L)
-          stop('Axis "', dim_name, '": "boundaries.regular" must have exactly 2 elements.', call. = FALSE)
+          stop('Axis "', dim_name, '": boundaries must have exactly 2 elements', call. = FALSE)
         return(bv)
       }
 
       if (!is.null(bounds_def$external)) {
         raw <- private$cs_load_external(bounds_def$external, dim_name, 'boundaries')
         if (!is.matrix(raw) || nrow(raw) != 2L)
-          stop('Axis "', dim_name, '": external boundaries array must be a 2-row matrix.', call. = FALSE)
+          stop('Axis "', dim_name, '": external boundaries array must be a 2-row matrix', call. = FALSE)
         return(raw)
       }
 
-      stop('Axis "', dim_name, '": "boundaries" must have one of "regular" or "external".', call. = FALSE)
+      stop('Axis "', dim_name, '": boundaries must have one of "regular" or "external"', call. = FALSE)
     },
 
-    # Load data from an `external` reference: { ref: { node, uri?, attribute? } }.
-    # Only local-store refs (no `uri`) are supported; `attribute` is not yet
-    # handled (it would require JSON Pointer traversal into another node's
-    # attributes rather than reading array data).
+    # Load data from an `external` reference: { ref: { node, uri? } }.
     cs_load_external = function(external_def, dim_name, context) {
       ref <- external_def$ref
       if (is.null(ref) || is.null(ref$node))
-        stop('Axis "', dim_name, '": ', context,
-             ' external reference is missing the required "node" field.', call. = FALSE)
-
-      if (!is.null(ref$uri))
-        stop('Axis "', dim_name, '": ', context,
-             ' references an external store URI "', ref$uri,
-             '" which is not yet supported.', call. = FALSE)
-
+        stop('Axis "', dim_name, '": ', context, ' external reference is missing the required "node" field', call. = FALSE)
       if (!is.null(ref$attribute))
-        stop('Axis "', dim_name, '": ', context,
-             ' uses an attribute JSON Pointer reference which is not yet supported.', call. = FALSE)
+        stop('Axis "', dim_name, '": ', context, ' uses an attribute reference which is not supported', call. = FALSE)
 
-      # Resolve the path relative to the referring array's parent group.
-      # ref$node is relative to the referring node (this array); resolve
-      # relative to its parent group prefix.
-      node_path     <- sub('^/', '', ref$node)  # strip any leading slash
-      parent_prefix <- if (is.null(private$.parent)) '' else private$.parent$prefix
-      full_prefix   <- paste0(parent_prefix, node_path, '/')
-
-      ref_meta <- private$.store$get_metadata(full_prefix)
-      if (is.null(ref_meta) || ref_meta$node_type != 'array')
-        stop('Axis "', dim_name, '": ', context,
-             ' external reference "', ref$node, '" does not resolve to an array.', call. = FALSE)
-
-      ref_arr <- zarr_array$new(node_path, ref_meta, private$.parent, private$.store)
-      ref_arr[]  # read all data
+      ref_arr <- private$resolve_external_node(node = ref$node, uri = ref$uri)
+      ref_arr$read()
     },
 
     # Fallback: a 0-based ordinal axis for dimensions carrying no cs metadata.
     cs_ordinal_axis = function(dim_name, dim_length) {
       crd_name <- paste0(dim_name, '_coordinates')
       values   <- CoordinateValuesOrdinal$new(dim_length)
-      coords   <- Coordinates$new(name = crd_name, direction = 'OTHER',
-                                  unit = '', values = values)
-      CoordinateSystemAxis$new(name         = dim_name,
-                               abbreviation = '',
-                               coordinates  = setNames(list(coords), crd_name))
+      coords   <- Coordinates$new(name = crd_name, direction = 'OTHER', unit = '', values = values)
+      CoordinateSystemAxis$new(name = dim_name, abbreviation = '', coordinates = setNames(list(coords), crd_name))
     },
 
     # Create a coordinate system using the spatial convention
-    build_spatial = function() {
+    build_spatial = function(meta) {
       # Get spatial attributes from the parent group and merge with local attributes
       parent_atts <- if (is.null(private$.parent)) NULL else private$.parent$metadata$attributes
-      atts <- self$attributes
+      atts <- meta$attributes
 
       # Extract the parameters and check their validity
-      dimension_names <- private$.metadata$dimension_names
+      dimension_names <- meta$dimension_names
       if (is.null(dimension_names))
         stop('Required top-level metadata item "dimension_names" not found', call. = FALSE)
 
@@ -268,7 +268,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # Build the coordinate system
       # X and Y coordinates are always numeric and always present
-      elem <- private$.metadata$shape[dim_order[2L]]
+      elem <- meta$shape[dim_order[2L]]
       values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[3L], transform[1L]))
       coords <- Coordinates$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'EAST',
                                 unit = '', values = values,
@@ -276,7 +276,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
       X_axis <- CoordinateSystemAxis$new(name = dimensions[2L], abbreviation = 'X',
                                          coordinates = list(X_coordinates = coords))
 
-      elem <- private$.metadata$shape[dim_order[1L]]
+      elem <- meta$shape[dim_order[1L]]
       values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[6L], transform[5L]))
       coords <- Coordinates$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'NORTH',
                                 unit = '', values = values,
@@ -305,7 +305,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
     },
 
     # Create a coordinate system from sibling "coordinate variable" arrays.
-    build_xarray = function() {
+    build_xarray = function(meta) {
       # Internal helper function
       .make_axis <- function(name, abbreviation, direction, units, values) {
         crd_name <- paste0(name, '_coordinates')
@@ -319,7 +319,6 @@ geozarr_array <- R6::R6Class('geozarr_array',
                                  coordinates = stats::setNames(list(coords), crd_name))
       }
 
-      meta <- self$metadata
       shape <- meta$shape
       dim_names <- meta$dimension_names %||% meta$attributes$`_ARRAY_DIMENSIONS` # Guaranteed to have one or the other
       # coordinates <- meta$attributes$coordinates # May be NULL, probably not needed because of dim_names anyway
@@ -330,8 +329,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
         if (!is.null(dim_meta) && dim_meta$node_type == "array") {
           dim_array <- zarr_array$new(dim_names[i], dim_meta, private$.parent, private$.store)
 
-          abbr <- .common_dimension_axes[tolower(dim_names[i])]
-          if (is.na(abbr)) abbr <- 'unknown'
+          abbr <- .common_axis_abbr[tolower(dim_names[i])]
+          if (is.na(abbr)) abbr <- 'other'
           units <- dim_array$metadata$attributes$units %||% ''
           axes[[i]] <- switch(abbr,
                  'X' = .make_axis(dim_names[i], 'X', 'EAST', units, dim_array[]),
@@ -348,29 +347,52 @@ geozarr_array <- R6::R6Class('geozarr_array',
     }
   ),
   public = list(
-    #' @description Initialize a new GeoZarr array. The array must already exist
-    #'   in the store.
+    #' @description Initialize a new GeoZarr array.
     #' @param name The name of the GeoZarr array.
     #' @param metadata List with the metadata of the array.
     #' @param parent The parent `zarr_group` instance of this new array, can be
     #'   missing or `NULL` if the Zarr object should have just this array.
     #' @param store The [zarr_store] instance to persist data in.
+    #' @param coord_sys Optional, an instance of [CoordinateSystem] providing
+    #'   the coordinate system of the array. If not provided, the coordinate
+    #'   system is constructed from the metadata of the array persisted in the
+    #'   store.
     #' @return An instance of `geozarr_array`.
-    initialize = function(name, metadata, parent, store) {
+    initialize = function(name, metadata, parent, store, coord_sys) {
       super$initialize(name, metadata, parent, store)
       private$.domain <- 'GeoZarr'
 
       # Build the coordinate system for the array - defer to the conventions and formats
-      private$.cs <- if (is.null(metadata$attributes$zarr_conventions)) {
-        # XArray Zarr format
-        private$build_xarray()
-      } else {
-        # Check the convention that applies and build the coordinate system
-        conv <- .conventions_supported(metadata)
-        if (is.na(conv) || conv == 'spatial')
-          private$build_spatial()
-        else
-          private$build_cs()
+      if (!missing(coord_sys) && inherits(coord_sys, 'CoordinateSystem'))
+        private$.cs <- coord_sys
+    },
+
+    #' @description Perform any processing after the Zarr hierarchy is in place
+    #'   and out-of-group references can be resolved.
+    #' @return Self, invisibly.
+    post_open = function() {
+      self$build_coordsys()
+    },
+
+    #' @description Build the coordinate system of the GeoZarr array if it has
+    #'   not been set yet. This should only be called when the Zarr hierarchy is
+    #'   in place and out-of-group references can be resolved, particularly for
+    #'   the `cs` convention.
+    #' @return Self, invisibly.
+    build_coordsys = function() {
+      if (is.null(private$.cs)) {
+        metadata <- private$.metadata
+        private$.cs <- if (is.null(metadata$attributes$zarr_conventions)) {
+          # No explicit convention: XArray Zarr format
+          private$build_xarray(metadata)
+        } else {
+          # Check the convention that applies and build the coordinate system
+          conv <- .conventions_supported(metadata)
+          if (is.na(conv) || conv == 'spatial')
+            private$build_spatial(metadata)
+          else
+            private$build_cs(metadata)
+        }
       }
     }
   ),
@@ -383,3 +405,4 @@ geozarr_array <- R6::R6Class('geozarr_array',
     }
   )
 )
+

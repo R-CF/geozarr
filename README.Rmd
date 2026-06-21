@@ -30,6 +30,44 @@ The following conventions are supported by `geozarr`:
 
 The `geozarr` package is closely integrated with the `zarr` package, to the extent that the only user-facing function in this package is `as_geozarr()`, to convert an R object (vector, matrix, array) into a Zarr array or store with GeoZarr metadata. Manipulating the Zarr object is done with the same tools as a regular Zarr object.
 
+The `as_geozarr() function creates a GeoZarr object from an R matrix or array. A GeoZarr object is like a Zarr object but with special attributes to establish a coordinate system. Default settings will be taken from the R object (data type, shape). Data is chunked into chunks of length 100 (or less if the array is smaller) and compressed. The object may be a stand-alone Zarr store (single Zarr array only), or a Zarr store to which additional Zarr groups and arrays may be added. The Zarr store may be in memory or persisted to a local file system.
+
+Depending on the properties of the R object, the GeoZarr object may use the "spatial" or "cs" convention for encoding. The "spatial" encoding is the most compact and it will be used for R objects that have at least X and Y dimensions, identified by the names set on the dimensions, and an optional third axis which is typically an image band or a discrete (class) axis -- the third axis may not represent height/depth (Z) or time (T). The coordinates must be numeric and regularly spaced and the Y coordinates must be decreasing. In other words, the "spatial" convention will be used for imagery style, north-up arrays with a coordinate system tied to the top-left corner of the array space. For all other cases the "cs" convention will be used which can use any type and number of axes, including Z and T.
+
+If the coordinates along the axes (the `dimnames` of the R object) are not regularly spaced, secondary Zarr arrays will be created with the axis coordinates, if the length of the axis is longer than the option `GeoZarr.options$max_explicit` -- shorter sets of coordinates are stored in the Zarr array `cs` attributes.
+
+Any time coordinates will be converted to a `CFtime` format with a reference of "days since 1970-01-01", compatible with the standard system clock.
+
+``` {r as_geozarr}
+library(geozarr)
+
+# Create an R array
+x <- array(1:400, c(5, 20, 4))
+
+# `spatial` convention
+# Set named dim_names with `x` and `y` (decreasing values), third dimension is class-based
+dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
+z <- as_geozarr(x, "spatial_data")
+z[["/spatial_data"]]
+z$hierarchy()
+
+# `cs` convention
+# Named dimensions with `y` coordinates in natural order, third dimension is time (regular)
+dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-06-%02d", 1:4))
+z <- as_geozarr(x, "cs_data")
+z[["/cs_data"]]
+z$hierarchy()
+
+# Irregular time dimension in months: 31, 28, 31 and 30 days
+old_explicit <- geozarr_options()$max_explicit
+geozarr_options("max_explicit", 3L) # Force writing of external Zarr array
+dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-%02d-01", 1:4))
+z <- as_geozarr(x, "cs_data_irregular_time")
+z[["/cs_data_irregular_time"]]
+z$hierarchy()
+geozarr_options("max_explicit", old_explicit)
+```
+
 # Development
 
 GeoZarr is currently under active development and this package is similarly in flux. The conventions implemented in this package will remain available unless the convention is deprecated due to any reason that would recommend against continuing to use the convention.

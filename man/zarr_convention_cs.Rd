@@ -46,8 +46,8 @@ structure (simplified):
 }\if{html}{\out{</div>}}
 
 Build a convention instance, add one or more CRS objects (each covering
-one or more dimension axes), then call \code{write()} to embed everything in
-the Zarr attributes list.
+one or more dimension axes), then call \code{as_list()} to retrieve everything
+for inclusion as the "cs" attribute in the Zarr node metadata.
 }
 \section{Super class}{
 \code{\link[zarr:zarr_convention]{zarr::zarr_convention}} -> \code{zarr_convention_cs}
@@ -66,7 +66,7 @@ the Zarr attributes list.
   \itemize{
     \item \href{#method-zarr_convention_cs-initialize}{\code{zarr_convention_cs$new()}}
     \item \href{#method-zarr_convention_cs-add_crs}{\code{zarr_convention_cs$add_crs()}}
-    \item \href{#method-zarr_convention_cs-write}{\code{zarr_convention_cs$write()}}
+    \item \href{#method-zarr_convention_cs-as_list}{\code{zarr_convention_cs$as_list()}}
     \item \href{#method-zarr_convention_cs-axis}{\code{zarr_convention_cs$axis()}}
     \item \href{#method-zarr_convention_cs-coordinates}{\code{zarr_convention_cs$coordinates()}}
     \item \href{#method-zarr_convention_cs-values_regular}{\code{zarr_convention_cs$values_regular()}}
@@ -79,7 +79,9 @@ the Zarr attributes list.
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="clear"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-clear'><code>zarr::zarr_convention$clear()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="register"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-register'><code>zarr::zarr_convention$register()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="set"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-set'><code>zarr::zarr_convention$set()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -133,26 +135,17 @@ represent a planar coordinate system.}
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-zarr_convention_cs-write"></a>}}
-\if{latex}{\out{\hypertarget{method-zarr_convention_cs-write}{}}}
-\subsection{\code{zarr_convention_cs$write()}}{
-  Write the \code{cs} attribute into a Zarr attributes list. The
-CMO entry in \code{zarr_conventions} is written by the inherited
-\code{register()} method and must be called separately before this method.
+\if{html}{\out{<a id="method-zarr_convention_cs-as_list"></a>}}
+\if{latex}{\out{\hypertarget{method-zarr_convention_cs-as_list}{}}}
+\subsection{\code{zarr_convention_cs$as_list()}}{
+  Retrieve the \code{cs} attributes as a list.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{zarr_convention_cs$write(attributes)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{attributes}}{A \code{list} with Zarr attributes for an array.}
-    }
+    \preformatted{zarr_convention_cs$as_list()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    The updated attributes list.
+    A \code{list} with the updated attributes for this convention.
   }
 }
 
@@ -278,7 +271,7 @@ character.}
   Coordinate values stored in an external array
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{zarr_convention_cs$values_external(node, uri = NULL)}
+    \preformatted{zarr_convention_cs$values_external(node, uri)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{

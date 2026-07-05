@@ -152,10 +152,10 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
                             y = axes[['Y']]$coordinates$values$raw,
                             registration = registration)
 
-    atts <- spatial$write(atts)
+    atts <- c(list(cs = spatial$as_list()), atts)
   } else {
     # cs convention
-    # At least 1 of X, Y, any others
+    # X, Y, any others
     cs_conv <- zarr_convention_cs$new()
     atts    <- cs_conv$register(atts)
 
@@ -206,7 +206,7 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
     cs_conv$add_crs(axes = axis_defs[axes[['T']]$name])
     cs_conv$add_crs(axes = axis_defs[axes[['OTHER']]$name])
 
-    atts <- cs_conv$write(atts)
+    atts <- c(list(cs = cs_conv$as_list()), atts)
   }
   meta$attributes <- atts
   arr$metadata <- meta

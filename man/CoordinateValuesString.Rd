@@ -37,7 +37,7 @@ data.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{values}}{The values in this class instance.}
+      \item{\code{values}}{The values in this class instance, a character vector.}
     }
     \if{html}{\out{</div>}}
   }

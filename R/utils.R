@@ -57,9 +57,9 @@ geozarr_options <- function(key, value) {
     as.list(GeoZarr.options)
   else {
     switch(key,
-           'max_explicit' = {
-             if (is.numeric(value)) GeoZarr.options$max_explicit <- as.integer(value)
-           })
+           'max_explicit' = if (is.numeric(value)) GeoZarr.options$max_explicit <- as.integer(value[1L]),
+           'eps'          = if (is.numeric(value)) Zarr.options$eps <- value[1L]
+    )
   }
 }
 

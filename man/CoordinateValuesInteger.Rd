@@ -36,7 +36,7 @@ coordinate values are typically used for categorical data.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{values}}{The values in this class instance.}
+      \item{\code{values}}{The values in this class instance, an integer vector.}
     }
     \if{html}{\out{</div>}}
   }

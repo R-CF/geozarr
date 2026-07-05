@@ -35,6 +35,7 @@ GeoZarr group is a container for other groups and arrays.
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="get_node"><a href='../../zarr/html/zarr_group.html#method-zarr_group-get_node'><code>zarr::zarr_group$get_node()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy'><code>zarr::zarr_group$hierarchy()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_group.html#method-zarr_group-hierarchy_nodes'><code>zarr::zarr_group$hierarchy_nodes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="post_open"><a href='../../zarr/html/zarr_group.html#method-zarr_group-post_open'><code>zarr::zarr_group$post_open()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="print"><a href='../../zarr/html/zarr_group.html#method-zarr_group-print'><code>zarr::zarr_group$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="set_node"><a href='../../zarr/html/zarr_group.html#method-zarr_group-set_node'><code>zarr::zarr_group$set_node()</code></a></span></li>
 </ul>

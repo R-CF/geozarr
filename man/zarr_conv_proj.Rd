@@ -43,7 +43,10 @@ a CRS in PROJJSON format.}
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="as_list"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-as_list'><code>zarr::zarr_convention$as_list()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="clear"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-clear'><code>zarr::zarr_convention$clear()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="register"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-register'><code>zarr::zarr_convention$register()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="set"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-set'><code>zarr::zarr_convention$set()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}

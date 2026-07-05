@@ -45,7 +45,8 @@ typically assigned to axes that have no other coordinates assigned to them.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{length}}{The number of elements in this instance.}
+      \item{\code{length}}{Integer value giving the number of elements in this
+instance.}
     }
     \if{html}{\out{</div>}}
   }

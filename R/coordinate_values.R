@@ -86,9 +86,13 @@ CoordinateValuesOrdinal <- R6::R6Class('CoordinateValuesOrdinal',
   ),
   public = list(
     #' @description Create an instance of this class.
-    #' @param length The number of elements in this instance.
+    #' @param length Integer value giving the number of elements in this
+    #'   instance.
     #' @return An instance of this class.
     initialize = function(length) {
+      if (!is.integer(length) || length(length) != 1L || length < 1L)
+        stop('Argument `length` must be a positive integer value', call. = FALSE)
+
       super$initialize(length)
     },
 
@@ -125,15 +129,15 @@ CoordinateValuesInteger <- R6::R6Class('CoordinateValuesInteger',
   ),
   public = list(
     #' @description Create an instance of this class.
-    #' @param values The values in this class instance.
+    #' @param values The values in this class instance, an integer vector.
     #' @return An instance of this class.
     initialize = function(values) {
+      if (!is.integer(values) || !length(values) || !.monotonicity(values))
+        stop('Argument `values` must be a vector of monotonous integer values', call. = FALSE)
+
       super$initialize(length(values))
       private$.values <- values
     }
-  ),
-  active = list(
-
   )
 )
 
@@ -162,6 +166,11 @@ CoordinateValuesIntegerPacked <- R6::R6Class('CoordinateValuesIntegerPacked',
     #'   unpacked data.
     #' @return An instance of this class.
     initialize = function(values, length) {
+      if (!is.integer(values) || length(values) != 2L)
+        stop('Argument `values` must be an integer vector of length 2', call. = FALSE)
+      if (values[2L] == 0L)
+        stop('Argument `values` must have a non-zero second value', call. = FALSE)
+
       super$initialize(length)
       private$.values <- values
     },
@@ -171,9 +180,6 @@ CoordinateValuesIntegerPacked <- R6::R6Class('CoordinateValuesIntegerPacked',
     range = function() {
       c(private$.values[1L], private$.values[1L] + (private$.length - 1L) * private$.values[2L])
     }
-  ),
-  active = list(
-
   )
 )
 
@@ -193,12 +199,12 @@ CoordinateValuesNumeric <- R6::R6Class('CoordinateValuesNumeric',
     #' @param values The values in this class instance.
     #' @return An instance of this class.
     initialize = function(values) {
+      if (!is.numeric(values) || !length(values) || !.monotonicity(values))
+        stop('Argument `values` must be a vector of monotonous numeric values', call. = FALSE)
+
       super$initialize(length(values))
       private$.values <- values
     }
-  ),
-  active = list(
-
   )
 )
 
@@ -228,6 +234,11 @@ CoordinateValuesNumericPacked <- R6::R6Class('CoordinateValuesNumericPacked',
     #'   unpacked data.
     #' @return An instance of this class.
     initialize = function(values, length) {
+      if (!is.numeric(values) || length(values) != 2L)
+        stop('Argument `values` must be a numeric vector of length 2', call. = FALSE)
+      if (.near(values[2L], 0))
+        stop('Argument `values` must have a non-zero second value', call. = FALSE)
+
       super$initialize(length)
       private$.values <- values
     },
@@ -237,9 +248,6 @@ CoordinateValuesNumericPacked <- R6::R6Class('CoordinateValuesNumericPacked',
     range = function() {
       c(private$.values[1L], private$.values[1L] + (private$.length - 1L) * private$.values[2L])
     }
-  ),
-  active = list(
-
   )
 )
 
@@ -256,14 +264,14 @@ CoordinateValuesString <- R6::R6Class('CoordinateValuesString',
   ),
   public = list(
     #' @description Create an instance of this class.
-    #' @param values The values in this class instance.
+    #' @param values The values in this class instance, a character vector.
     #' @return An instance of this class.
     initialize = function(values) {
+      if (!is.character(values) || !length(values))
+        stop('Argument `values` must be a character vector', call. = FALSE)
+
       super$initialize(length(values))
       private$.values <- values
     }
-  ),
-  active = list(
-
   )
 )

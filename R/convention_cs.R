@@ -43,8 +43,8 @@
 #' ```
 #'
 #'   Build a convention instance, add one or more CRS objects (each covering
-#'   one or more dimension axes), then call `write()` to embed everything in
-#'   the Zarr attributes list.
+#'   one or more dimension axes), then call `as_list()` to retrieve everything
+#'   for inclusion as the "cs" attribute in the Zarr node metadata.
 #'
 #' @docType class
 #' @export
@@ -57,10 +57,7 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
 
     # List of CRS objects. Each element is the list that will be serialised
     # directly as a JSON object under cs$crs[].
-    .crs = list(),
-
-    # `ref` convention to manage external data
-    .ref = NULL
+    .crs = list()
   ),
   public = list(
     #' @description Create a new instance of a "cs" convention agent.
@@ -112,20 +109,15 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       invisible(self)
     },
 
-    #' @description Write the `cs` attribute into a Zarr attributes list. The
-    #'   CMO entry in `zarr_conventions` is written by the inherited
-    #'   `register()` method and must be called separately before this method.
-    #' @param attributes A `list` with Zarr attributes for an array.
-    #' @return The updated attributes list.
-    write = function(attributes) {
+    #' @description Retrieve the `cs` attributes as a list.
+    #' @return A `list` with the updated attributes for this convention.
+    as_list = function() {
       if (!length(private$.crs))
-        stop('At least one CRS must be added via `add_crs()` before writing.', call. = FALSE)
+        stop('At least one CRS must be added via `add_crs()`', call. = FALSE)
 
       cs <- list(crs = private$.crs)
       if (length(private$.name)) cs <- c(list(name = private$.name), cs)
-
-      attributes$cs <- cs
-      attributes
+      cs
     },
 
     #' @description Build an axis definition.
@@ -222,16 +214,10 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     #' @param uri Optional character string. URI of an external store. Omit for
     #'   arrays in the same local store.
     #' @return A `values` list with an `external` element.
-    values_external = function(node, uri = NULL) {
-      if (!is.character(node) || length(node) != 1L || !nzchar(node))
-        stop('Argument `node` must be a non-empty character string giving the path to the coordinate array', call. = FALSE)
-      ref <- list(node = node)
-      if (!is.null(uri)) {
-        if (!is.character(uri) || length(uri) != 1L || !nzchar(uri))
-          stop('Argument `uri` must be a non-empty character string', call. = FALSE)
-        ref$uri <- uri
-      }
-      list(external = list(ref = ref))
+    values_external = function(node, uri) {
+      ref <- zarr::zarr_convention_ref$new()
+      ref$set(node, uri)
+      list(external = list(ref = ref$as_list()))
     },
 
     #' @description Regularly-spaced cell-boundary values.

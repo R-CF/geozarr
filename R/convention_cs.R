@@ -176,7 +176,8 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       if (is.null(time) && !is.null(unit)) {
         if (!is.character(unit) || length(unit) != 1L)
           stop('Argument `unit` must be a single character string', call. = FALSE)
-        coords$unit <- unit
+        if (unit != '-')
+          coords$unit <- unit
       }
       if (!is.null(time))       coords$time       <- time
       if (!is.null(boundaries)) coords$boundaries <- boundaries
@@ -255,7 +256,7 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       if (!is.character(epoch) || length(epoch) != 1L || !nzchar(epoch))
         stop('`epoch` must be a non-empty character string', call. = FALSE)
       tm <- list(unit = unit, epoch = epoch)
-      if (is.null(calendar)) calendar <= "proleptic_gregorian"
+      if (is.null(calendar)) calendar <- "proleptic_gregorian"
       else if (!is.character(calendar) || !nzchar(calendar[1L]))
         stop('`calendar` must be a non-empty character string', call. = FALSE)
       tm$calendar <- calendar[1L]

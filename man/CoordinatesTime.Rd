@@ -22,6 +22,11 @@ converts the raw values to intelligible coordinates, such as
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
     \item{\code{values}}{(read-only) Retrieve the coordinate values as timestamps.}
+
+    \item{\code{time}}{(read-only) The \code{CFTime} instance managing the coordinates.}
+
+    \item{\code{offsets}}{(read-only) Retrieve the numeric offsets of the time
+coordinate values.}
   }
   \if{html}{\out{</div>}}
 }
@@ -29,6 +34,8 @@ converts the raw values to intelligible coordinates, such as
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CoordinatesTime-initialize}{\code{CoordinatesTime$new()}}
+    \item \href{#method-CoordinatesTime-copy}{\code{CoordinatesTime$copy()}}
+    \item \href{#method-CoordinatesTime-slice}{\code{CoordinatesTime$slice()}}
   }
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
@@ -40,6 +47,7 @@ converts the raw values to intelligible coordinates, such as
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getRangeMeaning"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getRangeMeaning'><code>Coordinates$getRangeMeaning()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getUnit"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getUnit'><code>Coordinates$getUnit()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="print"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-print'><code>Coordinates$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="subset"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-subset'><code>Coordinates$subset()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -72,7 +80,7 @@ Must be "second", "minute", "hour", "day" or "year", or the
 abbreviation or plural thereof.}
       \item{\code{epoch}}{Character string. An ISO 8601 time stamp providing the
 reference point for time coordinate calculations.}
-      \item{\code{calendar}}{Charatcer string, optional. The calendar to use for the
+      \item{\code{calendar}}{Character string, optional. The calendar to use for the
 time coordinates. Must be one of the calendars supported by the CF
 Metadata Conventions. If not given, defaults to "standard".}
       \item{\code{values}}{An instance of a descendant class of \link{CoordinateValues}.
@@ -93,6 +101,48 @@ coordinate values are assumed to represent a point value.}
   }
   \subsection{Returns}{
     An instance of this class or an error.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinatesTime-copy"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinatesTime-copy}{}}}
+\subsection{\code{CoordinatesTime$copy()}}{
+  Return an exact copy of these coordinates.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinatesTime$copy()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new instance of \code{CoordinatesTime}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinatesTime-slice"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinatesTime-slice}{}}}
+\subsection{\code{CoordinatesTime$slice()}}{
+  Retrieve the indices of the time axis falling between two
+extreme values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinatesTime$slice(x, rightmost.closed = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{A vector of two timestamps in between of which all indices into
+the time axis to extract.}
+      \item{\code{rightmost.closed}}{Whether or not to include the upper limit.
+Default is \code{FALSE}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An integer vector giving the indices in the time axis between
+values in \code{x}, or \code{NULL} if none of the values are valid.
   }
 }
 

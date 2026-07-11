@@ -15,12 +15,15 @@ coordinate values are typically used for categorical data.
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CoordinateValuesInteger-initialize}{\code{CoordinateValuesInteger$new()}}
+    \item \href{#method-CoordinateValuesInteger-subset}{\code{CoordinateValuesInteger$subset()}}
+    \item \href{#method-CoordinateValuesInteger-clone}{\code{CoordinateValuesInteger$clone()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="print"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-print'><code>CoordinateValues$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="range"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-range'><code>CoordinateValues$range()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="slice"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-slice'><code>CoordinateValues$slice()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -42,6 +45,49 @@ coordinate values are typically used for categorical data.
   }
   \subsection{Returns}{
     An instance of this class.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesInteger-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesInteger-subset}{}}}
+\subsection{\code{CoordinateValuesInteger$subset()}}{
+  Return a subset of the coordinate values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesInteger$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices whose values from these coordinate values
+to include in the result.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateValuesInteger} instance covering the indicated
+range of values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesInteger-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesInteger-clone}{}}}
+\subsection{\code{CoordinateValuesInteger$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesInteger$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

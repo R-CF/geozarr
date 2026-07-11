@@ -26,16 +26,20 @@ this array.}
     \item \href{#method-geozarr_array-initialize}{\code{geozarr_array$new()}}
     \item \href{#method-geozarr_array-post_open}{\code{geozarr_array$post_open()}}
     \item \href{#method-geozarr_array-build_coordsys}{\code{geozarr_array$build_coordsys()}}
+    \item \href{#method-geozarr_array-subset}{\code{geozarr_array$subset()}}
   }
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="absolute_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-absolute_path'><code>zarr::zarr_node$absolute_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="append_array_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-append_array_attribute'><code>zarr::zarr_node$append_array_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-attribute'><code>zarr::zarr_node$attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attribute'><code>zarr::zarr_node$delete_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="relative_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-relative_path'><code>zarr::zarr_node$relative_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="walk_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-walk_path'><code>zarr::zarr_node$walk_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy_nodes'><code>zarr::zarr_array$hierarchy_nodes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="read"><a href='../../zarr/html/zarr_array.html#method-zarr_array-read'><code>zarr::zarr_array$read()</code></a></span></li>
@@ -103,6 +107,99 @@ the \code{cs} convention.
   }
   \subsection{Returns}{
     Self, invisibly.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-subset}{}}}
+\subsection{\code{geozarr_array$subset()}}{
+  This method extracts a subset of values from the GeoZarr
+array, with the range along each axis to extract expressed in
+coordinate values of the domain of each axis.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$subset(
+  ...,
+  .name = NULL,
+  .location = NULL,
+  .rightmost.closed = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{One or more arguments of the form \code{axis = range}. The "axis"
+part should be the name of an axis or its abbreviation \code{X}, \code{Y}, \code{Z} or
+\code{T}. The "range" part is a vector of values representing coordinates
+along the axis where to extract data. Axis abbreviations and names are
+case-sensitive and can be specified in any order. If values for the
+range per axis fall outside of the extent of the axis, the range is
+clipped to the extent of the axis.}
+      \item{\code{.name}}{The name of the GeoZarr array to be created. If omitted, an
+array will be created at the root of a new in-memory Zarr store.}
+      \item{\code{.location}}{Optional. If supplied, either an existing \link[zarr:zarr_group]{zarr_group}
+in a \link[zarr:zarr]{zarr} object, or a character string giving the location on a
+local file system where to persist the data. If the argument is a
+\code{zarr_group}, argument \code{.name} must be provided. If the argument gives
+the location for a new Zarr store then the location must be writable by
+the calling code. As per the Zarr specification, it is recommended to
+use a location that ends in ".zarr" when providing a location for a new
+store. If argument \code{.name} is given then the \code{geozarr_array} will be
+created in the root of the \code{zarr} store with that name. If the \code{.name}
+argument is not given, a single-array Zarr store will be created. If
+the \code{location} argument is not given, a \code{zarr} object is created in
+memory.}
+      \item{\code{.rightmost.closed}}{Optional. Single logical value to indicate if
+the upper boundary of range in each axis should be included.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    The range of values along each axis to be subset is expressed in
+coordinates of the domain of the axis. Any axes for which no selection
+is made in the \code{...} argument are extracted in whole. Coordinates can
+be specified in a variety of ways that are specific to the nature of
+the axis. For numeric axes it should (resolve to) be a vector of real
+values from which the range is computed. For time axes a vector of
+character timestamps, \code{POSIXct} or \code{Date} values must be specified. As
+with numeric values, only the two extreme values in the vector will be
+used. For character axes the order in the axis will be used, with the
+first and last value in the supplied range.
+
+If the range of coordinate values for an axis in argument \code{...} extends
+the valid range of the axis, the extracted data will start at the
+beginning for smaller values and extend to the end for larger values.
+If the values envelope the valid range the entire axis will be
+extracted in the result. If the range of coordinate values for any axis
+are all either smaller or larger than the valid range of the axis then
+nothing is extracted and \code{NULL} is returned.
+
+The extracted data has the same dimensional structure as the data in
+the array, with degenerate dimensions preserved. The order of the axes
+in argument \code{...} does not reorder the axes in the result.
+
+Arguments following \code{...} must be explicitly named, like
+\code{.rightmost.closed = TRUE}, to avoid the argument being treated as an
+axis name.
+
+As an example, to extract values of a variable for Australia for the
+year 2020, where the first axis in GeoZarr array \code{x} is the longitude,
+the second axis is the latitude, both in degrees, and the third (and
+final) axis is time, the values are extracted by \code{x$subset(X = c(112, 154), Y = c(-9, -44), T = c("2020-01-01", "2021-01-01"))}. Note that
+this works equally well for projected coordinate reference systems -
+the key is that the specification in argument \code{...} uses the same
+domain of values as the respective axes in \code{x} use.
+  }
+  \subsection{Returns}{
+    If the \code{.location} argument is a \code{zarr_group}, the new Zarr
+\code{geozarr_array} is returned, with a subset of data from this GeoZarr
+array, having the axes and attributes of this GeoZarr array. Otherwise,
+the \code{zarr} object that is newly created and which contains the
+\code{geozarr_array} instance, or an error if the \code{zarr} object could not be
+created. If one or more of the selectors in the \code{...} argument fall
+entirely outside of the range of the axis \code{NULL} is returned.
   }
 }
 

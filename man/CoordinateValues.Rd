@@ -32,6 +32,8 @@ the values are unpacked.}
     \item \href{#method-CoordinateValues-initialize}{\code{CoordinateValues$new()}}
     \item \href{#method-CoordinateValues-print}{\code{CoordinateValues$print()}}
     \item \href{#method-CoordinateValues-range}{\code{CoordinateValues$range()}}
+    \item \href{#method-CoordinateValues-slice}{\code{CoordinateValues$slice()}}
+    \item \href{#method-CoordinateValues-clone}{\code{CoordinateValues$clone()}}
   }
 }
 \if{html}{\out{<hr>}}
@@ -92,6 +94,52 @@ Packed classes must override this method.
   }
   \subsection{Returns}{
     A vector of two extreme values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValues-slice"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValues-slice}{}}}
+\subsection{\code{CoordinateValues$slice()}}{
+  Given a range of coordinate values, returns the indices of
+the coordinate values that fall within the supplied range.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValues$slice(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{A numeric vector whose extreme values indicate the indices of
+coordinate values to return.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An integer vector of length 2 with the lower and higher indices
+that fall within the range of coordinate values in argument \code{rng}.
+Returns \code{NULL} if no coordinate values fall within the range of
+argument \code{rng}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValues-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValues-clone}{}}}
+\subsection{\code{CoordinateValues$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValues$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

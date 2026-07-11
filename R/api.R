@@ -119,104 +119,28 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 
     CoordinateSystemAxis$new(nm, abbr, coords)
   })
+  names(axes) <- vapply(axes, function(ax) ax$name, FUN.VALUE = character(1), USE.NAMES = FALSE)
+  cs <- CoordinateSystem$new('coordinate_system', axes)
+
   ax_abbr <- vapply(axes, function(ax) ax$abbreviation, FUN.VALUE = character(1), USE.NAMES = FALSE)
   if (anyDuplicated(ax_abbr) > 0L)
     stop('Duplicate axes detected', call. = FALSE)
-  names(axes) <- ax_abbr
-  xy <- sum(match(ax_abbr, c('X', 'Y'), nomatch = 0L) > 0L)
-  if (xy == 0L)
-    stop('Cannot convert to GeoZarr: No X and/or Y axes found.', call. = FALSE)
 
   # Make a generic zarr array
   z <- zarr::as_zarr(x, name, location)
   arr <- if (inherits(z, 'zarr')) z[[paste0('/', name)]] else z
 
-  # dimension_names
-  meta <- append(arr$metadata, list(dimension_names = vapply(axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)))
-
-  # Set GeoZarr convention attributes
-  atts <- meta$attributes %||% list()
-  if (xy == 2L && !('Z' %in% ax_abbr) && !('T' %in% ax_abbr) && length(ax_abbr) <= 3L &&
-      inherits(axes[['X']]$coordinates$values, 'CoordinateValuesNumericPacked') && # == numeric & regular
-      inherits(axes[['Y']]$coordinates$values, 'CoordinateValuesNumericPacked') &&
-      axes[['Y']]$coordinates$values$raw[2L] < 0) {                                # == Y values descending
-    # spatial convention
-    # X + Y, optionally a band, no others, and X + Y coordinates are numeric and regular
-    spatial <- zarr_conv_spatial$new()
-    atts <- spatial$register(atts)
-
-    dimensions <- c(axes[['Y']]$name, axes[['X']]$name)
-    spatial$dimensions <- dimensions
-    spatial$set_coordinates(shape = c(axes[['X']]$length, axes[['Y']]$length),
-                            x = axes[['X']]$coordinates$values$raw,
-                            y = axes[['Y']]$coordinates$values$raw,
-                            registration = registration)
-
-    atts <- c(list(cs = spatial$as_list()), atts)
-  } else {
-    # cs convention
-    # X, Y, any others
-    cs_conv <- zarr_convention_cs$new()
-    atts    <- cs_conv$register(atts)
-
-    # Direction lookup by axis abbreviation
-    cs_direction <- c(X = 'EAST', Y = 'NORTH', Z = 'UP', T = 'FUTURE', OTHER = 'OTHER')
-
-    axis_defs <- lapply(axes, function(ax) {
-      # Values
-      val_obj <- ax$coordinates$values_object
-      values <- val_obj$raw
-      values_def <- if (inherits(val_obj, c('CoordinateValuesIntegerPacked', 'CoordinateValuesNumericPacked')))
-        cs_conv$values_regular(values[1L], values[2L])
-      else if (is.null(name) || ax$length <= GeoZarr.options$max_explicit)
-        cs_conv$values_explicit(values)
-      else {
-        # External coordinate values: Write coordinate values to a sibling array
-        # in the same group as the main data array. The sibling name is
-        # `<axis_name>_coord`.
-        sibling_name <- paste0(ax$name, '_coord')
-        grp <- if (inherits(location, 'zarr_group')) location else z[['/']]
-        sibling <- zarr::as_zarr(x = values, name = sibling_name, location = grp)
-        sibling_metadata <- sibling$metadata
-        sibling_metadata$dimension_names <- sibling_name
-        sibling$metadata <- sibling_metadata
-        sibling$save()
-        grp$set_node(sibling)
-        cs_conv$values_external(paste0('../', sibling_name))
-      }
-
-      # Time
-      time_def <- if (inherits(ax$coordinates, 'CoordinatesTime'))
-        cs_conv$time(unit = 'days', epoch = '1970-01-01', calendar = 'proleptic_gregorian')
-      else
-        NULL
-
-      # Coordinates and axis
-      coords_def <- cs_conv$coordinates(values_def, unit = NULL, time = time_def)
-      abbr <- ax$abbreviation
-      direction  <- cs_direction[[abbr]]
-      if (abbr == 'OTHER') abbr <- ''
-      cs_conv$axis(list(coords_def), abbreviation = abbr, direction = direction)
-    })
-    names(axis_defs) <- vapply(axes, function(ax) ax$name, FUN.VALUE = character(1L), USE.NAMES = FALSE)
-
-    # Group axes into separate CRS objects by axis category
-    cs_conv$add_crs(axes = axis_defs[vapply(axes[ax_abbr %in% c('X', 'Y')], function(ax) ax$name, FUN.VALUE = character(1L))])
-    cs_conv$add_crs(axes = axis_defs[axes[['Z']]$name])
-    cs_conv$add_crs(axes = axis_defs[axes[['T']]$name])
-    cs_conv$add_crs(axes = axis_defs[axes[['OTHER']]$name])
-
-    atts <- c(list(cs = cs_conv$as_list()), atts)
-  }
-  meta$attributes <- atts
+  meta <- .geozarr_set_convention(arr$metadata, cs, '..', registration)
   arr$metadata <- meta
   arr$save()
 
+  # Write any external axis coordinate data
+  .write_external_coordinates(meta, cs, arr)
+
   # Prepare the output
   if (inherits(location, 'zarr_group')) {
-    gza <- geozarr_array$new(name, meta, location, location$store)
+    gza <- geozarr_array$new(name = name, metadata = meta, parent = location, store = location$store, coord_sys = cs)
     gza$write(x)
-    gza$build_coordsys()
     location$set_node(gza)
   } else if (is.character(location)) {
     zarr::open_zarr(location)
@@ -224,15 +148,14 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
     # Memory store: replace the zarr_array by a geozarr_array.
     if (is.null(name)) {
       # The root in z is the zarr_array
-      gza <- geozarr_array$new(name = '', metadata = meta, store = z$store)
+      gza <- geozarr_array$new(name = '', metadata = meta, store = z$store, coord_sys = cs)
       z$root <- gza
     } else {
       # Replace z[['/name']] (deeper nesting uses 'location' which is covered above)
-      gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, store = z$store)
+      gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, store = z$store, coord_sys = cs)
       z$root$set_node(gza)
     }
     gza$write(x)
-    gza$build_coordsys()
     z
   }
 }

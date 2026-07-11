@@ -69,8 +69,53 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
       unit <- private$.active_coordinates$getUnit()
       if (!nzchar(unit)) unit <- '-'
 
-      data.frame(abbr = private$.abbreviation, direction = private$.active_coordinates$getDirection(),
-                 length = private$.active_coordinates$length, values = vals, unit = unit)
+      data.frame(abbr = private$.abbreviation,
+                 direction = private$.active_coordinates$getDirection(),
+                 length = private$.active_coordinates$length,
+                 values = vals,
+                 unit = unit)
+    },
+
+    #' @description Return an exact copy of this axis.
+    #' @return A new instance of `CoordinateSystemAxis`.
+    copy = function() {
+      coordinates <- lapply(private$.coordinates, function(crd) crd$copy())
+      CoordinateSystemAxis$new(self$name, self$abbreviation, coordinates)
+    },
+
+    #' @description Return an axis spanning a smaller coordinate range. This
+    #'   method returns an axis which spans the range of indices given by the
+    #'   `rng` argument.
+    #' @param name The name for the new axis. If an empty string is passed
+    #'   (default), will use the name of this axis.
+    #' @param rng The range of indices whose values from this axis to include in
+    #'   the returned axis. If the value of the argument is `NULL`, return a
+    #'   copy of the axis.
+    #' @return A new `CoordinateSystemAxis` instance covering the indicated
+    #'   range of indices. If the value of the argument `rng` is `NULL`, return
+    #'   a copy of this axis as the new axis.
+    subset = function(name = '', rng = NULL) {
+      if (is.null(rng))
+        self$copy()
+      else {
+        if (!nzchar(name)) name <- self$name
+        coordinates <- lapply(private$.coordinates, function(crd) crd$subset(rng))
+        CoordinateSystemAxis$new(name, private$.abbreviation, coordinates)
+      }
+    },
+
+    #' @description Given a range of domain coordinate values, returns the
+    #'   indices into this axis that fall within the supplied range. If the axis
+    #'   has bounds, any coordinate whose boundary values fall entirely or
+    #'   partially within the supplied range will be included in the result.
+    #' @param rng A numeric vector whose extreme values indicate the indices of
+    #'   coordinates to return.
+    #' @return An integer vector of length 2 with the lower and higher indices
+    #'   into the axis that fall within the range of coordinates in argument
+    #'   `rng`. Returns `NULL` if no (boundary) values of the axis fall within
+    #'   the range of coordinates.
+    slice = function(rng) {
+      private$.active_coordinates$slice(rng)
     },
 
     #' @description Retrieve the abbreviation of the axis. This method is

@@ -82,7 +82,7 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @param direction Character string. Direction of the coordinates. Must be
     #'   one from a set of values.
     #' @param unit Character string. Unit of measure of the coordinates.
-    #' @param values An instance of a descendant class of CoordinateValues.
+    #' @param values An instance of a descendant class of [CoordinateValues].
     #' @param bounds Optional. If the boundaries are regularly spaced, a vector
     #'   with the offset to the boundary lower and higher than the coordinate
     #'   value, respectively. If the boundaries are irregularly spaced, a matrix
@@ -138,6 +138,43 @@ Coordinates <- R6::R6Class('Coordinates',
 
       data.frame(name = private$.name, direction = private$.direction, values = vals,
                  unit = if (is.na(private$.unit) || !nzchar(private$.unit)) '-' else private$.unit)
+    },
+
+    #' @description Return an exact copy of these coordinates.
+    #' @return A new instance of `Coordinates`.
+    copy = function() {
+      bounds <- private$.bounds
+      if (!is.null(bounds))
+        bounds <- bounds$copy()
+      Coordinates$new(private$.name, private$.direction, private$.unit, private$.values$clone(), bounds)
+    },
+
+    #' @description Return coordinates spanning a smaller coordinate range.
+    #' @param rng The range of indices to include in the returned coordinates.
+    #' @return A new `Coordinates` instance covering the indicated range of
+    #'   indices, including boundary values, present.
+    subset = function(rng) {
+        values <- private$.values$subset(rng)
+        bounds <- if (is.null(private$.bounds)) NULL
+                  else private$.bounds$subset(rng)
+        Coordinates$new(self$name, private$.direction, private$.unit, values, bounds)
+    },
+
+    #' @description Given a range of domain coordinate values, returns the
+    #'   indices into the axis that fall within the supplied range. If the axis
+    #'   has boundary values, any coordinate whose boundary values fall entirely
+    #'   or partially within the supplied range will be included in the result.
+    #' @param rng A numeric vector whose extreme values indicate the indices of
+    #'   coordinates to return.
+    #' @return An integer vector of length 2 with the lower and higher indices
+    #'   into the axis that fall within the range of coordinates in argument
+    #'   `rng`. Returns `NULL` if no (boundary) values of the axis fall within
+    #'   the range of coordinates.
+    slice = function(rng) {
+      if (is.null(private$.bounds))
+        private$.values$slice(rng)
+      else
+        private$.bounds$slice(rng)
     },
 
     #' @description Retrieve the direction of the coordinates. This method is
@@ -216,9 +253,20 @@ Coordinates <- R6::R6Class('Coordinates',
     length = function(value) {
       if (missing(value))
         private$.values$length
+    },
+
+    #' @field unit Character string giving the unit-of-measure of the coordinate
+    #'   values.
+    unit = function(value) {
+      if (missing(value))
+        private$.unit
+      else if (is.character(value) && length(value) == 1L)
+        private$.unit <- value
     }
   )
 )
+
+# =============== Helper functions =============================================
 
 #' Create a CoordinateValues object from the arguments. This will look at the
 #' `storage.mode` of the values to determine its type. For numeric and integer

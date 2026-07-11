@@ -32,6 +32,9 @@ thus not with the axis.
     \item \href{#method-CoordinateSystemAxis-initialize}{\code{CoordinateSystemAxis$new()}}
     \item \href{#method-CoordinateSystemAxis-print}{\code{CoordinateSystemAxis$print()}}
     \item \href{#method-CoordinateSystemAxis-brief}{\code{CoordinateSystemAxis$brief()}}
+    \item \href{#method-CoordinateSystemAxis-copy}{\code{CoordinateSystemAxis$copy()}}
+    \item \href{#method-CoordinateSystemAxis-subset}{\code{CoordinateSystemAxis$subset()}}
+    \item \href{#method-CoordinateSystemAxis-slice}{\code{CoordinateSystemAxis$slice()}}
     \item \href{#method-CoordinateSystemAxis-getAbbreviation}{\code{CoordinateSystemAxis$getAbbreviation()}}
     \item \href{#method-CoordinateSystemAxis-getDirection}{\code{CoordinateSystemAxis$getDirection()}}
     \item \href{#method-CoordinateSystemAxis-getUnit}{\code{CoordinateSystemAxis$getUnit()}}
@@ -113,6 +116,80 @@ console.
   }
   \subsection{Returns}{
     A 1-row \code{data.frame} with some details of the axis.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateSystemAxis-copy"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-copy}{}}}
+\subsection{\code{CoordinateSystemAxis$copy()}}{
+  Return an exact copy of this axis.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateSystemAxis$copy()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new instance of \code{CoordinateSystemAxis}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateSystemAxis-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-subset}{}}}
+\subsection{\code{CoordinateSystemAxis$subset()}}{
+  Return an axis spanning a smaller coordinate range. This
+method returns an axis which spans the range of indices given by the
+\code{rng} argument.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateSystemAxis$subset(name = "", rng = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{The name for the new axis. If an empty string is passed
+(default), will use the name of this axis.}
+      \item{\code{rng}}{The range of indices whose values from this axis to include in
+the returned axis. If the value of the argument is \code{NULL}, return a
+copy of the axis.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateSystemAxis} instance covering the indicated
+range of indices. If the value of the argument \code{rng} is \code{NULL}, return
+a copy of this axis as the new axis.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateSystemAxis-slice"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-slice}{}}}
+\subsection{\code{CoordinateSystemAxis$slice()}}{
+  Given a range of domain coordinate values, returns the
+indices into this axis that fall within the supplied range. If the axis
+has bounds, any coordinate whose boundary values fall entirely or
+partially within the supplied range will be included in the result.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateSystemAxis$slice(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{A numeric vector whose extreme values indicate the indices of
+coordinates to return.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An integer vector of length 2 with the lower and higher indices
+into the axis that fall within the range of coordinates in argument
+\code{rng}. Returns \code{NULL} if no (boundary) values of the axis fall within
+the range of coordinates.
   }
 }
 

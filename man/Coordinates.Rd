@@ -42,6 +42,9 @@ coordinate values.}
 
     \item{\code{length}}{(read-only) The number of elements in this instance once
 the values are unpacked.}
+
+    \item{\code{unit}}{Character string giving the unit-of-measure of the coordinate
+values.}
   }
   \if{html}{\out{</div>}}
 }
@@ -51,6 +54,9 @@ the values are unpacked.}
     \item \href{#method-Coordinates-initialize}{\code{Coordinates$new()}}
     \item \href{#method-Coordinates-print}{\code{Coordinates$print()}}
     \item \href{#method-Coordinates-brief}{\code{Coordinates$brief()}}
+    \item \href{#method-Coordinates-copy}{\code{Coordinates$copy()}}
+    \item \href{#method-Coordinates-subset}{\code{Coordinates$subset()}}
+    \item \href{#method-Coordinates-slice}{\code{Coordinates$slice()}}
     \item \href{#method-Coordinates-getDirection}{\code{Coordinates$getDirection()}}
     \item \href{#method-Coordinates-getUnit}{\code{Coordinates$getUnit()}}
     \item \href{#method-Coordinates-getMinimumValue}{\code{Coordinates$getMinimumValue()}}
@@ -76,7 +82,7 @@ system axis.
       \item{\code{direction}}{Character string. Direction of the coordinates. Must be
 one from a set of values.}
       \item{\code{unit}}{Character string. Unit of measure of the coordinates.}
-      \item{\code{values}}{An instance of a descendant class of CoordinateValues.}
+      \item{\code{values}}{An instance of a descendant class of \link{CoordinateValues}.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
 value, respectively. If the boundaries are irregularly spaced, a matrix
@@ -128,6 +134,73 @@ coordinate values are assumed to represent a point value.}
   }
   \subsection{Returns}{
     A 1-row \code{data.frame} with some details of the axis.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Coordinates-copy"></a>}}
+\if{latex}{\out{\hypertarget{method-Coordinates-copy}{}}}
+\subsection{\code{Coordinates$copy()}}{
+  Return an exact copy of these coordinates.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Coordinates$copy()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new instance of \code{Coordinates}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Coordinates-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-Coordinates-subset}{}}}
+\subsection{\code{Coordinates$subset()}}{
+  Return coordinates spanning a smaller coordinate range.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Coordinates$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices to include in the returned coordinates.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{Coordinates} instance covering the indicated range of
+indices, including boundary values, present.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Coordinates-slice"></a>}}
+\if{latex}{\out{\hypertarget{method-Coordinates-slice}{}}}
+\subsection{\code{Coordinates$slice()}}{
+  Given a range of domain coordinate values, returns the
+indices into the axis that fall within the supplied range. If the axis
+has boundary values, any coordinate whose boundary values fall entirely
+or partially within the supplied range will be included in the result.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Coordinates$slice(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{A numeric vector whose extreme values indicate the indices of
+coordinates to return.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An integer vector of length 2 with the lower and higher indices
+into the axis that fall within the range of coordinates in argument
+\code{rng}. Returns \code{NULL} if no (boundary) values of the axis fall within
+the range of coordinates.
   }
 }
 

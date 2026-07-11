@@ -16,6 +16,9 @@ data.
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CoordinateValuesString-initialize}{\code{CoordinateValuesString$new()}}
+    \item \href{#method-CoordinateValuesString-subset}{\code{CoordinateValuesString$subset()}}
+    \item \href{#method-CoordinateValuesString-slice}{\code{CoordinateValuesString$slice()}}
+    \item \href{#method-CoordinateValuesString-clone}{\code{CoordinateValuesString$clone()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
@@ -43,6 +46,76 @@ data.
   }
   \subsection{Returns}{
     An instance of this class.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesString-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesString-subset}{}}}
+\subsection{\code{CoordinateValuesString$subset()}}{
+  Return a subset of the coordinate values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesString$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices whose values from these coordinate values
+to include in the result.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateValuesString} instance covering the indicated
+range of values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesString-slice"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesString-slice}{}}}
+\subsection{\code{CoordinateValuesString$slice()}}{
+  Given a range of coordinate values, returns the indices that
+fall within the supplied range.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesString$slice(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{A character vector whose extreme (alphabetic) values indicate
+the indices of coordinate values to return.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    An integer vector of length 2 with the lower and higher indices
+that fall within the range of coordinate values in argument \code{rng}.
+Returns \code{NULL} if no values of the axis fall within the range of
+coordinates.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesString-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesString-clone}{}}}
+\subsection{\code{CoordinateValuesString$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesString$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

@@ -7,6 +7,8 @@
 \description{
 This class implements ordinal values. Ordinal values are
 typically assigned to axes that have no other coordinates assigned to them.
+By default, ordinal values start at 0 (as per the Zarr specification) but
+after subsetting or other forms of selection the value may be different.
 }
 \section{Super class}{
 \code{\link[geozarr:CoordinateValues]{CoordinateValues}} -> \code{CoordinateValuesOrdinal}
@@ -24,12 +26,15 @@ typically assigned to axes that have no other coordinates assigned to them.
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CoordinateValuesOrdinal-initialize}{\code{CoordinateValuesOrdinal$new()}}
+    \item \href{#method-CoordinateValuesOrdinal-subset}{\code{CoordinateValuesOrdinal$subset()}}
     \item \href{#method-CoordinateValuesOrdinal-range}{\code{CoordinateValuesOrdinal$range()}}
+    \item \href{#method-CoordinateValuesOrdinal-clone}{\code{CoordinateValuesOrdinal$clone()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="print"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-print'><code>CoordinateValues$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="slice"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-slice'><code>CoordinateValues$slice()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -39,7 +44,7 @@ typically assigned to axes that have no other coordinates assigned to them.
   Create an instance of this class.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateValuesOrdinal$new(length)}
+    \preformatted{CoordinateValuesOrdinal$new(length, low = 0L)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -47,11 +52,37 @@ typically assigned to axes that have no other coordinates assigned to them.
     \describe{
       \item{\code{length}}{Integer value giving the number of elements in this
 instance.}
+      \item{\code{low}}{Optional. Integer value giving the lowest index value in this
+instance. When omitted, defaults to 0L.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
     An instance of this class.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesOrdinal-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesOrdinal-subset}{}}}
+\subsection{\code{CoordinateValuesOrdinal$subset()}}{
+  Return a subset of the coordinate values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesOrdinal$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices whose values from these coordinate values
+to include in the result.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateValuesOrdinal} instance covering the indicated
+range of values.
   }
 }
 
@@ -67,6 +98,25 @@ instance.}
   }
   \subsection{Returns}{
     A vector of two extreme values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesOrdinal-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesOrdinal-clone}{}}}
+\subsection{\code{CoordinateValuesOrdinal$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesOrdinal$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

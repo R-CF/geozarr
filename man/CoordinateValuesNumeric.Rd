@@ -16,12 +16,15 @@ physical property, such as longitude or depth.
 \subsection{Public methods}{
   \itemize{
     \item \href{#method-CoordinateValuesNumeric-initialize}{\code{CoordinateValuesNumeric$new()}}
+    \item \href{#method-CoordinateValuesNumeric-subset}{\code{CoordinateValuesNumeric$subset()}}
+    \item \href{#method-CoordinateValuesNumeric-clone}{\code{CoordinateValuesNumeric$clone()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="print"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-print'><code>CoordinateValues$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="range"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-range'><code>CoordinateValues$range()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="slice"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-slice'><code>CoordinateValues$slice()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -43,6 +46,49 @@ physical property, such as longitude or depth.
   }
   \subsection{Returns}{
     An instance of this class.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesNumeric-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesNumeric-subset}{}}}
+\subsection{\code{CoordinateValuesNumeric$subset()}}{
+  Return a subset of the coordinate values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesNumeric$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices whose values from these coordinate values
+to include in the result.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateValuesNumeric} instance covering the indicated
+range of values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesNumeric-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesNumeric-clone}{}}}
+\subsection{\code{CoordinateValuesNumeric$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesNumeric$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

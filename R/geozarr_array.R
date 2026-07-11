@@ -344,6 +344,30 @@ geozarr_array <- R6::R6Class('geozarr_array',
       }
 
       CoordinateSystem$new(name = 'local_CS', axes = axes)
+    },
+
+    # Check that names passed as arguments to $subset() are valid. This means
+    # that they must refer to an axis by name or abbreviation and there can be
+    # no duplication. It returns an integer vector with the order in which the
+    # axes are specified. This function assumes that the coordinate system is
+    # set and having axes.
+    check_selection_names = function(selection, axis_names) {
+      is_axis <- match(selection, axis_names)
+      if (anyDuplicated(is_axis, incomparables = NA))
+        stop("Duplicated axis names not allowed", call. = FALSE)
+      if (!any(is.na(is_axis)))
+        return(is_axis)
+
+      abbr <- vapply(private$.cs$axes, function(a) a$abbreviation, character(1L))
+      is_orient <- match(selection, abbr)
+      if (anyDuplicated(is_orient, incomparables = NA))
+        stop("Duplicated axis abbreviations not allowed", call. = FALSE)
+      if (!any(is.na(is_orient)))
+        return(is_orient)
+
+      ax_na <- which(is.na(is_axis))
+      is_axis[ax_na] <- is_orient[ax_na]
+      is_axis
     }
   ),
   public = list(
@@ -394,6 +418,150 @@ geozarr_array <- R6::R6Class('geozarr_array',
             private$build_cs(metadata)
         }
       }
+    },
+
+    #' @description This method extracts a subset of values from the GeoZarr
+    #'   array, with the range along each axis to extract expressed in
+    #'   coordinate values of the domain of each axis.
+    #' @details The range of values along each axis to be subset is expressed in
+    #'   coordinates of the domain of the axis. Any axes for which no selection
+    #'   is made in the `...` argument are extracted in whole. Coordinates can
+    #'   be specified in a variety of ways that are specific to the nature of
+    #'   the axis. For numeric axes it should (resolve to) be a vector of real
+    #'   values from which the range is computed. For time axes a vector of
+    #'   character timestamps, `POSIXct` or `Date` values must be specified. As
+    #'   with numeric values, only the two extreme values in the vector will be
+    #'   used. For character axes the order in the axis will be used, with the
+    #'   first and last value in the supplied range.
+    #'
+    #'   If the range of coordinate values for an axis in argument `...` extends
+    #'   the valid range of the axis, the extracted data will start at the
+    #'   beginning for smaller values and extend to the end for larger values.
+    #'   If the values envelope the valid range the entire axis will be
+    #'   extracted in the result. If the range of coordinate values for any axis
+    #'   are all either smaller or larger than the valid range of the axis then
+    #'   nothing is extracted and `NULL` is returned.
+    #'
+    #'   The extracted data has the same dimensional structure as the data in
+    #'   the array, with degenerate dimensions preserved. The order of the axes
+    #'   in argument `...` does not reorder the axes in the result.
+    #'
+    #'   Arguments following `...` must be explicitly named, like
+    #'   `.rightmost.closed = TRUE`, to avoid the argument being treated as an
+    #'   axis name.
+    #'
+    #'   As an example, to extract values of a variable for Australia for the
+    #'   year 2020, where the first axis in GeoZarr array `x` is the longitude,
+    #'   the second axis is the latitude, both in degrees, and the third (and
+    #'   final) axis is time, the values are extracted by `x$subset(X = c(112,
+    #'   154), Y = c(-9, -44), T = c("2020-01-01", "2021-01-01"))`. Note that
+    #'   this works equally well for projected coordinate reference systems -
+    #'   the key is that the specification in argument `...` uses the same
+    #'   domain of values as the respective axes in `x` use.
+    #' @param ... One or more arguments of the form `axis = range`. The "axis"
+    #'   part should be the name of an axis or its abbreviation `X`, `Y`, `Z` or
+    #'   `T`. The "range" part is a vector of values representing coordinates
+    #'   along the axis where to extract data. Axis abbreviations and names are
+    #'   case-sensitive and can be specified in any order. If values for the
+    #'   range per axis fall outside of the extent of the axis, the range is
+    #'   clipped to the extent of the axis.
+    #' @param .rightmost.closed Optional. Single logical value to indicate if
+    #'   the upper boundary of range in each axis should be included.
+    #' @param .name The name of the GeoZarr array to be created. If omitted, an
+    #'   array will be created at the root of a new in-memory Zarr store.
+    #' @param .location Optional. If supplied, either an existing [zarr_group]
+    #'   in a [zarr] object, or a character string giving the location on a
+    #'   local file system where to persist the data. If the argument is a
+    #'   `zarr_group`, argument `.name` must be provided. If the argument gives
+    #'   the location for a new Zarr store then the location must be writable by
+    #'   the calling code. As per the Zarr specification, it is recommended to
+    #'   use a location that ends in ".zarr" when providing a location for a new
+    #'   store. If argument `.name` is given then the `geozarr_array` will be
+    #'   created in the root of the `zarr` store with that name. If the `.name`
+    #'   argument is not given, a single-array Zarr store will be created. If
+    #'   the `location` argument is not given, a `zarr` object is created in
+    #'   memory.
+    #' @return If the `.location` argument is a `zarr_group`, the new Zarr
+    #'   `geozarr_array` is returned, with a subset of data from this GeoZarr
+    #'   array, having the axes and attributes of this GeoZarr array. Otherwise,
+    #'   the `zarr` object that is newly created and which contains the
+    #'   `geozarr_array` instance, or an error if the `zarr` object could not be
+    #'   created. If one or more of the selectors in the `...` argument fall
+    #'   entirely outside of the range of the axis `NULL` is returned.
+    subset = function(..., .name = NULL, .location = NULL, .rightmost.closed = FALSE) {
+      if (is.null(private$.cs))
+        stop('Cannot subset a GeoZarr array without a coordinate system set', call. = FALSE)
+      if (!missing(.name) && !zarr::is_valid_node_name(.name))
+        stop('Invalid name for a Zarr array: ', .name, call. = FALSE)
+
+      axes <- private$.cs$axes
+      num_axes <- length(axes)
+      if (!num_axes)
+        stop('Cannot subset a scalar variable', call. = FALSE)
+
+      # Organize the selectors
+      selectors <- list(...)
+      if (is.list(selectors[[1L]]))
+        selectors <- selectors[[1L]]
+      sel_names <- names(selectors)
+      axis_order <- private$check_selection_names(sel_names, names(axes))
+
+      # Subset the axes and make a new CoordinateSystem
+      out_axes <- vector('list', num_axes)
+      selection <- vector('list', num_axes)
+      for (ax in seq(num_axes)) {
+        axis <- axes[[ax]]
+
+        # Set start and count values and create a corresponding axis
+        rng <- selectors[[ axis$name ]] %||% selectors[[ axis$abbreviation ]]
+        if (is.null(rng)) { # Axis not specified so take the whole axis
+          idx <- c(1L, axis$length)
+          out_axis <- axis$copy()
+        } else { # Subset the axis
+          idx <- axis$slice(rng)
+          if (is.null(idx)) return(NULL)
+          out_axis <- axis$subset(rng = idx)
+        }
+        out_axes[[ax]] <- out_axis
+        selection[[ax]] <- idx
+      }
+      names(out_axes) <- vapply(out_axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)
+
+      cs <- CoordinateSystem$new(self$coordinate_system$name, out_axes)
+
+      # Get the metadata of self and adjust the shape
+      ab <- array_builder$new(self$metadata)
+      ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)
+      new_meta <- .geozarr_set_convention(ab$metadata(), cs, '..')
+      new_meta$chunk_key_encoding <- self$metadata$chunk_key_encoding
+
+      # Create the new GeoZarr array
+      if (inherits(.location, 'zarr_group')) {
+        # New gza at the location in the implicit zarr object: return the gza
+        gza <- geozarr_array$new(name = .name, metadata = new_meta, parent = .location, store = .location$store, coord_sys = cs)
+        gza$write(self$read(selection))
+        .location$set_node(gza)
+      } else {
+        # Create the store and add the array to make the store valid
+        store <- if (missing(.location) || is.null(.location) || !nzchar(.location))
+          zarr::zarr_memorystore$new()
+        else
+          zarr::zarr_localstore$new(root = .location)
+
+        if (missing(.name) || is.null(.name) || !nzchar(.name)) {
+          .name <- ''
+          store$create_array(name = '', metadata = new_meta)
+        } else {
+          store$create_group(name = '')
+          store$create_array(parent = '/', name = .name, metadata = new_meta)
+        }
+
+        # Create the Zarr object and get a handle on the newly created array
+        z <- zarr$new(store)
+        gza <- z[[paste0('/', .name)]]
+        gza$write(self$read(selection))
+        z
+      }
     }
   ),
   active = list(
@@ -406,3 +574,37 @@ geozarr_array <- R6::R6Class('geozarr_array',
   )
 )
 
+# ================= Helper functions ===========================================
+
+# This function writes the external coordinate arrays to the Zarr store. The
+# meta argument is scanned for ref objects in the `cs` convention attributes.
+# The values are taken from the coord_sys argument, a CoordinateSystem instance.
+# The relative path is computed against the path of argument arr, a zarr_array
+# instance.
+.write_external_coordinates <- function(meta, coord_sys, arr) {
+  crs <- meta$attributes$cs$crs
+  if (!is.null(crs)) {
+    for (c in seq_along(crs))
+      for (ax in seq_along(crs[[c]]$axes)) {
+        axis_name <- names(crs[[c]]$axes)[ax]
+        axis <- crs[[c]]$axes[[ax]]
+        ext <- axis$coordinates[[1L]]$values$external
+        if (!is.null(ext)) {
+          if (is.null(arr$parent))
+            stop('Single-array Zarr store cannot have external coordinate arrays', call. = FALSE)
+          path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
+          path_parts <- path_parts[-(length(path_parts))] # Strip the array name
+          grp <- arr$walk_path(path_parts)
+          sibling_name <- paste0(axis_name, '_coord')
+          crds <- coord_sys$axes[[axis_name]]$coordinates
+          values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
+          sibling <- zarr::as_zarr(x = values, name = sibling_name, location = grp)
+          sibling_metadata <- sibling$metadata
+          sibling_metadata$dimension_names <- sibling_name
+          sibling$metadata <- sibling_metadata
+          sibling$save()
+          grp$set_node(sibling)
+        }
+      }
+  }
+}

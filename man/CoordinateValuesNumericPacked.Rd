@@ -17,11 +17,14 @@ physical property, such as longitude or depth.
   \itemize{
     \item \href{#method-CoordinateValuesNumericPacked-initialize}{\code{CoordinateValuesNumericPacked$new()}}
     \item \href{#method-CoordinateValuesNumericPacked-range}{\code{CoordinateValuesNumericPacked$range()}}
+    \item \href{#method-CoordinateValuesNumericPacked-subset}{\code{CoordinateValuesNumericPacked$subset()}}
+    \item \href{#method-CoordinateValuesNumericPacked-clone}{\code{CoordinateValuesNumericPacked$clone()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="print"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-print'><code>CoordinateValues$print()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="geozarr" data-topic="CoordinateValues" data-id="slice"><a href='../../geozarr/html/CoordinateValues.html#method-CoordinateValues-slice'><code>CoordinateValues$slice()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -63,6 +66,49 @@ unpacked data.}
   }
   \subsection{Returns}{
     A vector of two extreme values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesNumericPacked-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesNumericPacked-subset}{}}}
+\subsection{\code{CoordinateValuesNumericPacked$subset()}}{
+  Return a subset of the coordinate values.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesNumericPacked$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices whose values from these coordinate values
+to include in the result, relative to the unpacked values.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinateValuesNumericPacked} instance covering the
+indicated range of values.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateValuesNumericPacked-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateValuesNumericPacked-clone}{}}}
+\subsection{\code{CoordinateValuesNumericPacked$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateValuesNumericPacked$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
   }
 }
 

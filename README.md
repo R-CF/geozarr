@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial
@@ -86,10 +87,10 @@ z[["/spatial_data"]]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
-#>  abbr direction length values             unit
-#>  X    EAST       5     [1e+05 ... 140000] -   
-#>  Y    NORTH     20     [95000 ... 0]      -   
-#>       OTHER      4     [0 ... 3]          -
+#>  abbr  direction length values             unit
+#>  X     OTHER      5     [1e+05 ... 140000] -   
+#>  Y     OTHER     20     [95000 ... 0]      -   
+#>  OTHER OTHER      4     [a ... d]          -
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
@@ -109,8 +110,8 @@ z[["/cs_data"]]
 #> 
 #> Coordinate system:
 #>  abbr direction length values                      unit
-#>  X    EAST       5     [1e+05 ... 140000]          -   
-#>  Y    NORTH     20     [0 ... 95000]               -   
+#>  X    OTHER      5     [1e+05 ... 140000]          -   
+#>  Y    OTHER     20     [0 ... 95000]               -   
 #>  T    FUTURE     4     [2026-06-01 ... 2026-06-04] days
 z$hierarchy()
 #> <Zarr hierarchy> 
@@ -132,13 +133,14 @@ z[["/cs_data_irregular_time"]]
 #> 
 #> Coordinate system:
 #>  abbr direction length values                      unit
-#>  X    EAST       5     [1e+05 ... 140000]          -   
-#>  Y    NORTH     20     [0 ... 95000]               -   
+#>  X    OTHER      5     [1e+05 ... 140000]          -   
+#>  Y    OTHER     20     [0 ... 95000]               -   
 #>  T    FUTURE     4     [2026-01-01 ... 2026-04-01] days
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
-#> └ ⌖ cs_data_irregular_time
+#> ├ ⌖ cs_data_irregular_time
+#> └ ⌗ time_coord
 geozarr_options("max_explicit", old_explicit)
 ```
 

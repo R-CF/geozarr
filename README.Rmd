@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 # geozarr
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial data on top of the Zarr specification. It builds on the `zarr` package, a native R implementation of the Zarr specification that can read and write Zarr v.3 stores in memory, on the local file system and over HTTP.

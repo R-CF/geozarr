@@ -50,7 +50,6 @@ geozarr_array <- R6::R6Class('geozarr_array',
         }
       } else {
         # External store: Load the store and grab the node indicated
-        # FIXME
         stop('Not yet supported', call. = FALSE)
       }
 
@@ -58,7 +57,6 @@ geozarr_array <- R6::R6Class('geozarr_array',
         referred_node
       else {
         # Get the requested attribute from referred_node
-        # FIXME
         stop('Not yet supported', call. = FALSE)
       }
     },
@@ -146,13 +144,21 @@ geozarr_array <- R6::R6Class('geozarr_array',
         NULL
 
       time <- coord_def$time
-      if (is.null(time))
-        Coordinates$new(name = crd_name, direction = direction,
-                        unit = coord_def$unit %||% '', values = cv, bounds = bounds)
-      else
+      if (is.null(time)) {
+        if (!is.null(cv$length))
+          CoordinatesPacked$new(name = crd_name, direction = direction,
+                                unit = coord_def$unit %||% '', values = cv$values, length = cv$length, bounds = bounds)
+        else
+          Coordinates$new(name = crd_name, direction = direction,
+                          unit = coord_def$unit %||% '', values = cv$values, bounds = bounds)
+      } else {
+        values <- cv$values
+        if (!is.null(cv$length))
+          values <- seq(from = values[1L], by = values[2L], length.out = cv$length)
         CoordinatesTime$new(name = crd_name, direction = direction, unit = time$unit,
                             epoch = time$epoch, calendar = time$calendar,
-                            values = cv, bounds = bounds)
+                            values = values, bounds = bounds)
+      }
     },
 
     # Resolve a `values` object into an instance inheriting from CoordinateValues
@@ -164,7 +170,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         rv <- unlist(values_def$regular)
         if (length(rv) != 2L)
           stop('Axis "', dim_name, '": "values.regular" must have exactly 2 elements', call. = FALSE)
-        return(CoordinateValuesNumericPacked$new(values = rv, length = dim_length))
+        return(list(mode = storage.mode(rv), values = rv, length = dim_length))
       }
 
       if (!is.null(values_def$explicit)) {
@@ -268,19 +274,17 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # Build the coordinate system
       # X and Y coordinates are always numeric and always present
-      elem <- meta$shape[dim_order[2L]]
-      values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[3L], transform[1L]))
-      coords <- Coordinates$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'EAST',
-                                unit = '', values = values,
-                                bounds = if (registration == 'pixel') c(transform[1L], 0) else NULL)
+      coords <- CoordinatesPacked$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'EAST',
+                                      unit = '', values = c(transform[3L], transform[1L]),
+                                      length = meta$shape[dim_order[2L]],
+                                      bounds = if (registration == 'pixel') c(transform[1L], 0) else NULL)
       X_axis <- CoordinateSystemAxis$new(name = dimensions[2L], abbreviation = 'X',
                                          coordinates = list(X_coordinates = coords))
 
-      elem <- meta$shape[dim_order[1L]]
-      values <- CoordinateValuesNumericPacked$new(length = elem, values = c(transform[6L], transform[5L]))
-      coords <- Coordinates$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'NORTH',
-                                unit = '', values = values,
-                                bounds = if (registration == 'pixel') c(transform[5L], 0) else NULL)
+      coords <- CoordinatesPacked$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'NORTH',
+                                      unit = '', values = c(transform[6L], transform[5L]),
+                                      length = meta$shape[dim_order[1L]],
+                                      bounds = if (registration == 'pixel') c(transform[5L], 0) else NULL)
       Y_axis <- CoordinateSystemAxis$new(name = dimensions[1L], abbreviation = 'Y',
                                          coordinates = list(Y_coordinates = coords))
 
@@ -290,9 +294,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
       other_axes <- if (length(others)) {
         lapply(others, function(ndx) {
           name <- dimension_names[ndx]
-          values <- CoordinateValuesOrdinal$new(private$.metadata$shape[ndx])
-          coords <- Coordinates$new(name = paste0(name, '_coordinates'), direction = 'OTHER', unit = '',
-                                    values = values, bounds = NULL)
+          coords <- CoordinatesOrdinal$new(name = paste0(name, '_coordinates'), direction = 'OTHER',
+                                           length = private$.metadata$shape[ndx])
           axis <- CoordinateSystemAxis$new(name = name, abbreviation = '',
                                            coordinates = setNames(list(coords), paste0(name, '_coordinates')))
         })

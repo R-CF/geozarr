@@ -6,25 +6,16 @@
 \title{Coordinates}
 \description{
 This class implements the coordinates class. The coordinates are
-always associated with a coordinate system axis. This class is not part of
-the OGC standard but rather an extension to allow an axis to have multiple
-sets of coordinates.
+always associated with a coordinate system axis.
 
-By default the class has numeric coordinate values. For integer values
-(e.g. for an ordinal axis), string values, or values that require special
-handling (e.g. time coordinates) descendant classes should be used.
+This class provides the basic interface for coordinate values and it
+manages numeric coordinate values, both integer and floating-point.
+Descendant classes manage packed numerical values, character values and
+time values.
 
-Coordinate values are represented as a sequence of two values whenever
-possible: the coordinate value of the first element and the constant
-spacing between successive values. If the separation between values is not
-constant, a full vector with coordinate values is stored.
-
-A similar arrangement is used for the boundary values that define the
-finite extent of each element in the coordinates. When regular, the bounds
-indicate the amount below and above the coordinate value, respectively,
-that define the extent of each element. Otherwise, it is a matrix with
-explicit boundary values below (row 1) and above (row 2) each coordinate
-value (in the columns).
+The optional boundary values for numeric coordinate values that define the
+finite extent of each element in the coordinates are also managed by this
+class.
 }
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
@@ -33,10 +24,14 @@ value (in the columns).
 
     \item{\code{direction}}{Set or retrieve the direction of the coordinates.}
 
-    \item{\code{values_object}}{(read-only) Retrieve the object that manages the
-coordinate values.}
+    \item{\code{values}}{(read-only) Retrieve the coordinate values as a full vector
+of values.}
 
-    \item{\code{values}}{(read-only) Retrieve the coordinate values.}
+    \item{\code{raw}}{(read-only) Retrieve the coordinate values as stored, either a
+full vector or packed.}
+
+    \item{\code{bounds}}{(read-only) Retrieve the boundary values around
+coordinates.}
 
     \item{\code{range}}{(read-only) Retrieve the extreme values of the coordinates.}
 
@@ -72,7 +67,7 @@ values.}
 system axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$new(name, direction, unit, values, bounds)}
+    \preformatted{Coordinates$new(name, direction, unit, values, bounds = NULL)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -82,7 +77,9 @@ system axis.
       \item{\code{direction}}{Character string. Direction of the coordinates. Must be
 one from a set of values.}
       \item{\code{unit}}{Character string. Unit of measure of the coordinates.}
-      \item{\code{values}}{An instance of a descendant class of \link{CoordinateValues}.}
+      \item{\code{values}}{A vector of values. If argument \code{values_packed} is \code{TRUE}
+then there are two values: the initial coordinate value and the
+increment. Otherwise this is a vector of values.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
 value, respectively. If the boundaries are irregularly spaced, a matrix

@@ -77,46 +77,37 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 
     # Values -> coordinates -> axis
     v <- suppressWarnings(as.numeric(coordinates[[nm]]))
-    len <- length(v)
-    if (any(is.na(v))) {
-      if (!requireNamespace('CFtime', quietly = TRUE))
-        stop('You must install package `CFtime` for this functionality.', call. = FALSE)
-      t <- try(CFtime::CFtime('days since 1970-01-01', 'proleptic_gregorian', coordinates[[nm]]), silent = TRUE)
-      if (inherits(t, 'try-error')) {
-        # String axis
-        cv <- CoordinateValuesString$new(coordinates[[nm]])
-        coords <- Coordinates$new(name = paste0(nm, '_coordinates'),
-                                  direction = 'OTHER', unit = '-', values = cv)
-      } else {
-        # Time axis
-        v <- t$offsets
-        if (length(v) > 1L) {
-          delta <- diff(v)
-          cv <- if (length(v) == 2L || all(abs(diff(delta)) < 0.00001))
-            CoordinateValuesNumericPacked$new(c(v[1L], delta[1L]), length(v))
-          else
-            CoordinateValuesNumeric$new(v)
-          coords <- CoordinatesTime$new(name = paste0(nm, '_coordinates'),
-                                        direction = if (delta[1L] > 0) 'FUTURE' else 'PAST',
-                                        unit = 'days', epoch = '1970-01-01', values = cv)
-        } else {
-          cv <- CoordinateValuesNumeric$new(v)
-          coords <- CoordinatesTime$new(name = paste0(nm, '_coordinates'),
-                                        direction = 'OTHER', unit = 'days',
-                                        epoch = '1970-01-01', values = cv)
+    crds <- if (any(is.na(v))) .make_coordinate_values(coordinates[[nm]])
+            else .make_coordinate_values(v)
+    coords <- switch(crds$mode,
+      'integer',
+      'double' = {
+        if (!is.null(crds$length))
+          CoordinatesPacked$new(name = paste0(nm, '_coordinates'),
+                                direction = 'OTHER', unit = '-', values = crds$values, length = crds$length)
+        else
+          Coordinates$new(name = paste0(nm, '_coordinates'),
+                          direction = 'OTHER', unit = '-', values = crds$values)
+      },
+      'character' = {
+        if (!requireNamespace('CFtime', quietly = TRUE))
+          stop('You must install package `CFtime` for this functionality', call. = FALSE)
+        t <- try(CFtime::CFtime('days since 1970-01-01', 'proleptic_gregorian', crds$values), silent = TRUE)
+        if (inherits(t, 'try-error'))
+          # String axis
+          CoordinatesString$new(name = paste0(nm, '_coordinates'),
+                                direction = 'OTHER', unit = '-', values = crds$values)
+        else {
+          # Time axis
+          off <- t$offsets
+          dir <- if (length(crds$values) == 1L) 'OTHER'
+                 else if (off[2L] > off[1L]) 'FUTURE'
+                 else 'PAST'
+          CoordinatesTime$new(name = paste0(nm, '_coordinates'), direction = dir,
+                              unit = 'days', epoch = '1970-01-01', values = off)
         }
       }
-    } else {
-      # Numeric axis
-      v <- signif(v, digits = 7)
-      cv <- if (length(v) > 2L && all(abs(diff(delta <- diff(v))) < 0.00001))
-              CoordinateValuesNumericPacked$new(c(v[1L], delta[1L]), length(v))
-            else
-              CoordinateValuesNumeric$new(v)
-      coords <- Coordinates$new(name = paste0(nm, '_coordinates'),
-                                direction = 'OTHER', unit = '-', values = cv)
-    }
-
+    )
     CoordinateSystemAxis$new(nm, abbr, coords)
   })
   names(axes) <- vapply(axes, function(ax) ax$name, FUN.VALUE = character(1), USE.NAMES = FALSE)

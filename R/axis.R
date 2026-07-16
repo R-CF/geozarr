@@ -181,7 +181,7 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
         if (is.null(private$.active_coordinates))
           0L
         else
-          private$.active_coordinates$values_object$length
+          private$.active_coordinates$length
       }
     }
   )

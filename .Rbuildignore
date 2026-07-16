@@ -6,3 +6,4 @@
 ^\.positai$
 ^\.claude$
 ^\.github$
+^cran-comments\.md$

@@ -35,7 +35,7 @@ the extent that the only user-facing function in this package is
 Zarr array or store with GeoZarr metadata. Manipulating the Zarr object
 is done with the same tools as a regular Zarr object.
 
-The \`as_geozarr() function creates a GeoZarr object from an R matrix or
+The `as_geozarr()` function creates a GeoZarr object from an R matrix or
 array. A GeoZarr object is like a Zarr object but with special
 attributes to establish a coordinate system. Default settings will be
 taken from the R object (data type, shape). Data is chunked into chunks

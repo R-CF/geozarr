@@ -170,9 +170,8 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 
     axis_defs <- lapply(axes, function(ax) {
       # Values
-      val_obj <- ax$coordinates$values_object
-      values <- val_obj$raw
-      values_def <- if (inherits(val_obj, c('CoordinateValuesIntegerPacked', 'CoordinateValuesNumericPacked')))
+      values <- ax$coordinates$raw
+      values_def <- if (inherits(ax$coordinates, 'CoordinatesPacked'))
         cs_conv$values_regular(values[1L], values[2L])
       else if (ax$length <= GeoZarr.options$max_explicit)
         cs_conv$values_explicit(values)

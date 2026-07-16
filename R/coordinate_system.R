@@ -20,7 +20,7 @@ CoordinateSystem <- R6::R6Class("CoordinateSystem",
     #' @return An instance of `CoordinateSystem` or an error.
     initialize = function(name, axes) {
       super$initialize(name)
-      # FIXME: Must check that the list of axes form a valid CS
+
       if (is.list(axes) && length(axes) >= 1L &&
           all(sapply(axes, inherits, "CoordinateSystemAxis")))
         private$.axes <- axes

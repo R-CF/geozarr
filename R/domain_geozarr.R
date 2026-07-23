@@ -110,11 +110,9 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
   )
 )
 
-# ==================== Helper functions ========================================
-
 # This function will take the valid metadata for a Zarr array, the
 # [CoordinateSystem] instance of a new `geozarr` array to create, optionally the
-# path relative to the location of the new `geo_zarr` array for ther group that
+# path relative to the location of the new `geo_zarr` array for the group that
 # stores any external arrays with coordinate values. The function will then set
 # the proper convention attributes based on the coordinate system and return the
 # updated metadata.

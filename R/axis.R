@@ -8,6 +8,7 @@
 #'   thus not with the axis.
 #'
 #' @docType class
+#' @export
 CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
   inherit = IdentifiedObject,
   private = list(

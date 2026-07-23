@@ -6,7 +6,7 @@
 #' @docType class
 #' @export
 geozarr_array <- R6::R6Class('geozarr_array',
-  inherit = zarr_array,
+  inherit = zarr::zarr_array,
   cloneable = FALSE,
   private = list(
     # The coordinate system of this array
@@ -330,7 +330,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         dim_prefix <- paste0(private$.parent$prefix, dim_names[i], "/")
         dim_meta   <- private$.store$get_metadata(dim_prefix)
         if (!is.null(dim_meta) && dim_meta$node_type == "array") {
-          dim_array <- zarr_array$new(dim_names[i], dim_meta, private$.parent, private$.store)
+          dim_array <- zarr::zarr_array$new(dim_names[i], dim_meta, private$.parent, private$.store)
 
           abbr <- .common_axis_abbr[tolower(dim_names[i])]
           if (is.na(abbr)) abbr <- 'other'

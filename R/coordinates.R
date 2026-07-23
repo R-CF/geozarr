@@ -51,6 +51,7 @@ AxisDirection <- c(
 #'   finite extent of each element in the coordinates are also managed by this
 #'   class.
 #' @docType class
+#' @export
 Coordinates <- R6::R6Class('Coordinates',
   cloneable = FALSE,
   private = list(
@@ -93,9 +94,7 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @param direction Character string. Direction of the coordinates. Must be
     #'   one from a set of values.
     #' @param unit Character string. Unit of measure of the coordinates.
-    #' @param values A vector of values. If argument `values_packed` is `TRUE`
-    #'   then there are two values: the initial coordinate value and the
-    #'   increment. Otherwise this is a vector of values.
+    #' @param values A vector of values.
     #' @param bounds Optional. If the boundaries are regularly spaced, a vector
     #'   with the offset to the boundary lower and higher than the coordinate
     #'   value, respectively. If the boundaries are irregularly spaced, a matrix
@@ -313,6 +312,7 @@ Coordinates <- R6::R6Class('Coordinates',
 #'   This class provides the specific interface for packed numeric coordinate
 #'   values, both integer and floating-point.
 #' @docType class
+#' @export
 CoordinatesPacked <- R6::R6Class('CoordinatesPacked',
   inherit = Coordinates,
   cloneable = FALSE,
@@ -398,6 +398,7 @@ public = list(
 #'   This class provides the specific interface for string-type coordinate
 #'   values.
 #' @docType class
+#' @export
 CoordinatesString <- R6::R6Class('CoordinatesString',
   inherit = Coordinates,
   cloneable = FALSE,
@@ -446,6 +447,7 @@ CoordinatesString <- R6::R6Class('CoordinatesString',
 #'   "2026-06-01T12:04:15".
 #'
 #' @docType class
+#' @export
 CoordinatesTime <- R6::R6Class('CoordinatesTime',
   inherit = Coordinates,
   cloneable = FALSE,
@@ -640,6 +642,7 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
 #'   By default, ordinal values start at 0 (as per the Zarr specification) but
 #'   after subsetting or other forms of selection the value may be different.
 #' @docType class
+#' @export
 CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
   inherit = CoordinatesPacked,
   private = list(

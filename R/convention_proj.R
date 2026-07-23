@@ -15,7 +15,7 @@
 #' @docType class
 #' @export
 zarr_conv_proj <- R6::R6Class('zarr_conv_proj',
-  inherit = zarr_convention,
+  inherit = zarr::zarr_convention,
   cloneable = FALSE,
   private = list(
     # Optional: Character string giving an identifier composed of an authority

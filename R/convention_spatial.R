@@ -15,7 +15,7 @@
 #' @docType class
 #' @export
 zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
-  inherit = zarr_convention,
+  inherit = zarr::zarr_convention,
   cloneable = FALSE,
   private = list(
     # Required: Vector of names of spatial dimensions y and X, in that order,

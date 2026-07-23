@@ -5,7 +5,14 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr)
+[![CRAN
+Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr)
+[![License: GPL
+v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org)
+[![Last
+commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial

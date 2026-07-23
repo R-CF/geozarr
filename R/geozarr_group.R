@@ -6,7 +6,7 @@
 #' @docType class
 #' @export
 geozarr_group <- R6::R6Class('geozarr_group',
-  inherit = zarr_group,
+  inherit = zarr::zarr_group,
   cloneable = FALSE,
   private = list(
     # Print GeoZarr details as part of printing a group.

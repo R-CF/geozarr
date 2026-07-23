@@ -49,7 +49,7 @@
 #' @docType class
 #' @export
 zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
-  inherit = zarr_convention,
+  inherit = zarr::zarr_convention,
   cloneable = FALSE,
   private = list(
     # Optional top-level name for the coordinate set.

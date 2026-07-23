@@ -77,9 +77,7 @@ system axis.
       \item{\code{direction}}{Character string. Direction of the coordinates. Must be
 one from a set of values.}
       \item{\code{unit}}{Character string. Unit of measure of the coordinates.}
-      \item{\code{values}}{A vector of values. If argument \code{values_packed} is \code{TRUE}
-then there are two values: the initial coordinate value and the
-increment. Otherwise this is a vector of values.}
+      \item{\code{values}}{A vector of values.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
 value, respectively. If the boundaries are irregularly spaced, a matrix

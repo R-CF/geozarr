@@ -12,8 +12,8 @@ In an extension over the OGC standard, an axis can have multiple sets of
 coordinates. The unit-of-measure is associated with the coordinates and
 thus not with the axis.
 }
-\section{Super class}{
-\code{\link[geozarr:IdentifiedObject]{IdentifiedObject}} -> \code{CoordinateSystemAxis}
+\section{Super classes}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[geozarr:IdentifiedObject]{IdentifiedObject}} -> \code{CoordinateSystemAxis}
 }
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
@@ -46,6 +46,11 @@ thus not with the axis.
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getAlias"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getAlias'><code>IdentifiedObject$getAlias()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getIdentifiers"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getIdentifiers'><code>IdentifiedObject$getIdentifiers()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getName"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getName'><code>IdentifiedObject$getName()</code></a></span></li>
@@ -62,7 +67,7 @@ thus not with the axis.
   Create a new axis instance for use in a coordinate system.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$new(name, abbreviation, coordinates)}
+    \preformatted{CoordinateSystemAxis$new(name, abbreviation, coordinates, attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -73,6 +78,7 @@ thus not with the axis.
       \item{\code{coordinates}}{A list with one or more named instances of the
 Coordinates class, or any of its descendants. The first element in the
 list will be made active.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the axis.}
     }
     \if{html}{\out{</div>}}
   }

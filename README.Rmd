@@ -11,10 +11,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-# geozarr
+# ⌖ geozarr
 
 <!-- badges: start -->
-[![CRAN Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr) [![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org) [![Last commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
+[![Lifecycle: Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](https://lifecycle.r-lib.org/articles/stages.html) [![CRAN Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr) [![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org) [![Last commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial data on top of the Zarr specification. It builds on the `zarr` package, a native R implementation of the Zarr specification that can read and write Zarr v.3 stores in memory, on the local file system and over HTTP.
@@ -50,6 +50,8 @@ x <- array(1:400, c(5, 20, 4))
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
 z <- as_geozarr(x, "spatial_data")
 z[["/spatial_data"]]
+
+# GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
 z$hierarchy()
 
 # `cs` convention
@@ -65,6 +67,8 @@ geozarr_options("max_explicit", 3L) # Force writing of external Zarr array
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-%02d-01", 1:4))
 z <- as_geozarr(x, "cs_data_irregular_time")
 z[["/cs_data_irregular_time"]]
+
+# "time_coord" is a regular Zarr array, it uses the ⌗ glyph
 z$hierarchy()
 geozarr_options("max_explicit", old_explicit)
 ```

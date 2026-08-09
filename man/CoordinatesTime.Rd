@@ -15,13 +15,23 @@ optionally its boundaries, just like other instances of the base class
 converts the raw values to intelligible coordinates, such as
 "2026-06-01T12:04:15".
 }
-\section{Super class}{
-\code{\link[geozarr:Coordinates]{Coordinates}} -> \code{CoordinatesTime}
+\section{Super classes}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[geozarr:Coordinates]{Coordinates}} -> \code{CoordinatesTime}
 }
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
     \item{\code{values}}{(read-only) Retrieve the coordinate values as timestamps.}
+
+    \item{\code{bounds}}{(read-only) Retrieve the boundary values around time
+coordinates, a matrix with 2 rows and as many columns as there are
+coordinates values or \code{NULL} if boundary values have not been set.}
+
+    \item{\code{bounds_raw}}{(read-only) Retrieve the boundary values around time
+coordinates, packed if possible. If the boundary values are packed, a
+vector of length 2 is returned, otherwise a matrix with 2 rows and as
+many columns as there are coordinates values or \code{NULL} if boundary
+values have not been set.}
 
     \item{\code{time}}{(read-only) The \code{CFTime} instance managing the coordinates.}
 
@@ -40,6 +50,11 @@ coordinate values.}
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="brief"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-brief'><code>Coordinates$brief()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getDirection"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getDirection'><code>Coordinates$getDirection()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getMaximumValue"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getMaximumValue'><code>Coordinates$getMaximumValue()</code></a></span></li>
@@ -65,7 +80,8 @@ system axis for time.
   epoch,
   calendar = "standard",
   values,
-  bounds = NULL
+  bounds = NULL,
+  attributes = list()
 )}
     \if{html}{\out{</div>}}
   }
@@ -95,6 +111,7 @@ offset to the boundary above the coordinate value in row 2. The
 boundaries represent the finite extent around the boundary value that
 this value is representative for. If this argument is not provided, the
 coordinate values are assumed to represent a point value.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}
   }

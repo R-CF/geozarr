@@ -13,13 +13,16 @@ CoordinateSystem <- R6::R6Class("CoordinateSystem",
   ),
   public = list(
     #' @description Create a new coordinate system. The CS must have at least
-    #' one axis.
+    #'   one axis.
     #' @param name Character string. Name of the coordinate system.
     #' @param axes A `list` of instances of [CoordinateSystemAxis]. There must
-    #' be at least one axis in the list.
+    #'   be at least one axis in the list.
+    #' @param attributes Optional. A `list` of attributes of the coordinate
+    #'   system.
     #' @return An instance of `CoordinateSystem` or an error.
-    initialize = function(name, axes) {
-      super$initialize(name)
+    initialize = function(name, axes, attributes = list()) {
+      # FIXME: Must check that the list of axes form a valid CS
+      super$initialize(name, attributes)
 
       if (is.list(axes) && length(axes) >= 1L &&
           all(sapply(axes, inherits, "CoordinateSystemAxis")))
@@ -34,6 +37,7 @@ CoordinateSystem <- R6::R6Class("CoordinateSystem",
     print = function(...) {
       cat("<Coordinate System>\n")
       self$print_axes(...)
+      self$print_attributes()
       invisible(self)
     },
 

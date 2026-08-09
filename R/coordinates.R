@@ -53,9 +53,9 @@ AxisDirection <- c(
 #' @docType class
 #' @export
 Coordinates <- R6::R6Class('Coordinates',
+  inherit = zarr::zarr_object,
   cloneable = FALSE,
   private = list(
-    .name = NA_character_,
     .direction = NA_character_,
     .unit = NA_character_,
 
@@ -73,6 +73,10 @@ Coordinates <- R6::R6Class('Coordinates',
     # as many columns as there are coordinate values.
     .bounds = NULL,
 
+    # Coordinates may have attributes, stored in a `list`. The `zarr_object`
+    # base class has common methods that operate on this list.
+    .attributes = list(),
+
     # This method return a vector of the extreme values of the coordinates. By
     # default the .values are taken. Descendant classes should override this as
     # necessary.
@@ -85,6 +89,12 @@ Coordinates <- R6::R6Class('Coordinates',
     # as necessary.
     coordinate_length = function() {
       length(private$.values)
+    },
+
+
+    # Attributes to print to the console. By default all attributes are printed.
+    display_attributes = function() {
+      private$.attributes
     }
   ),
   public = list(
@@ -104,12 +114,11 @@ Coordinates <- R6::R6Class('Coordinates',
     #'   boundaries represent the finite extent around the boundary value that
     #'   this value is representative for. If this argument is not provided, the
     #'   coordinate values are assumed to represent a point value.
+    #' @param attributes Optional. A `list` of attributes of the coordinates.
     #' @return An instance of this class or an error.
-    initialize = function(name, direction, unit, values, bounds = NULL) {
-      if (is.character(name) && length(name) == 1L && nzchar(name))
-        private$.name <- name
-      else
-        stop("Coordinates name must be a character string.", call. = FALSE)
+    initialize = function(name, direction, unit, values, bounds = NULL, attributes = list()) {
+      super$initialize(name)
+      private$.attributes <- attributes
 
       if (is.character(direction) && length(direction) == 1L && toupper(direction) %in% AxisDirection)
         private$.direction <- direction
@@ -136,12 +145,17 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @return Self, invisible.
     print = function(...) {
       cat('<Coordinates> ', private$.name, '\n', sep = '')
-      cat('Length    :', private$coordinate_length, '\n')
+      cat('Length    :', private$coordinate_length(), '\n')
       cat('Direction :', private$.direction, '\n')
-      vals <- private$coordinate_range()
-      cat('Values    : [', vals[1L], ' ... ', vals[2L], '] ',
-          if (is.na(private$.unit) || !nzchar(private$.unit)) '-' else private$.unit,
-          '\n', sep = '')
+      if (self$length == 1L)
+        vals <- paste0('[', private$.values, ']')
+      else {
+        vals <- private$coordinate_range()
+        vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']')
+      }
+      cat('Values    :', vals,
+          if (is.na(private$.unit) || !nzchar(private$.unit)) '-' else private$.unit, '\n')
+      self$print_attributes()
       invisible(self)
     },
 
@@ -151,6 +165,8 @@ Coordinates <- R6::R6Class('Coordinates',
       nm <- private$.name
 
       vals <- private$coordinate_range()
+      if (is.numeric(vals))
+        vals <- round(vals, digits = 4L)
       vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']', sep = '')
 
       data.frame(name = private$.name, direction = private$.direction, values = vals,
@@ -267,7 +283,8 @@ Coordinates <- R6::R6Class('Coordinates',
     },
 
     #' @field bounds (read-only) Retrieve the boundary values around
-    #'   coordinates.
+    #'   coordinates, a matrix with 2 rows and as many columns as there are
+    #'   coordinates values or `NULL` if boundary values have not been set.
     bounds = function(value) {
       if (missing(value)) {
         if (is.matrix(private$.bounds))
@@ -277,6 +294,16 @@ Coordinates <- R6::R6Class('Coordinates',
           rbind(vals - private$.bounds[1L], vals + private$.bounds[2L])
         } else NULL
       }
+    },
+
+    #' @field bounds_raw (read-only) Retrieve the boundary values around
+    #'   coordinates exactly as they are stored with the coordinate. If the
+    #'   boundary values are packed, a vector of length 2 is returned, otherwise
+    #'   a matrix with 2 rows and as many columns as there are coordinates
+    #'   values or `NULL` if boundary values have not been set.
+    bounds_raw = function(value) {
+      if (missing(value))
+        private$.bounds
     },
 
     #' @field range (read-only) Retrieve the extreme values of the coordinates.
@@ -298,6 +325,13 @@ Coordinates <- R6::R6Class('Coordinates',
         private$.unit
       else if (is.character(value) && length(value) == 1L)
         private$.unit <- value
+    },
+
+    #' @field attributes (read-only) A named `list` with the attributes of this
+    #'   object.
+    attributes = function(value) {
+      if (missing(value))
+        private$.attributes
     }
   )
 )
@@ -350,10 +384,11 @@ public = list(
   #'   the finite extent around the boundary value that this value is
   #'   representative for. If this argument is not provided, the coordinate
   #'   values are assumed to represent a point value.
+  #' @param attributes Optional. A `list` of attributes of the coordinates.
   #' @return An instance of this class or an error.
-  initialize = function(name, direction, unit, values, length, bounds = NULL) {
+  initialize = function(name, direction, unit, values, length, bounds = NULL, attributes = list()) {
     private$.length <- length
-    super$initialize(name, direction, unit, values, bounds)
+    super$initialize(name, direction, unit, values, bounds, attributes)
   },
 
   #' @description Return an exact copy of these coordinates.
@@ -411,15 +446,17 @@ CoordinatesString <- R6::R6Class('CoordinatesString',
     #' @param unit Character string. Unit of measure of the coordinates.
     #' @param values A vector of values. There must be two values: the initial
     #'   coordinate value and the increment.
+    #' @param attributes Optional. A `list` of attributes of the coordinates.
     #' @return An instance of this class or an error.
-    initialize = function(name, direction, unit, values) {
-      super$initialize(name, direction, unit, values)
+    initialize = function(name, direction, unit, values, attributes = list()) {
+      super$initialize(name, direction, unit, values, attributes = attributes)
     },
 
     #' @description Return an exact copy of these coordinates.
     #' @return A new instance of `CoordinatesString`.
     copy = function() {
-      CoordinatesString$new(private$.name, private$.direction, private$.unit, private$.values)
+      CoordinatesString$new(private$.name, private$.direction, private$.unit,
+                            private$.values, attributes = private$.attributes)
     },
 
     #' @description Return coordinates spanning a smaller coordinate range.
@@ -427,7 +464,9 @@ CoordinatesString <- R6::R6Class('CoordinatesString',
     #' @return A new `CoordinatesString` instance covering the indicated range of
     #'   indices.
     subset = function(rng) {
-      CoordinatesString$new(self$name, private$.direction, private$.unit, private$.values[rng[1L]:rng[2L]])
+      CoordinatesString$new(self$name, private$.direction, private$.unit,
+                            private$.values[rng[1L]:rng[2L]],
+                            attributes = private$.attributes)
     }
   )
 )
@@ -570,16 +609,24 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     #'   boundaries represent the finite extent around the boundary value that
     #'   this value is representative for. If this argument is not provided, the
     #'   coordinate values are assumed to represent a point value.
+    #' @param attributes Optional. A `list` of attributes of the coordinates.
     #' @return An instance of this class or an error.
-    initialize = function(name, direction, unit, epoch, calendar = 'standard', values, bounds = NULL) {
-      super$initialize(name, direction, unit, values, bounds)
+    initialize = function(name, direction, unit, epoch, calendar = 'standard', values, bounds = NULL, attributes = list()) {
+      super$initialize(name, direction, unit, values, bounds, attributes)
+      # FIXME: Values may be packed if numeric
       private$.time <- try(CFtime::CFTime$new(definition = paste(unit, 'since', epoch),
                                      calendar = calendar, offsets = values), silent = TRUE)
       if (inherits(private$.time, 'try-error'))
         stop('Arguments do not form a valid calendar definition', call. = FALSE)
 
-      if (!is.null(bounds))
-        private$.time$set_bounds(self$bounds)
+      if (!is.null(bounds)) {
+        private$.bounds <- bounds
+        if (is.vector(bounds)) {
+          off <- private$.time$offsets
+          bounds <- rbind(off + bounds[1L], off + bounds[2L])
+        }
+        private$.time$set_bounds(bounds)
+      }
     },
 
     #' @description Return an exact copy of these coordinates.
@@ -587,11 +634,9 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     copy = function() {
       time_def <- strsplit(private$.time$calendar$definition, ' ', fixed = TRUE)[[1L]]
       bounds <- private$.bounds
-      if (!is.null(bounds))
-        bounds <- bounds$copy()
       CoordinatesTime$new(private$.name, private$.direction,
                  time_def[1L], time_def[3L], private$.time$calendar$name,
-                 private$.values$clone(), bounds)
+                 private$.values$clone(), bounds, private$.attributes)
     },
 
     #' @description Retrieve the indices of the time axis falling between two
@@ -615,6 +660,30 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     values = function(value) {
       if (missing(value))
         private$.time$format()
+    },
+
+    #' @field bounds (read-only) Retrieve the boundary values around time
+    #'   coordinates, a matrix with 2 rows and as many columns as there are
+    #'   coordinates values or `NULL` if boundary values have not been set.
+    bounds = function(value) {
+      if (missing(value)) {
+        if (is.matrix(private$.bounds))
+          private$.bounds
+        else if (is.vector(private$.bounds)) {
+          vals <- private$.time$offsets
+          rbind(vals + private$.bounds[1L], vals + private$.bounds[2L])
+        } else NULL
+      }
+    },
+
+    #' @field bounds_raw (read-only) Retrieve the boundary values around time
+    #'   coordinates, packed if possible. If the boundary values are packed, a
+    #'   vector of length 2 is returned, otherwise a matrix with 2 rows and as
+    #'   many columns as there are coordinates values or `NULL` if boundary
+    #'   values have not been set.
+    bounds_raw = function(value) {
+      if (missing(value))
+        private$.bounds
     },
 
     #' @field time (read-only) The `CFTime` instance managing the coordinates.
@@ -657,12 +726,13 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
     #'   instance.
     #' @param low Optional. Integer value giving the lowest index value in this
     #'   instance. When omitted, defaults to 0L.
+    #' @param attributes Optional. A `list` of attributes of the coordinates.
     #' @return An instance of this class.
-    initialize = function(name, direction, length, low = 0L) {
+    initialize = function(name, direction, length, low = 0L, attributes = list()) {
       if (!is.integer(length) || length(length) != 1L || length < 1L)
         stop('Argument `length` must be a positive integer value', call. = FALSE)
 
-      super$initialize(name, direction, unit = '-', values = c(low, 1L), length)
+      super$initialize(name, direction, unit = '-', values = c(low, 1L), length, attributes)
       private$.bottom = low
     },
 

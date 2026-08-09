@@ -8,9 +8,9 @@
 #'
 #' @docType class
 IdentifiedObject <- R6::R6Class("IdentifiedObject",
+  inherit = zarr::zarr_object,
   private = list(
-    # MANDATORY The object name is set at initialization and is immutable
-    .name       = NA_character_,
+    # MANDATORY name Implemented by zarr_object
 
     # OPTIONAL Zero or more aliases for the object name
     .aliases    = list(),
@@ -19,18 +19,25 @@ IdentifiedObject <- R6::R6Class("IdentifiedObject",
     .identifiers = list(),
 
     # OPTIONAL Remarks for the object
-    .remarks    = NA_character_
+    .remarks    = NA_character_,
+
+    # ADDITIONAL Attributes for the objects composing a coordinate system
+    .attributes = list(),
+
+    # Attributes to print to the console. By default all attributes are printed.
+    display_attributes = function() {
+      private$.attributes
+    }
   ),
   public = list(
     #' @description Create a new object.
     #' @param name Character string. Name of the object.
+    #' @param attributes Optional. A `list` of attributes of the object.
     #' @return A new instance of the object, or an error if the object could not
     #'   be created.
-    initialize = function(name) {
-      if (is.character(name) && length(name) == 1L && nzchar(name))
-        private$.name <- name
-      else
-        stop("Object name must be a character string.", call. = FALSE)
+    initialize = function(name, attributes = list()) {
+      super$initialize(name)
+      private$.attributes <- attributes
     },
 
     #' @description Retrieve the name of the object. This method is mandatory in
@@ -102,7 +109,13 @@ IdentifiedObject <- R6::R6Class("IdentifiedObject",
     name = function(value) {
       if (missing(value))
         private$.name
-    }
+    },
 
+    #' @field attributes (read-only) A named `list` with the attributes of this
+    #'   object.
+    attributes = function(value) {
+      if (missing(value))
+        private$.attributes
+    }
   )
 )

@@ -121,7 +121,7 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
   z <- zarr::as_zarr(x, name, location)
   arr <- if (inherits(z, 'zarr')) z[[paste0('/', name)]] else z
 
-  meta <- .geozarr_set_convention(arr$metadata, cs, '..', registration)
+  meta <- set_convention(arr$metadata, cs, '..', registration)
   arr$metadata <- meta
   arr$save()
 

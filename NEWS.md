@@ -1,6 +1,10 @@
 # geozarr (development version)
 
+* Coordinate system elements can have attributes.
 * Exporting multiple objects for downstream package use.
+* Boundary values are written to the array metadata.
+* Better support for vertical axes.
+* Bug fixes.
 
 # geozarr 0.1.0
 

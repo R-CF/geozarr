@@ -10,7 +10,7 @@ group in the hierarchy of a Zarr object having GeoZarr attributes. A
 GeoZarr group is a container for other groups and arrays.
 }
 \section{Super classes}{
-\code{\link[zarr:zarr_node]{zarr::zarr_node}} -> \code{\link[zarr:zarr_group]{zarr::zarr_group}} -> \code{geozarr_group}
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[zarr:zarr_node]{zarr::zarr_node}} -> \code{\link[zarr:zarr_group]{zarr::zarr_group}} -> \code{geozarr_group}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -20,11 +20,11 @@ GeoZarr group is a container for other groups and arrays.
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="absolute_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-absolute_path'><code>zarr::zarr_node$absolute_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="append_array_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-append_array_attribute'><code>zarr::zarr_node$append_array_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-attribute'><code>zarr::zarr_node$attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="delete_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-delete_attribute'><code>zarr::zarr_node$delete_attribute()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="print_attributes"><a href='../../zarr/html/zarr_node.html#method-zarr_node-print_attributes'><code>zarr::zarr_node$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="relative_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-relative_path'><code>zarr::zarr_node$relative_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>

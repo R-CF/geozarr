@@ -28,9 +28,10 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     #' @param coordinates A list with one or more named instances of the
     #'   Coordinates class, or any of its descendants. The first element in the
     #'   list will be made active.
+    #' @param attributes Optional. A `list` of attributes of the axis.
     #' @return An instance of this class or an error.
-    initialize = function(name, abbreviation, coordinates) {
-      super$initialize(name)
+    initialize = function(name, abbreviation, coordinates, attributes = list()) {
+      super$initialize(name, attributes)
 
       if (is.character(abbreviation) && length(abbreviation) == 1L)
         private$.abbreviation <- abbreviation
@@ -58,19 +59,31 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
       coords <- do.call(rbind, lapply(private$.coordinates, function(crd) crd$brief()))
       if (nrow(coords) == 1L) coords$name <- NULL
       print(.slim.data.frame(coords, ...), right = FALSE, row.names = FALSE)
+      if (length(private$.attributes)) self$print_attributes()
+      else private$.active_coordinates$print_attributes()
       invisible(self)
     },
 
     #' @description Some details of the axis.
     #' @return A 1-row `data.frame` with some details of the axis.
     brief = function() {
-      vals <- private$.active_coordinates$range
-      vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']', sep = '')
+      if (self$length == 1L) {
+        vals <- private$.active_coordinates$values
+        if (is.numeric(vals))
+          vals <- round(vals, digits = 4L)
+        vals <- paste0('[', vals, ']')
+      } else {
+        vals <- private$.active_coordinates$range
+        if (is.numeric(vals))
+          vals <- round(vals, digits = 4L)
+        vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']')
+      }
 
       unit <- private$.active_coordinates$getUnit()
       if (!nzchar(unit)) unit <- '-'
 
       data.frame(abbr = private$.abbreviation,
+                 name = self$name,
                  direction = private$.active_coordinates$getDirection(),
                  length = private$.active_coordinates$length,
                  values = vals,

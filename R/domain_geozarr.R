@@ -110,13 +110,34 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
   )
 )
 
-# This function will take the valid metadata for a Zarr array, the
-# [CoordinateSystem] instance of a new `geozarr` array to create, optionally the
-# path relative to the location of the new `geo_zarr` array for the group that
-# stores any external arrays with coordinate values. The function will then set
-# the proper convention attributes based on the coordinate system and return the
-# updated metadata.
-.geozarr_set_convention <- function(metadata, coord_sys, external_group, registration = 'pixel') {
+#' Set the GeoZarr convention with array details in the metadata of the array
+#'
+#' This function will write the GeoZarr convention with all details into the
+#' metadata of a Zarr array.
+#'
+#' @param metadata A `list` with the basic metadata of the array.
+#' @param coord_sys The [CoordinateSystem] instance of the GeoZarr array.
+#' @param external_group Optional, the path to the group, relative to the
+#'   location of the array, that stores any external arrays with coordinate
+#'   values.
+#' @param registration Optional, the registration point of the array for use
+#'   with the "spatial" convention. Defaults to "pixel".
+#' @return A `list` with the metadata updated with convention attributes.
+#' @export
+#' @examples
+#' ab <- zarr::array_builder$new()
+#' ab$data_type <- "int32"
+#' ab$shape <- c(1000L, 20L)
+#'
+#' crd1 <- CoordinatesPacked$new("X_coordinates", "EAST", "m", c(0, 1000), 1000L)
+#' ax1 <- CoordinateSystemAxis$new("Axis1", "X", crd1)
+#' crd2 <- CoordinatesPacked$new("Y_coordinates", "NORTH", "m", c(0, 1000), 20L)
+#' ax2 <- CoordinateSystemAxis$new("Axis2", "Y", crd2)
+#'
+#' cs <- CoordinateSystem$new("CS", list(Axis1 = ax1, Axis2 = ax2))
+#'
+#' set_convention(ab$metadata(), cs)
+set_convention <- function(metadata, coord_sys, external_group, registration = 'pixel') {
   meta <- metadata
   atts <- meta$attributes %||% list()
   axes <- coord_sys$axes
@@ -169,15 +190,35 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     axis_defs <- lapply(axes, function(ax) {
       # Values
       values <- ax$coordinates$raw
-      values_def <- if (inherits(ax$coordinates, 'CoordinatesPacked'))
+
+      packed <- if (inherits(ax$coordinates, 'CoordinatesTime')) {
+        # Time coordinates are always held in unpacked form so must check if they are regular
+        if (.is_regular(values)) {
+          values <- c(values[1L], values[2L] - values[1L])
+          TRUE
+        } else FALSE
+      } else inherits(ax$coordinates, 'CoordinatesPacked')
+
+      values_def <- if (packed)
         cs_conv$values_regular(values[1L], values[2L])
       else if (ax$length <= GeoZarr.options$max_explicit)
         cs_conv$values_explicit(values)
       else
         # External coordinate values: Write coordinate values to an external array.
-        # The name of the external array is `<axis_name>_coord`. The actual writing
-        # to the external array should be done in the calling code.
-        cs_conv$values_external(paste0(external_group, '/', paste0(ax$name, '_coord')))
+        # The name of the external array is the same as the name of the axis. The
+        # actual writing to the external array should be done in the calling code.
+        cs_conv$values_external(paste0(external_group, '/', ax$name))
+
+      # Boundary values
+      bnds <- ax$coordinates$bounds_raw
+      bnds_def <- if (is.vector(bnds))
+        cs_conv$boundaries_regular(bnds[1L], bnds[2L])
+      else if (is.matrix(bnds))
+        # External boundary values: Write boundary values to an external array.
+        # The name of the external array is `<axis_name>_bounds`. The
+        # actual writing to the external array should be done in the calling code.
+        cs_conv$values_external(paste0(external_group, '/', paste0(ax$name, '_bounds')))
+      else NULL
 
       # Time
       time_def <- if (inherits(ax$coordinates, 'CoordinatesTime')) {
@@ -186,7 +227,8 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
       } else NULL
 
       # Coordinates and axis
-      coords_def <- cs_conv$coordinates(values_def, unit = ax$coordinates$unit, time = time_def)
+      coords_def <- cs_conv$coordinates(values_def, unit = ax$coordinates$unit,
+                                        boundaries = bnds_def, time = time_def)
       abbr <- ax$abbreviation
       direction  <- cs_direction[[abbr]]
       if (abbr == 'OTHER') abbr <- ''

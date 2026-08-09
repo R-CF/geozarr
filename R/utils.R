@@ -100,6 +100,15 @@ geozarr_options <- function(key, value) {
   else 0L
 }
 
+#' Test if vector `x` is regular, meaning the difference between successive
+#' values is constant, possibly 0.
+#' @noRd
+.is_regular <- function(x, tolerance = GeoZarr.options$eps) {
+  if (length(x) == 1L) return(FALSE)
+  d <- diff(x)
+  isTRUE(all.equal(d, rep(d[1L], length(d)), tolerance))
+}
+
 # There are formats out there that implicitly attach meaning to the name of an
 # axis. This named vector makes an effort to find the axis abbreviation
 # from the name. This is heuristics and a fallback option when no explicit

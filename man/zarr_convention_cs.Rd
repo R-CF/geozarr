@@ -190,7 +190,8 @@ by Coordinates" (e.g. \code{"EAST"}, \code{"NORTH"}, \code{"UP"}, \code{"FUTURE"
   unit = NULL,
   boundaries = NULL,
   parametric = NULL,
-  time = NULL
+  time = NULL,
+  attributes = NULL
 )}
     \if{html}{\out{</div>}}
   }
@@ -208,6 +209,7 @@ coordinates.}
       \item{\code{parametric}}{Optional parametric definition produced by
 \code{parametric()}.}
       \item{\code{time}}{Optional time definition produced by \code{time()}.}
+      \item{\code{attributes}}{Optional list with attributes for the coordinates.}
     }
     \if{html}{\out{</div>}}
   }
@@ -297,10 +299,8 @@ arrays in the same local store.}
 
 The two values give the offset \emph{below} and \emph{above} the coordinate value
 that define the extent of each cell, in the same unit as the
-coordinates. Both offsets are expressed as positive magnitudes; the
-convention interprets "below" as the lower-valued boundary and "above"
-as the higher-valued boundary regardless of the sign of the axis
-increment.
+coordinates. Both offsets are expressed relative to the coordinate value
+so \code{below} must be non-positive and \code{above} must be non-negative.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{zarr_convention_cs$boundaries_regular(below, above)}
@@ -309,7 +309,7 @@ increment.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{below, above}}{Numeric. Positive offset from the coordinate value to
+      \item{\code{below, above}}{Numeric. Offset from the coordinate value to
 the lower and upper boundary, respectively.}
     }
     \if{html}{\out{</div>}}

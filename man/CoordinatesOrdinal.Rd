@@ -11,7 +11,7 @@ By default, ordinal values start at 0 (as per the Zarr specification) but
 after subsetting or other forms of selection the value may be different.
 }
 \section{Super classes}{
-\code{\link[geozarr:Coordinates]{Coordinates}} -> \code{\link[geozarr:CoordinatesPacked]{CoordinatesPacked}} -> \code{CoordinatesOrdinal}
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[geozarr:Coordinates]{Coordinates}} -> \code{\link[geozarr:CoordinatesPacked]{CoordinatesPacked}} -> \code{CoordinatesOrdinal}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -24,6 +24,11 @@ after subsetting or other forms of selection the value may be different.
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="brief"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-brief'><code>Coordinates$brief()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getDirection"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getDirection'><code>Coordinates$getDirection()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getMaximumValue"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getMaximumValue'><code>Coordinates$getMaximumValue()</code></a></span></li>
@@ -41,7 +46,7 @@ after subsetting or other forms of selection the value may be different.
   Create an instance of this class.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinatesOrdinal$new(name, direction, length, low = 0L)}
+    \preformatted{CoordinatesOrdinal$new(name, direction, length, low = 0L, attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -54,6 +59,7 @@ one from a set of values.}
 instance.}
       \item{\code{low}}{Optional. Integer value giving the lowest index value in this
 instance. When omitted, defaults to 0L.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}
   }

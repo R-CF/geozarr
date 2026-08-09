@@ -160,9 +160,11 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     #' @param parametric Optional parametric definition produced by
     #'   `parametric()`.
     #' @param time Optional time definition produced by `time()`.
+    #' @param attributes Optional list with attributes for the coordinates.
     #' @return A named list representing one coordinates entry.
     coordinates = function(values, name = NULL, unit = NULL,
-                           boundaries = NULL, parametric = NULL, time = NULL) {
+                           boundaries = NULL, parametric = NULL, time = NULL,
+                           attributes = NULL) {
       if (!is.list(values) || is.null(values[['regular']]) &&
           is.null(values[['explicit']]) && is.null(values[['external']]))
         stop('Argument `values` is malformed', call. = FALSE)
@@ -182,6 +184,7 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       if (!is.null(time))       coords$time       <- time
       if (!is.null(boundaries)) coords$boundaries <- boundaries
       if (!is.null(parametric)) coords$parametric <- parametric
+      if (!is.null(attributes)) coords$attributes <- attributes
       coords
     },
 
@@ -225,18 +228,18 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     #'
     #'   The two values give the offset *below* and *above* the coordinate value
     #'   that define the extent of each cell, in the same unit as the
-    #'   coordinates. Both offsets are expressed as positive magnitudes; the
-    #'   convention interprets "below" as the lower-valued boundary and "above"
-    #'   as the higher-valued boundary regardless of the sign of the axis
-    #'   increment.
-    #' @param below,above Numeric. Positive offset from the coordinate value to
+    #'   coordinates. Both offsets are expressed relative to the coordinate value
+    #'   so `below` must be non-positive and `above` must be non-negative.
+    #' @param below,above Numeric. Offset from the coordinate value to
     #'   the lower and upper boundary, respectively.
     #' @return A `boundaries` list with a `regular` element.
     boundaries_regular = function(below, above) {
-      if (!is.numeric(below) || length(below) != 1L || below < 0)
-        stop('Argument `below` must be a single non-negative numeric value', call. = FALSE)
+      if (!is.numeric(below) || length(below) != 1L || below > 0)
+        stop('Argument `below` must be a single non-positive numeric value', call. = FALSE)
       if (!is.numeric(above) || length(above) != 1L || above < 0)
         stop('Argument `above` must be a single non-negative numeric value', call. = FALSE)
+      if (.near(below, above))
+        stop('Arguments `below` and `above` cannot both be 0', call. = FALSE)
       list(regular = c(below, above))
     },
 

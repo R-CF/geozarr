@@ -11,8 +11,8 @@ coordinates are always associated with a coordinate system axis.
 This class provides the specific interface for string-type coordinate
 values.
 }
-\section{Super class}{
-\code{\link[geozarr:Coordinates]{Coordinates}} -> \code{CoordinatesString}
+\section{Super classes}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[geozarr:Coordinates]{Coordinates}} -> \code{CoordinatesString}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -24,6 +24,11 @@ values.
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="brief"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-brief'><code>Coordinates$brief()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getDirection"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getDirection'><code>Coordinates$getDirection()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getMaximumValue"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getMaximumValue'><code>Coordinates$getMaximumValue()</code></a></span></li>
@@ -42,7 +47,7 @@ values.
 system axis for string-type coordinate values.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinatesString$new(name, direction, unit, values)}
+    \preformatted{CoordinatesString$new(name, direction, unit, values, attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -54,6 +59,7 @@ one from a set of values.}
       \item{\code{unit}}{Character string. Unit of measure of the coordinates.}
       \item{\code{values}}{A vector of values. There must be two values: the initial
 coordinate value and the increment.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}
   }

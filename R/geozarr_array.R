@@ -535,7 +535,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
       # Get the metadata of self and adjust the shape
       ab <- array_builder$new(self$metadata)
       ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)
-      new_meta <- .geozarr_set_convention(ab$metadata(), cs, '..')
+      new_meta <- set_convention(ab$metadata(), cs, '..')
       new_meta$chunk_key_encoding <- self$metadata$chunk_key_encoding
 
       # Create the new GeoZarr array
@@ -598,12 +598,11 @@ geozarr_array <- R6::R6Class('geozarr_array',
           path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
           path_parts <- path_parts[-(length(path_parts))] # Strip the array name
           grp <- arr$walk_path(path_parts)
-          sibling_name <- paste0(axis_name, '_coord')
           crds <- coord_sys$axes[[axis_name]]$coordinates
           values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
-          sibling <- zarr::as_zarr(x = values, name = sibling_name, location = grp)
+          sibling <- zarr::as_zarr(x = values, name = axis_name, location = grp)
           sibling_metadata <- sibling$metadata
-          sibling_metadata$dimension_names <- sibling_name
+          sibling_metadata$dimension_names <- axis_name
           sibling$metadata <- sibling_metadata
           sibling$save()
           grp$set_node(sibling)

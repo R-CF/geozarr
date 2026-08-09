@@ -9,8 +9,8 @@ This class implements the coordinate system class. This class
 definition implements the same class from the OGC geoAPI Java package,
 extended with specific code for this package.
 }
-\section{Super class}{
-\code{\link[geozarr:IdentifiedObject]{IdentifiedObject}} -> \code{CoordinateSystem}
+\section{Super classes}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[geozarr:IdentifiedObject]{IdentifiedObject}} -> \code{CoordinateSystem}
 }
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
@@ -33,6 +33,11 @@ coordinate system.}
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
 <ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getAlias"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getAlias'><code>IdentifiedObject$getAlias()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getIdentifiers"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getIdentifiers'><code>IdentifiedObject$getIdentifiers()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="IdentifiedObject" data-id="getName"><a href='../../geozarr/html/IdentifiedObject.html#method-IdentifiedObject-getName'><code>IdentifiedObject$getName()</code></a></span></li>
@@ -50,7 +55,7 @@ coordinate system.}
 one axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystem$new(name, axes)}
+    \preformatted{CoordinateSystem$new(name, axes, attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -59,6 +64,8 @@ one axis.
       \item{\code{name}}{Character string. Name of the coordinate system.}
       \item{\code{axes}}{A \code{list} of instances of \link{CoordinateSystemAxis}. There must
 be at least one axis in the list.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinate
+system.}
     }
     \if{html}{\out{</div>}}
   }

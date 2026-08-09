@@ -17,6 +17,9 @@ The optional boundary values for numeric coordinate values that define the
 finite extent of each element in the coordinates are also managed by this
 class.
 }
+\section{Super class}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{Coordinates}
+}
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
@@ -31,7 +34,14 @@ of values.}
 full vector or packed.}
 
     \item{\code{bounds}}{(read-only) Retrieve the boundary values around
-coordinates.}
+coordinates, a matrix with 2 rows and as many columns as there are
+coordinates values or \code{NULL} if boundary values have not been set.}
+
+    \item{\code{bounds_raw}}{(read-only) Retrieve the boundary values around
+coordinates exactly as they are stored with the coordinate. If the
+boundary values are packed, a vector of length 2 is returned, otherwise
+a matrix with 2 rows and as many columns as there are coordinates
+values or \code{NULL} if boundary values have not been set.}
 
     \item{\code{range}}{(read-only) Retrieve the extreme values of the coordinates.}
 
@@ -40,6 +50,9 @@ the values are unpacked.}
 
     \item{\code{unit}}{Character string giving the unit-of-measure of the coordinate
 values.}
+
+    \item{\code{attributes}}{(read-only) A named \code{list} with the attributes of this
+object.}
   }
   \if{html}{\out{</div>}}
 }
@@ -59,6 +72,15 @@ values.}
     \item \href{#method-Coordinates-getRangeMeaning}{\code{Coordinates$getRangeMeaning()}}
   }
 }
+\if{html}{\out{<details open><summary>Inherited methods</summary>
+<ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
+</ul>
+</details>}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Coordinates-initialize"></a>}}
 \if{latex}{\out{\hypertarget{method-Coordinates-initialize}{}}}
@@ -67,7 +89,14 @@ values.}
 system axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$new(name, direction, unit, values, bounds = NULL)}
+    \preformatted{Coordinates$new(
+  name,
+  direction,
+  unit,
+  values,
+  bounds = NULL,
+  attributes = list()
+)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -87,6 +116,7 @@ offset to the boundary above the coordinate value in row 2. The
 boundaries represent the finite extent around the boundary value that
 this value is representative for. If this argument is not provided, the
 coordinate values are assumed to represent a point value.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}
   }

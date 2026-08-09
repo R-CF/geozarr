@@ -11,10 +11,16 @@ class is ancestor to many other, more useful classes. This class just
 provides basic identification properties. It is not very useful to
 instantiate this class directly; instead, use descendant classes.
 }
+\section{Super class}{
+\code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{IdentifiedObject}
+}
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
     \item{\code{name}}{(read-only) The name of the object.}
+
+    \item{\code{attributes}}{(read-only) A named \code{list} with the attributes of this
+object.}
   }
   \if{html}{\out{</div>}}
 }
@@ -32,6 +38,15 @@ instantiate this class directly; instead, use descendant classes.
     \item \href{#method-IdentifiedObject-clone}{\code{IdentifiedObject$clone()}}
   }
 }
+\if{html}{\out{<details open><summary>Inherited methods</summary>
+<ul>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="append_array_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-append_array_attribute'><code>zarr::zarr_object$append_array_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-attribute'><code>zarr::zarr_object$attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="delete_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-delete_attribute'><code>zarr::zarr_object$delete_attribute()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
+</ul>
+</details>}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-IdentifiedObject-initialize"></a>}}
 \if{latex}{\out{\hypertarget{method-IdentifiedObject-initialize}{}}}
@@ -39,13 +54,14 @@ instantiate this class directly; instead, use descendant classes.
   Create a new object.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{IdentifiedObject$new(name)}
+    \preformatted{IdentifiedObject$new(name, attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
       \item{\code{name}}{Character string. Name of the object.}
+      \item{\code{attributes}}{Optional. A \code{list} of attributes of the object.}
     }
     \if{html}{\out{</div>}}
   }

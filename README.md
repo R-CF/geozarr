@@ -1,10 +1,12 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# geozarr
+# ⌖ geozarr
 
 <!-- badges: start -->
 
+[![Lifecycle:
+Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 [![CRAN
 Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr)
 [![CRAN
@@ -94,10 +96,12 @@ z[["/spatial_data"]]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
-#>  abbr  direction length values             unit
-#>  X     OTHER      5     [1e+05 ... 140000] -   
-#>  Y     OTHER     20     [95000 ... 0]      -   
-#>  OTHER OTHER      4     [a ... d]          -
+#>  abbr  name direction length values             unit
+#>  X     x    OTHER      5     [1e+05 ... 140000] -   
+#>  Y     y    OTHER     20     [95000 ... 0]      -   
+#>  OTHER cls  OTHER      4     [a ... d]          -
+
+# GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
@@ -116,10 +120,10 @@ z[["/cs_data"]]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
-#>  abbr direction length values                      unit
-#>  X    OTHER      5     [1e+05 ... 140000]          -   
-#>  Y    OTHER     20     [0 ... 95000]               -   
-#>  T    FUTURE     4     [2026-06-01 ... 2026-06-04] days
+#>  abbr name direction length values                      unit
+#>  X    x    OTHER      5     [1e+05 ... 140000]          -   
+#>  Y    y    OTHER     20     [0 ... 95000]               -   
+#>  T    time FUTURE     4     [2026-06-01 ... 2026-06-04] days
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
@@ -139,10 +143,12 @@ z[["/cs_data_irregular_time"]]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
-#>  abbr direction length values                      unit
-#>  X    OTHER      5     [1e+05 ... 140000]          -   
-#>  Y    OTHER     20     [0 ... 95000]               -   
-#>  T    FUTURE     4     [2026-01-01 ... 2026-04-01] days
+#>  abbr name direction length values                      unit
+#>  X    x    OTHER      5     [1e+05 ... 140000]          -   
+#>  Y    y    OTHER     20     [0 ... 95000]               -   
+#>  T    time FUTURE     4     [2026-01-01 ... 2026-04-01] days
+
+# "time_coord" is a regular Zarr array, it uses the ⌗ glyph
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)

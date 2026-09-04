@@ -117,6 +117,16 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 #'
 #' @param metadata A `list` with the basic metadata of the array.
 #' @param coord_sys The [CoordinateSystem] instance of the GeoZarr array.
+#' @param crs Optional, a `list` with 1 or more CRS definitions. Named list
+#'   elements can be "compound",  "spatial" (X-Y), "vertical" or "temporal".
+#'   Those elements are a `list` themselves with one or more of the named
+#'   elements "code", "wkt2" or "projjson" (for the attributes in the `proj`
+#'   convention) with their value being the attribute to register. In the `cs`
+#'   convention, a "compound" CRS will be associated with the coordinate system
+#'   of the GeoZarr array, the other options will be associated with the
+#'   specific CRSs of the coordinate system. In the `spatial` convention there
+#'   can only be 1 CRS which must be of type "compound" or "spatial" and which
+#'   is registered at the root of the "attributes" of the GeoZarr array.
 #' @param external_group Optional, the path to the group, relative to the
 #'   location of the array, that stores any external arrays with coordinate
 #'   values.
@@ -136,8 +146,10 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 #'
 #' cs <- CoordinateSystem$new("CS", list(Axis1 = ax1, Axis2 = ax2))
 #'
-#' set_convention(ab$metadata(), cs)
-set_convention <- function(metadata, coord_sys, external_group, registration = 'pixel') {
+#' crs <- list(spatial = list(code = "EPSG:4326"))
+#'
+#' set_convention(ab$metadata(), cs, crs)
+set_convention <- function(metadata, coord_sys, crs = NULL, external_group, registration = 'pixel') {
   meta <- metadata
   atts <- meta$attributes %||% list()
   axes <- coord_sys$axes
@@ -177,8 +189,16 @@ set_convention <- function(metadata, coord_sys, external_group, registration = '
                             x = axes[[X_axis]]$coordinates$values$raw,
                             y = axes[[Y_axis]]$coordinates$values$raw,
                             registration = registration)
-
     atts <- c(atts, spatial$as_list())
+
+    if (!is.null(crs) && is.list(crs) && length(crs) == 1L &&
+        all(names(crs) %in% c('compound', 'spatial')) && length(crs[[1L]]) &&
+        all(names(crs[[1L]]) %in% c('code', 'wkt2', 'projjson'))) {
+      proj <- zarr_conv_proj$new(crs[[1L]])
+      atts <- proj$register(atts)
+      atts <- proj$write(atts)
+    } else
+      stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)
   } else {
     # cs convention
     cs_conv <- zarr_convention_cs$new()
@@ -187,6 +207,7 @@ set_convention <- function(metadata, coord_sys, external_group, registration = '
     # Direction lookup by axis abbreviation
     cs_direction <- c(X = 'EAST', Y = 'NORTH', Z = 'UP', T = 'FUTURE', OTHER = 'OTHER')
 
+    has_external <- FALSE
     axis_defs <- lapply(axes, function(ax) {
       # Values
       values <- ax$coordinates$raw
@@ -203,11 +224,13 @@ set_convention <- function(metadata, coord_sys, external_group, registration = '
         cs_conv$values_regular(values[1L], values[2L])
       else if (ax$length <= GeoZarr.options$max_explicit)
         cs_conv$values_explicit(values)
-      else
+      else {
         # External coordinate values: Write coordinate values to an external array.
         # The name of the external array is the same as the name of the axis. The
         # actual writing to the external array should be done in the calling code.
+        has_external <<- TRUE
         cs_conv$values_external(paste0(external_group, '/', ax$name))
+      }
 
       # Boundary values
       bnds <- ax$coordinates$bounds_raw
@@ -223,23 +246,47 @@ set_convention <- function(metadata, coord_sys, external_group, registration = '
       # Time
       time_def <- if (inherits(ax$coordinates, 'CoordinatesTime')) {
         def <- strsplit(ax$coordinates$time$calendar$definition, ' ', fixed = TRUE)[[1L]]
-        cs_conv$time(unit = def[1L], epoch = def[3L], calendar = ax$coordinates$time$calendar$calendar)
+        cs_conv$time(unit = def[1L], epoch = def[3L], calendar = ax$coordinates$time$calendar$name)
       } else NULL
 
       # Coordinates and axis
       coords_def <- cs_conv$coordinates(values_def, unit = ax$coordinates$unit,
                                         boundaries = bnds_def, time = time_def)
       abbr <- ax$abbreviation
+      if (abbr == ' ') abbr <- 'OTHER'
       direction  <- cs_direction[[abbr]]
       if (abbr == 'OTHER') abbr <- ''
       cs_conv$axis(list(coords_def), abbreviation = abbr, direction = direction)
     })
 
+    # Do we need the ref convention?
+    if (has_external) {
+      ref_conv <- zarr::zarr_convention_ref$new()
+      atts <- ref_conv$register(atts)
+    }
+
     # Group axes into separate CRS objects by axis category
-    cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)])
-    cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')])
-    cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')])
-    cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
+    if (is.null(crs)) {
+      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar')
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')], type = 'vertical')
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')], type = 'temporal')
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
+    } else {
+      proj <- if (is.null(crs$spatial)) NULL else zarr_conv_proj$new(crs$spatial)
+      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar', id = proj)
+      proj <- if (is.null(crs$vertical)) NULL else zarr_conv_proj$new(crs$vertical)
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')], type = 'vertical', id = proj)
+      proj <- if (is.null(crs$temporal)) NULL else zarr_conv_proj$new(crs$temporal)
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')], type = 'temporal', id = proj)
+      cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
+
+      if (!is.null(crs$compound)) {
+        proj <- zarr_conv_proj$new(crs$compound)
+        cs_conv$cs_crs <- proj
+      }
+      if (!is.null(proj))
+        atts <- proj$register(atts)
+    }
 
     atts <- c(list(cs = cs_conv$as_list()), atts)
   }

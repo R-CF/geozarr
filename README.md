@@ -86,13 +86,13 @@ x <- array(1:400, c(5, 20, 4))
 # `spatial` convention
 # Set named dim_names with `x` and `y` (decreasing values), third dimension is class-based
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
-z <- as_geozarr(x, "spatial_data")
+z <- as_geozarr(x, name = "spatial_data")
 z[["/spatial_data"]]
 #> <Zarr array> ⌖ spatial_data 
 #> Path      : /spatial_data 
 #> Domain    : GeoZarr 
 #> Data type : int32 
-#> Shape     : 5 20 4 
+#> Shape     : 5 20 4 [x, y, cls]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
@@ -108,15 +108,16 @@ z$hierarchy()
 #> └ ⌖ spatial_data
 
 # `cs` convention
+# Create the new array in the existing zarr object in the root group
 # Named dimensions with `y` coordinates in natural order, third dimension is time (regular)
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-06-%02d", 1:4))
-z <- as_geozarr(x, "cs_data")
+arr <- as_geozarr(x, name = "cs_data", location = z[["/"]])
 z[["/cs_data"]]
 #> <Zarr array> ⌖ cs_data 
 #> Path      : /cs_data 
 #> Domain    : GeoZarr 
 #> Data type : int32 
-#> Shape     : 5 20 4 
+#> Shape     : 5 20 4 [x, y, time]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
@@ -127,19 +128,22 @@ z[["/cs_data"]]
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
+#> ├ ⌖ spatial_data
 #> └ ⌖ cs_data
 
 # Irregular time dimension in months: 31, 28, 31 and 30 days
+# Create the new array in the existing zarr object in a new group
 old_explicit <- geozarr_options()$max_explicit
 geozarr_options("max_explicit", 3L) # Force writing of external Zarr array
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-%02d-01", 1:4))
-z <- as_geozarr(x, "cs_data_irregular_time")
-z[["/cs_data_irregular_time"]]
+grp <- z$add_group("/", "irregular")
+arr <- as_geozarr(x, name = "cs_data_irregular_time", location = grp)
+z[["/irregular/cs_data_irregular_time"]]
 #> <Zarr array> ⌖ cs_data_irregular_time 
-#> Path      : /cs_data_irregular_time 
+#> Path      : /irregular/cs_data_irregular_time 
 #> Domain    : GeoZarr 
 #> Data type : int32 
-#> Shape     : 5 20 4 
+#> Shape     : 5 20 4 [x, y, time]
 #> Chunking  : 5 20 4 
 #> 
 #> Coordinate system:
@@ -148,12 +152,15 @@ z[["/cs_data_irregular_time"]]
 #>  Y    y    OTHER     20     [0 ... 95000]               -   
 #>  T    time FUTURE     4     [2026-01-01 ... 2026-04-01] days
 
-# "time_coord" is a regular Zarr array, it uses the ⌗ glyph
+# "time" is a regular Zarr array, it uses the ⌗ glyph
 z$hierarchy()
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
-#> ├ ⌖ cs_data_irregular_time
-#> └ ⌗ time_coord
+#> ├ ⌖ spatial_data
+#> ├ ⌖ cs_data
+#> └ ☰ irregular
+#>   ├ ⌖ cs_data_irregular_time
+#>   └ ⌗ time
 geozarr_options("max_explicit", old_explicit)
 ```
 

@@ -100,7 +100,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         coords_list <- lapply(seq_along(coord_defs), function(j) {
           private$cs_build_coordinates(coord_defs[[j]], dim_name, j, dim_length, direction)
         })
-        names(coords_list) <- vapply(coords_list, function(cd) cd$name, FUN.VALUE = character(1L))
+        names(coords_list) <- vapply(coords_list, function(cd) cd$name, character(1L))
 
         CoordinateSystemAxis$new(name = dim_name, abbreviation = abbr, coordinates = coords_list)
       }
@@ -371,6 +371,37 @@ geozarr_array <- R6::R6Class('geozarr_array',
       ax_na <- which(is.na(is_axis))
       is_axis[ax_na] <- is_orient[ax_na]
       is_axis
+    },
+
+    # Create a new external Zarr array at `ext_name` in `grp`, or verify that an
+    # existing one is compatible with `values`. `values` may be a vector (a
+    # single-dimension coordinate array) or a matrix (e.g. a 2 x n bounds array),
+    # in R-native shape/ordering. `dim_names` must have one entry per dimension
+    # of `values`, in the same order.
+    write_or_verify_external = function(grp, ext_name, values, unit, dim_names) {
+      shp <- dim(values) %||% length(values)
+
+      ext_arr <- grp$children[[ext_name]]
+      if (is.null(ext_arr)) {
+        # No existing array -- write new array
+        ext_arr <- zarr::as_zarr(x = values, name = ext_name, location = grp)
+        meta <- ext_arr$metadata
+        meta$dimension_names <- dim_names
+        meta$attributes$units <- unit
+        ext_arr$metadata <- meta
+        ext_arr$save()
+        grp$set_node(ext_arr)
+      } else {
+        # Check existing array for coincidence with `values`
+        ok <- length(ext_arr$shape) == length(shp) && all(ext_arr$shape == shp) &&
+          (ext_arr$attribute('units') %||% '-') == unit &&
+          storage.mode(ext_vals <- ext_arr[]) == storage.mode(values) &&
+          (if (is.character(values)) identical(ext_vals, values)
+           else all(.near(ext_vals, values)))
+        if (!ok)
+          stop('Incompatible external array "', ext_name, '" already exists', call. = FALSE)
+      }
+      invisible(self)
     }
   ),
   public = list(
@@ -535,7 +566,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
       # Get the metadata of self and adjust the shape
       ab <- array_builder$new(self$metadata)
       ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)
-      new_meta <- set_convention(ab$metadata(), cs, '..')
+      new_meta <- set_convention(ab$metadata(), cs, external_group = '..')
+      # FIXME: Must use CRS from self
       new_meta$chunk_key_encoding <- self$metadata$chunk_key_encoding
 
       # Create the new GeoZarr array
@@ -565,6 +597,50 @@ geozarr_array <- R6::R6Class('geozarr_array',
         gza$write(self$read(selection))
         z
       }
+    },
+
+    #' @description Write any external coordinates of this array to the
+    #'   underlying Zarr store. The metadata of this array is scanned for `ref`
+    #'   objects in the `cs` convention attributes. The values of the external
+    #'   coordinates are taken from the [CoordinateSystem] instance of this
+    #'   array.
+    #' @return Self, invisibly.
+    write_external_coordinates = function() {
+      crs <- private$.metadata$attributes$cs$crs
+      if (!is.null(crs)) {
+        for (i in seq_along(crs))
+          for (ax in seq_along(crs[[i]]$axes)) {
+            axis_name <- names(crs[[i]]$axes)[ax]
+            axis <- crs[[i]]$axes[[ax]]
+            for (j in seq_along(axis$coordinates)) {
+              # Coordinate values
+              ext <- axis$coordinates[[j]]$values$external
+              if (!is.null(ext)) {
+                if (is.null(private$.parent))
+                  stop('Single-array Zarr store cannot have external coordinate arrays', call. = FALSE)
+                path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
+                ext_name <- path_parts[length(path_parts)]
+                path_parts <- path_parts[-(length(path_parts))] # Strip the coordinate array name
+                grp <- self$walk_path(path_parts)
+                crds <- private$.cs$axes[[axis_name]]$coordinates_list[[j]]
+                values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
+                private$write_or_verify_external(grp, ext_name, values, crds$unit, ext_name)
+              }
+
+              # Boundary values
+              bnd_ext <- axis$coordinates[[j]]$bounds$external
+              if (!is.null(bnd_ext)) {
+                path_parts_bnd <- strsplit(bnd_ext$ref$node, '/', fixed = TRUE)[[1L]]
+                ext_bnd_name <- path_parts_bnd[length(path_parts_bnd)]
+                path_parts_bnd <- path_parts_bnd[-(length(path_parts_bnd))]
+                grp_bnd <- self$walk_path(path_parts_bnd)
+                bnd_values <- crds$bounds  # 2 x n matrix, per coordinates.R
+                private$write_or_verify_external(grp_bnd, ext_bnd_name, bnd_values, crds$unit, c('bounds', ext_name))
+              }
+            }
+          }
+      }
+      invisible(self)
     }
   ),
   active = list(
@@ -576,37 +652,3 @@ geozarr_array <- R6::R6Class('geozarr_array',
     }
   )
 )
-
-# ================= Helper functions ===========================================
-
-# This function writes the external coordinate arrays to the Zarr store. The
-# meta argument is scanned for ref objects in the `cs` convention attributes.
-# The values are taken from the coord_sys argument, a CoordinateSystem instance.
-# The relative path is computed against the path of argument arr, a zarr_array
-# instance.
-.write_external_coordinates <- function(meta, coord_sys, arr) {
-  crs <- meta$attributes$cs$crs
-  if (!is.null(crs)) {
-    for (c in seq_along(crs))
-      for (ax in seq_along(crs[[c]]$axes)) {
-        axis_name <- names(crs[[c]]$axes)[ax]
-        axis <- crs[[c]]$axes[[ax]]
-        ext <- axis$coordinates[[1L]]$values$external
-        if (!is.null(ext)) {
-          if (is.null(arr$parent))
-            stop('Single-array Zarr store cannot have external coordinate arrays', call. = FALSE)
-          path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
-          path_parts <- path_parts[-(length(path_parts))] # Strip the array name
-          grp <- arr$walk_path(path_parts)
-          crds <- coord_sys$axes[[axis_name]]$coordinates
-          values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
-          sibling <- zarr::as_zarr(x = values, name = axis_name, location = grp)
-          sibling_metadata <- sibling$metadata
-          sibling_metadata$dimension_names <- axis_name
-          sibling$metadata <- sibling_metadata
-          sibling$save()
-          grp$set_node(sibling)
-        }
-      }
-  }
-}

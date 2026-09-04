@@ -23,9 +23,10 @@ converts the raw values to intelligible coordinates, such as
   \describe{
     \item{\code{values}}{(read-only) Retrieve the coordinate values as timestamps.}
 
-    \item{\code{bounds}}{(read-only) Retrieve the boundary values around time
-coordinates, a matrix with 2 rows and as many columns as there are
-coordinates values or \code{NULL} if boundary values have not been set.}
+    \item{\code{bounds}}{Set or retrieve the boundary values around time
+coordinates. When setting, assign a matrix with 2 rows and as many
+columns as there are coordinates values. When retrieving, a matrix as
+just described or \code{NULL} if boundary values have not been set.}
 
     \item{\code{bounds_raw}}{(read-only) Retrieve the boundary values around time
 coordinates, packed if possible. If the boundary values are packed, a
@@ -100,8 +101,9 @@ reference point for time coordinate calculations.}
 time coordinates. Must be one of the calendars supported by the CF
 Metadata Conventions. If not given, defaults to "standard".}
       \item{\code{values}}{A vector of values. They may be numeric, in which case they
-are taken to be offsets from the epoch in the given unit, or character,
-in which case they must be ISO 8601 time stamps.}
+are taken to be offsets from the epoch in the given unit and the values
+may not be packed, or character, in which case they must be ISO 8601
+time stamps.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
 value, respectively. If the boundaries are irregularly spaced, a matrix

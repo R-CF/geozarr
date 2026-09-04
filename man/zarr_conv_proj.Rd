@@ -56,7 +56,16 @@ a CRS in PROJJSON format.}
   Create a new instance of a "proj" convention agent.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{zarr_conv_proj$new()}
+    \preformatted{zarr_conv_proj$new(attributes)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{attributes}}{Optional, a named \code{list} with one or more of the \code{proj}
+attributes. The elements in the list must be one or more of "code",
+"wkt2" and "projjson".}
+    }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{

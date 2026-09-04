@@ -28,6 +28,8 @@
 #'   "cs": {
 #'     "crs": [
 #'       {
+#'         "type": "compound" | "planar" | "vertical" | "temporal" | "undefined",
+#'         "description: "optional text",
 #'         "axes": {
 #'           "<dimension_name>": {
 #'             "abbreviation": "X",
@@ -37,7 +39,9 @@
 #'           }
 #'         }
 #'       }
-#'     ]
+#'     ],
+#'     "id": "Identifier of a compound CRS",
+#'     "attributes": { <optional attributes as a JSON sub-schema> }
 #'   }
 #' }
 #' ```
@@ -54,6 +58,9 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
   private = list(
     # Optional top-level name for the coordinate set.
     .name = character(0),
+
+    # Optional top-level CRS identifier, a `zarr_conv_proj` instance when set.
+    .crs_id = NULL,
 
     # List of CRS objects. Each element is the list that will be serialised
     # directly as a JSON object under cs$crs[].
@@ -80,15 +87,15 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     #' @param axes A named list of axis definitions, keyed by the dimension name
     #'   that appears in the Zarr array's `dimension_names` metadata. If the
     #'   argument is `NULL` or an empty list, the call is a no-op.
-    #' @param name Optional character string. Descriptive name for the CRS.
-    #' @param id Optional. Convention `proj` attributes (`proj:code`,
-    #'   `proj:wkt2`, or `proj:projjson`) providing the formal OGC description
-    #'   of the CRS.
+    #' @param type Optional, character string. Type of CRS, one of "compound",
+    #'   "planar", "vertical", "temporal", "unknown" (default).
+    #' @param id Optional. An instance of [zarr_conv_proj] providing the formal
+    #'   OGC description of the CRS.
     #' @param geolocation Optional list. Geolocation grid definition for
     #'   curvilinear grids. This should only be included for CRS's that
     #'   represent a planar coordinate system.
     #' @return Self, invisibly.
-    add_crs = function(axes, name = NULL, id = NULL, geolocation = NULL) {
+    add_crs = function(axes, type = "unknown", id = NULL, geolocation = NULL) {
       if (is.null(axes) || !length(axes)) return()
       if (!is.list(axes) || is.null(names(axes)) || any(!nzchar(names(axes))))
         stop('Argument `axes` must be a non-empty named list', call. = FALSE)
@@ -96,13 +103,8 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       if (any(bad))
         stop('Every element of `axes` must be a non-empty list', call. = FALSE)
 
-      crs <- list(axes = axes)
-      if (!is.null(name)) {
-        if (!is.character(name) || length(name) != 1L || !nzchar(name))
-          stop('Argument `name` must be a non-empty character string', call. = FALSE)
-        crs$name <- name
-      }
-      if (!is.null(id)) crs$id <- id
+      crs <- list(type = type, axes = axes)
+      if (!is.null(id)) crs$id <- id$write(crs$id)
       if (!is.null(geolocation)) crs$geolocation <- geolocation
 
       private$.crs <- c(private$.crs, list(crs))
@@ -115,7 +117,8 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
       if (!length(private$.crs))
         stop('At least one CRS must be added via `add_crs()`', call. = FALSE)
 
-      cs <- list(crs = private$.crs)
+      cs <- if (is.null(private$.crs_id)) list(crs = private$.crs)
+            else list(crs = private$.crs, id = private$.crs_id$write(list()))
       if (length(private$.name)) cs <- c(list(name = private$.name), cs)
       cs
     },
@@ -301,6 +304,15 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
         private$.name <- value
       else
         stop('`name` must be a non-empty character string.', call. = FALSE)
+    },
+
+    #' @field cs_crs Optional top-level CRS identifier, an instance of
+    #' [zarr_conv_proj].
+    cs_crs = function(value) {
+      if (missing(value))
+        private$.crs_id
+      else if (inherits(value, 'zarr_conv_proj'))
+        private$.crs_id <- value
     },
 
     #' @field crs (read-only) The list of CRS objects accumulated so far.

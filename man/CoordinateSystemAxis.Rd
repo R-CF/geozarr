@@ -20,6 +20,8 @@ thus not with the axis.
   \describe{
     \item{\code{abbreviation}}{Set or retrieve the abbreviation of the axis.}
 
+    \item{\code{coordinates_list}}{(read-only) Retrieve all coordinates in a \code{list}.}
+
     \item{\code{coordinates}}{(read-only) Retrieve the currently active coordinates.}
 
     \item{\code{length}}{(read-only) Retrieve the length of the axis.}

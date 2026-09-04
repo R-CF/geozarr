@@ -183,6 +183,12 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
         private$.abbreviation <- value[1L]
     },
 
+    #' @field coordinates_list (read-only) Retrieve all coordinates in a `list`.
+    coordinates_list = function(value) {
+      if (missing(value))
+        private$.coordinates
+    },
+
     #' @field coordinates (read-only) Retrieve the currently active coordinates.
     coordinates = function(value) {
       if (missing(value))

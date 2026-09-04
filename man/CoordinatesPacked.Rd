@@ -80,13 +80,13 @@ coordinate value and the increment.}
 packed data is for.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
-value, respectively. If the boundaries are irregularly spaced, a matrix
-with two rows and as many columns as there are elements, with the offset
-to the boundary below the coordinate value in row 1 and the offset to the
-boundary above the coordinate value in row 2. The boundaries represent
-the finite extent around the boundary value that this value is
-representative for. If this argument is not provided, the coordinate
-values are assumed to represent a point value.}
+value, respectively. Otherwise, a matrix with two rows and as many
+columns as there are elements, with the offset to the boundary below the
+coordinate value in row 1 and the offset to the boundary above the
+coordinate value in row 2. The boundaries represent the finite extent
+around the boundary value that this value is representative for. If this
+argument is not provided, the coordinate values are assumed to represent
+a point value.}
       \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}

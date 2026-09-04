@@ -4,12 +4,29 @@
 \alias{set_convention}
 \title{Set the GeoZarr convention with array details in the metadata of the array}
 \usage{
-set_convention(metadata, coord_sys, external_group, registration = "pixel")
+set_convention(
+  metadata,
+  coord_sys,
+  crs = NULL,
+  external_group,
+  registration = "pixel"
+)
 }
 \arguments{
 \item{metadata}{A \code{list} with the basic metadata of the array.}
 
 \item{coord_sys}{The \link{CoordinateSystem} instance of the GeoZarr array.}
+
+\item{crs}{Optional, a \code{list} with 1 or more CRS definitions. Named list
+elements can be "compound",  "spatial" (X-Y), "vertical" or "temporal".
+Those elements are a \code{list} themselves with one or more of the named
+elements "code", "wkt2" or "projjson" (for the attributes in the \code{proj}
+convention) with their value being the attribute to register. In the \code{cs}
+convention, a "compound" CRS will be associated with the coordinate system
+of the GeoZarr array, the other options will be associated with the
+specific CRSs of the coordinate system. In the \code{spatial} convention there
+can only be 1 CRS which must be of type "compound" or "spatial" and which
+is registered at the root of the "attributes" of the GeoZarr array.}
 
 \item{external_group}{Optional, the path to the group, relative to the
 location of the array, that stores any external arrays with coordinate
@@ -37,5 +54,7 @@ ax2 <- CoordinateSystemAxis$new("Axis2", "Y", crd2)
 
 cs <- CoordinateSystem$new("CS", list(Axis1 = ax1, Axis2 = ax2))
 
-set_convention(ab$metadata(), cs)
+crs <- list(spatial = list(code = "EPSG:4326"))
+
+set_convention(ab$metadata(), cs, crs)
 }

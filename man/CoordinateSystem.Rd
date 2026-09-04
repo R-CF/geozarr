@@ -17,6 +17,8 @@ extended with specific code for this package.
   \describe{
     \item{\code{axes}}{(read-only) Retrieve the list of axes that make up this
 coordinate system.}
+
+    \item{\code{crs}}{Set or retreive the CRS identifier of the coordinate system.}
   }
   \if{html}{\out{</div>}}
 }
@@ -55,7 +57,7 @@ coordinate system.}
 one axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystem$new(name, axes, attributes = list())}
+    \preformatted{CoordinateSystem$new(name, axes, crs = "", attributes = list())}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -64,6 +66,8 @@ one axis.
       \item{\code{name}}{Character string. Name of the coordinate system.}
       \item{\code{axes}}{A \code{list} of instances of \link{CoordinateSystemAxis}. There must
 be at least one axis in the list.}
+      \item{\code{crs}}{Optional, character string with the description of the CRS of
+this coordinate system, always assumed to be compound.}
       \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinate
 system.}
     }

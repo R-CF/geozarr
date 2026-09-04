@@ -33,9 +33,10 @@ of values.}
     \item{\code{raw}}{(read-only) Retrieve the coordinate values as stored, either a
 full vector or packed.}
 
-    \item{\code{bounds}}{(read-only) Retrieve the boundary values around
-coordinates, a matrix with 2 rows and as many columns as there are
-coordinates values or \code{NULL} if boundary values have not been set.}
+    \item{\code{bounds}}{Set or retrieve the boundary values around coordinates.
+When setting, assign a matrix with 2 rows and as many columns as there
+are coordinates values. When retrieving, a matrix as just described or
+\code{NULL} if boundary values have not been set.}
 
     \item{\code{bounds_raw}}{(read-only) Retrieve the boundary values around
 coordinates exactly as they are stored with the coordinate. If the
@@ -104,18 +105,18 @@ system axis.
     \describe{
       \item{\code{name}}{Character string. Name of the coordinate set.}
       \item{\code{direction}}{Character string. Direction of the coordinates. Must be
-one from a set of values.}
+one from the set of values given in \code{AxisDirection}.}
       \item{\code{unit}}{Character string. Unit of measure of the coordinates.}
       \item{\code{values}}{A vector of values.}
       \item{\code{bounds}}{Optional. If the boundaries are regularly spaced, a vector
 with the offset to the boundary lower and higher than the coordinate
-value, respectively. If the boundaries are irregularly spaced, a matrix
-with two rows and as many columns as there are elements, with the
-offset to the boundary below the coordinate value in row 1 and the
-offset to the boundary above the coordinate value in row 2. The
-boundaries represent the finite extent around the boundary value that
-this value is representative for. If this argument is not provided, the
-coordinate values are assumed to represent a point value.}
+value, respectively. Otherwise, a matrix with two rows and as many
+columns as there are elements, with the offset to the boundary below
+the coordinate value in row 1 and the offset to the boundary above the
+coordinate value in row 2. The boundaries represent the finite extent
+around the boundary value that this value is representative for. If
+this argument is not provided, the coordinate values are assumed to
+represent a point value.}
       \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
     }
     \if{html}{\out{</div>}}

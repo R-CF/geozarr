@@ -39,10 +39,11 @@ The following conventions are supported by `geozarr`:
 # Working with `geozarr`
 
 The `geozarr` package is closely integrated with the `zarr` package, to
-the extent that the only user-facing function in this package is
+the extent that the only user-facing functions in this package are
 `as_geozarr()`, to convert an R object (vector, matrix, array) into a
-Zarr array or store with GeoZarr metadata. Manipulating the Zarr object
-is done with the same tools as a regular Zarr object.
+Zarr array or store with GeoZarr metadata, and `create_geozarr_array()`,
+to create a GeoZarr array with a coordinate system defined. Manipulating
+the Zarr object is done with the same tools as a regular Zarr object.
 
 The `as_geozarr()` function creates a GeoZarr object from an R matrix or
 array. A GeoZarr object is like a Zarr object but with special
@@ -52,6 +53,12 @@ of length 100 (or less if the array is smaller) and compressed. The
 object may be a stand-alone Zarr store (single Zarr array only), or a
 Zarr store to which additional Zarr groups and arrays may be added. The
 Zarr store may be in memory or persisted to a local file system.
+
+The `create_geozarr_array()` function creates a new GeoZarr array in an
+existing Zarr store. The function takes a description of the coordinate
+system as one of its arguments and creates the array to match that. The
+array will initially not have any data, but this can be loaded with the
+`geozarr_array$write()` method.
 
 Depending on the properties of the R object, the GeoZarr object may use
 the “spatial” or “cs” convention for encoding. The “spatial” encoding is
@@ -66,15 +73,15 @@ tied to the top-left corner of the array space. For all other cases the
 “cs” convention will be used which can use any type and number of axes,
 including Z and T.
 
-If the coordinates along the axes (the `dimnames` of the R object) are
-not regularly spaced, secondary Zarr arrays will be created with the
-axis coordinates, if the length of the axis is longer than the option
-`GeoZarr.options$max_explicit` – shorter sets of coordinates are stored
-in the Zarr array `cs` attributes.
+If the coordinates along an axis (the `dimnames` of the R object, or as
+directly specified) are not regularly spaced, secondary Zarr arrays will
+be created with the axis coordinates, if the length of the axis is
+longer than the option `GeoZarr.options$max_explicit` – shorter sets of
+coordinates are stored in the Zarr array `cs` attributes.
 
-Any time coordinates will be converted to a `CFtime` format with a
+Any time coordinates will be converted to a `CFTime` format with a
 reference of “days since 1970-01-01”, compatible with the standard
-system clock.
+system clock, unless specific details are provided.
 
 ``` r
 library(geozarr)

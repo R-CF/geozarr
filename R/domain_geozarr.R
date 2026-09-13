@@ -43,16 +43,28 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     # Detect if the referenced array is XArray formatted. Dimension variables are
     # excluded.
     is_xarray_array = function(name, metadata, parent, store) {
-      # XArray array must have a parent
       if (is.null(parent) || metadata$node_type == 'group')
         return(FALSE)
 
-      dims <- metadata$dimension_names %||% metadata$attributes$`_ARRAY_DIMENSIONS`
-      if (is.null(dims) || (len <- length(dims)) == 0L || (len == 1L && dims[1L] == name))
+      attrs <- metadata$attributes %||% list()
+
+      # v.2: unambiguous
+      if (!is.null(attrs$`_ARRAY_DIMENSIONS`))
+        return(TRUE)
+
+      # v.3: dimension_names is necessary but not sufficient
+      dims <- metadata$dimension_names
+      if (is.null(dims) || length(dims) == 0L)
         return(FALSE)
 
-      siblings <- store$list_dir(parent$prefix)
-      any(dims %in% siblings)
+      # Exclude dimension coordinate arrays (1D, same name as its dimension)
+      if (length(dims) == 1L && dims[1L] == name)
+        return(FALSE)
+
+      # XArray data variables always carry the "coordinates" attribute
+      # Secondary arrays (coordinate values, boundaries) never do
+      coords_attr <- attrs$coordinates
+      !is.null(coords_attr) && is.character(coords_attr) && nchar(coords_attr) > 0L
     }
   ),
   public = list(

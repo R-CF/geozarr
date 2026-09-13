@@ -118,6 +118,7 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
     stop('Duplicate axes detected', call. = FALSE)
 
   # Make a generic zarr array
+  dimnames(x) <- NULL # FIXME: This is done in package zarr as of release after 0.5.1
   z <- zarr::as_zarr(x, name, location)
   arr <- if (inherits(z, 'zarr')) z[[paste0('/', name)]] else z
   meta <- set_convention(arr$metadata, cs, external_group = '..', registration = registration)
@@ -413,3 +414,4 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
 
   gza
 }
+

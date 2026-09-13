@@ -217,7 +217,10 @@ geozarr_array <- R6::R6Class('geozarr_array',
         stop('Axis "', dim_name, '": ', context, ' uses an attribute reference which is not supported', call. = FALSE)
 
       ref_arr <- private$resolve_external_node(node = ref$node, uri = ref$uri)
-      ref_arr$read()
+      if (is.null(ref_arr))
+        warning('External node "', ref$node, '" not found!')
+      else
+        ref_arr$read()
     },
 
     # Fallback: a 0-based ordinal axis for dimensions carrying no cs metadata.
@@ -628,7 +631,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
               }
 
               # Boundary values
-              bnd_ext <- axis$coordinates[[j]]$bounds$external
+              bnd_ext <- axis$coordinates[[j]]$boundaries$external
               if (!is.null(bnd_ext)) {
                 path_parts_bnd <- strsplit(bnd_ext$ref$node, '/', fixed = TRUE)[[1L]]
                 ext_bnd_name <- path_parts_bnd[length(path_parts_bnd)]

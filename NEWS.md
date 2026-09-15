@@ -1,4 +1,4 @@
-# geozarr (development version)
+# geozarr 0.2.0
 
 * Coordinate system elements can have attributes.
 * Exporting multiple objects for downstream package use.

@@ -226,7 +226,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # Fallback: a 0-based ordinal axis for dimensions carrying no cs metadata.
     cs_ordinal_axis = function(dim_name, dim_length) {
       crd_name <- paste0(dim_name, '_coordinates')
-      values   <- CoordinateValuesOrdinal$new(dim_length)
+      values   <- CoordinatesOrdinal$new(dim_length)
       coords   <- Coordinates$new(name = crd_name, direction = 'OTHER', unit = '', values = values)
       CoordinateSystemAxis$new(name = dim_name, abbreviation = '', coordinates = setNames(list(coords), crd_name))
     },

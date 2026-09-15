@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 [![Lifecycle: Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](https://lifecycle.r-lib.org/articles/stages.html) [![CRAN Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr) [![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org) [![Last commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The `geozarr` package implements a set of conventions for geospatial data on top of the Zarr specification. It builds on the `zarr` package, a native R implementation of the Zarr specification that can read and write Zarr v.3 stores in memory, on the local file system and over HTTP.
+The `geozarr` package implements a set of conventions for geospatial data on top of the Zarr specification. It builds on the `zarr` package, a native R implementation of the Zarr specification that can read and write Zarr v.3 stores in memory, on the local file system and over HTTP. 
 
 The following conventions are supported by `geozarr`:
 
@@ -54,7 +54,7 @@ z <- as_geozarr(x, name = "spatial_data")
 z[["/spatial_data"]]
 
 # GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
-z$hierarchy()
+z$hierarchy() 
 
 # `cs` convention
 # Create the new array in the existing zarr object in the root group

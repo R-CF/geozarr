@@ -174,8 +174,8 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 #'   * `coordinates`: A vector of coordinate values. The length of the vector
 #'   becomes the length of the corresponding dimension in the array.
 #'   * `boundaries`: Optional. For boundaries that are regular, meaning that the
-#'   lower offset `(-∞, 0)` for each coordinate is constant and the same for the
-#'   higher offset `(0, ∞)`, then a vector of the lower and higher offset, in
+#'   lower offset `(-\eqn{\infty}, 0)` for each coordinate is constant and the same for the
+#'   higher offset `(0, \eqn{\infty})`, then a vector of the lower and higher offset, in
 #'   that order, may be supplied. Otherwise a matrix has to be supplied with as
 #'   many columns as there are coordinates and the lower offsets in row 1 and
 #'   the higher offsets in row 2.

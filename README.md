@@ -109,7 +109,7 @@ z[["/spatial_data"]]
 #>  OTHER cls  OTHER      4     [a ... d]          -
 
 # GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
-z$hierarchy()
+z$hierarchy() 
 #> <Zarr hierarchy> 
 #> ☰ / (root group)
 #> └ ⌖ spatial_data

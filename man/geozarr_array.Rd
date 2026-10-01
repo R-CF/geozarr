@@ -142,7 +142,9 @@ case-sensitive and can be specified in any order. If values for the
 range per axis fall outside of the extent of the axis, the range is
 clipped to the extent of the axis.}
       \item{\code{.name}}{The name of the GeoZarr array to be created. If omitted, an
-array will be created at the root of a new in-memory Zarr store.}
+array will be created at the root of a new in-memory Zarr store. The
+new array can then not have any associated arrays, such as for
+irregular coordinate values or boundaries.}
       \item{\code{.location}}{Optional. If supplied, either an existing \link[zarr:zarr_group]{zarr_group}
 in a \link[zarr:zarr]{zarr} object, or a character string giving the location on a
 local file system where to persist the data. If the argument is a
@@ -150,11 +152,8 @@ local file system where to persist the data. If the argument is a
 the location for a new Zarr store then the location must be writable by
 the calling code. As per the Zarr specification, it is recommended to
 use a location that ends in ".zarr" when providing a location for a new
-store. If argument \code{.name} is given then the \code{geozarr_array} will be
-created in the root of the \code{zarr} store with that name. If the \code{.name}
-argument is not given, a single-array Zarr store will be created. If
-the \code{location} argument is not given, a \code{zarr} object is created in
-memory.}
+store. If the \code{.location} argument is not given, a \code{zarr} object is
+created in memory.}
       \item{\code{.rightmost.closed}}{Optional. Single logical value to indicate if
 the upper boundary of range in each axis should be included.}
     }
@@ -197,13 +196,13 @@ the key is that the specification in argument \code{...} uses the same
 domain of values as the respective axes in \code{x} use.
   }
   \subsection{Returns}{
-    If the \code{.location} argument is a \code{zarr_group}, the new Zarr
+    If the \code{.location} argument is a \code{zarr_group}, the new
 \code{geozarr_array} is returned, with a subset of data from this GeoZarr
 array, having the axes and attributes of this GeoZarr array. Otherwise,
 the \code{zarr} object that is newly created and which contains the
-\code{geozarr_array} instance, or an error if the \code{zarr} object could not be
-created. If one or more of the selectors in the \code{...} argument fall
-entirely outside of the range of the axis \code{NULL} is returned.
+\code{geozarr_array} instance. If one or more of the selectors in the \code{...}
+argument fall entirely outside of the range of the axis \code{NULL} is
+returned.
   }
 }
 

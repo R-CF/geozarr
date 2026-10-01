@@ -52,13 +52,18 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     #' @param ... Ignored.
     #' @return Self, invisible.
     print = function(...) {
+      coords <- private$.active_coordinates
       cat('<Axis> ', private$.name, '\n', sep = '')
       cat('Abbreviation :', if (nzchar(private$.abbreviation)) private$.abbreviation else '-', '\n')
-      cat('Length       :', private$.active_coordinates$length, '\n')
-      cat('Coordinates  :\n')
-      coords <- do.call(rbind, lapply(private$.coordinates, function(crd) crd$brief()))
-      if (nrow(coords) == 1L) coords$name <- NULL
-      print(.slim.data.frame(coords, ...), right = FALSE, row.names = FALSE)
+      if (inherits(coords, "CoordinatesTime")) {
+        cat('Calendar     :', coords$time$calendar$name, '\n')
+        cat('Epoch        :', paste0(coords$time$calendar$origin_date, "T",
+                                     coords$time$calendar$origin_time), '\n')
+      }
+      cat('Coordinates  : [', coords$length, ']\n', sep = '')
+      all_coords <- do.call(rbind, lapply(private$.coordinates, function(crd) crd$brief()))
+      if (nrow(all_coords) == 1L) all_coords$name <- NULL
+      print(.slim.data.frame(all_coords, ...), right = FALSE, row.names = FALSE)
       if (length(private$.attributes)) self$print_attributes()
       else private$.active_coordinates$print_attributes()
       invisible(self)

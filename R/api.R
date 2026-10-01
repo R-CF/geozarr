@@ -40,33 +40,26 @@
 #'   argument `name` must be provided. If the argument gives the location for a
 #'   new Zarr store then the location must be writable by the calling code. As
 #'   per the Zarr specification, it is recommended to use a location that ends
-#'   in ".zarr" when providing a location for a new store. If argument `name` is
-#'   given then the `geozarr_array` will be created in the root of the `zarr`
-#'   store with that name. If the `name` argument is not given, a single-array
-#'   Zarr store will be created. If the `location` argument is not given, a
-#'   `zarr` object is created in memory.
+#'   in ".zarr" when providing a location for a new store. If the `location`
+#'   argument is not given, a `zarr` object is created in memory.
 #' @param registration Either "pixel" (the default) or "node". Pixel
 #'   registration interprets the coordinates in the "dimnames" of argument `x`
 #'   as being the upper-left corner of each grid cell. Node registration
 #'   interprets them as the centers of grid cells. In both cases the elements in
 #'   the array are assumed to represent an area.
-#' @return If the `location` argument is a `zarr_group`, the new `geozarr_array`
-#'   instance is returned. Otherwise, the `zarr` object that is newly created
-#'   and which contains the GeoZarr array in the root group, or an error if the
-#'   `zarr` object could not be created.
+#' @return If the `.location` argument is a `zarr_group`, the new
+#'   `geozarr_array` is returned. Otherwise, the `zarr` object that is newly
+#'   created and which contains the `geozarr_array` instance.
 #' @docType methods
 #' @export
 #' @examples
 #' x <- array(1:400, c(5, 20, 4))
 #' dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
-#' z <- as_geozarr(x, "my_data")
-#' z
+#' arr <- as_geozarr(x, "my_data")
+#' arr
 as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') {
   if (is.null(coordinates <- dimnames(x)))
     stop('Can only convert a matrix or array to a GeoZarr object when dimnames are set', call. = FALSE)
-
-  if (missing(name) || !nzchar(name))
-    name <- NULL
 
   # Check that required attributes and dimnames are set
   axis_names <- names(coordinates)
@@ -117,44 +110,22 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
   if (anyDuplicated(ax_abbr) > 0L)
     stop('Duplicate axes detected', call. = FALSE)
 
-  # Make a generic zarr array
-  dimnames(x) <- NULL # FIXME: This is done in package zarr as of release after 0.5.1
-  z <- zarr::as_zarr(x, name, location)
-  arr <- if (inherits(z, 'zarr')) z[[paste0('/', name)]] else z
-  meta <- set_convention(arr$metadata, cs, external_group = '..', registration = registration)
-  arr$metadata <- meta
-  arr$save()
+  # Build the array metadata from x
+  ab <- zarr::array_builder$new()
+  ab$data_type <- switch(storage.mode(x),
+                         'logical'   = 'bool',
+                         'integer'   = 'int32',
+                         'double'    = 'float64',
+                         'character' = 'string',
+                         stop('Unsupported data type:', storage.mode(x), call. = FALSE))
+  d <- dim(x) %||% length(x)
+  ab$shape <- d
+  # ab$chunk_shape <- zarr::auto_chunk(d) enable after zarr next release
+  if (prod(d) > zarr::zarr_options('min_compress'))
+    ab$add_codec('blosc', list(clevel = 6L))
 
-  # Prepare the output
-  if (inherits(location, 'zarr_group')) {
-    gza <- geozarr_array$new(name = name, metadata = meta, parent = location, store = location$store, coord_sys = cs)
-    gza$write_external_coordinates()
-    location$set_node(gza)
-  } else if (is.character(location)) {
-    if (is.null(name)) {
-      gza <- geozarr_array$new(name = '', metadata = meta, store = z$store, coord_sys = cs)
-      z$root <- gza
-    } else {
-      gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, store = z$store, coord_sys = cs)
-      z$root$set_node(gza)
-    }
-    gza$write_external_coordinates()
-    z
-  } else {
-    # Memory store: replace the zarr_array by a geozarr_array.
-    if (is.null(name)) {
-      # The root in z is the zarr_array
-      gza <- geozarr_array$new(name = '', metadata = meta, store = z$store, coord_sys = cs)
-      z$root <- gza
-    } else {
-      # Replace z[['/name']] (deeper nesting uses 'location' which is covered above)
-      gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, store = z$store, coord_sys = cs)
-      z$root$set_node(gza)
-    }
-    gza$write(x)
-    gza$write_external_coordinates()
-    z
-  }
+  dimnames(x) <- NULL
+  .create_gza(ab$metadata(), cs, x, name, location, registration = registration)
 }
 
 #' Create a new GeoZarr array

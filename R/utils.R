@@ -218,3 +218,51 @@ geozarr_options <- function(key, value) {
   "profiles"                = "other",
   "scenario"                = "other"
 )
+
+# This internal function takes details and a `name` for a new array to be
+# created and the `location` being a group or store where it needs to go. It
+# returns a geozarr_array instance if the `location` argument is a `zarr_group`,
+# a `zarr` instance otherwise.
+.create_gza <- function(meta, cs, data, name = NULL, location = NULL, ...) {
+  # Set the convention
+  meta <- set_convention(meta, cs, ...)
+
+  # Get the store and the target group
+  if (inherits(location, 'zarr_group')) {
+    if (!is.null(location$children[[name]]))
+      stop('Group ', location$name, ' already has a node with name ', name, call. = FALSE)
+    store <- location$store
+    meta <- store$create_array(parent = location$path, name = name, metadata = meta)
+    gza <- geozarr_array$new(name = name, metadata = meta, parent = location, store = store, coord_sys = cs)
+    gza$write(data)
+    gza$write_external_coordinates()
+    location$set_node(gza)
+  } else {
+    store <- if (is.null(location) || !nzchar(location))
+      zarr::zarr_memorystore$new()
+    else
+      zarr::zarr_localstore$new(root = location)
+    if (is.null(name) || !nzchar(name)) {
+      # Single-array store
+      name <- ''
+      meta <- store$create_array(name = '', metadata = meta)
+      z <- zarr::zarr$new(store)
+      gza <- geozarr_array$new(name = '', metadata = meta, store = store, coord_sys = cs)
+      gza$write(data)
+      z$root <- gza
+    } else if (zarr::is_valid_node_name(name)) {
+      # Array in the root group
+      store$create_group(name = '')
+      z <- zarr::zarr$new(store)
+      meta <- store$create_array(parent = '/', name = name, metadata = meta)
+      gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, store = store, coord_sys = cs)
+      gza$write(data)
+      gza$write_external_coordinates()
+      z$root$set_node(gza)
+    } else
+      stop('Invalid name for a Zarr array: ', name, call. = FALSE)
+  }
+
+  if (inherits(location, 'zarr_group')) gza
+  else z
+}

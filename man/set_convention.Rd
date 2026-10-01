@@ -4,13 +4,7 @@
 \alias{set_convention}
 \title{Set the GeoZarr convention with array details in the metadata of the array}
 \usage{
-set_convention(
-  metadata,
-  coord_sys,
-  crs = NULL,
-  external_group,
-  registration = "pixel"
-)
+set_convention(metadata, coord_sys, crs = NULL, ...)
 }
 \arguments{
 \item{metadata}{A \code{list} with the basic metadata of the array.}
@@ -28,12 +22,12 @@ specific CRSs of the coordinate system. In the \code{spatial} convention there
 can only be 1 CRS which must be of type "compound" or "spatial" and which
 is registered at the root of the "attributes" of the GeoZarr array.}
 
-\item{external_group}{Optional, the path to the group, relative to the
+\item{...}{Optional argument specific to the conventions. Currently supported
+arguments are "external_group": the path to the group, relative to the
 location of the array, that stores any external arrays with coordinate
-values.}
-
-\item{registration}{Optional, the registration point of the array for use
-with the "spatial" convention. Defaults to "pixel".}
+values, default is ".." (the same group as the array); and "registration":
+the registration point of the array for use with the "spatial" convention,
+default is "pixel".}
 }
 \value{
 A \code{list} with the metadata updated with convention attributes.

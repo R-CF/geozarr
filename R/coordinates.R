@@ -184,7 +184,8 @@ Coordinates <- R6::R6Class('Coordinates',
       vals <- private$coordinate_range()
       if (is.numeric(vals))
         vals <- round(vals, digits = 4L)
-      vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']', sep = '')
+      vals <- if (length(vals) == 1L) paste0('[', vals[1L], ']')
+              else paste0('[', vals[1L], ' ... ', vals[2L], ']')
 
       data.frame(name = private$.name, direction = private$.direction, values = vals,
                  unit = if (is.na(private$.unit) || !nzchar(private$.unit)) '-' else private$.unit)
@@ -203,7 +204,7 @@ Coordinates <- R6::R6Class('Coordinates',
     subset = function(rng) {
       values <- private$.values[rng[1L]:rng[2L]]
       bounds <- if (is.null(private$.bounds)) NULL
-                else if (is.matrix(private$.bounds)) private$.bounds[ , rng[1L]:rng[2L]] # Matrix form
+                else if (is.matrix(private$.bounds)) private$.bounds[ , rng[1L]:rng[2L], drop = FALSE] # Matrix form
                 else private$.bounds                                                     # Packed form
       Coordinates$new(self$name, private$.direction, private$.unit, values, bounds)
     },
@@ -309,7 +310,7 @@ Coordinates <- R6::R6Class('Coordinates',
           private$.bounds
         else if (is.vector(private$.bounds)) {
           vals <- self$values
-          rbind(vals - private$.bounds[1L], vals + private$.bounds[2L])
+          rbind(vals + private$.bounds[1L], vals + private$.bounds[2L])
         } else NULL
       } else private$set_boundary_values(values)
     },
@@ -424,7 +425,7 @@ public = list(
     bounds <- if (is.null(private$.bounds)) NULL
               else if (is.matrix(private$.bounds)) private$.bounds[ , rng[1L]:rng[2L]] # Matrix form
               else private$.bounds                                                     # Packed form
-    CoordinatesPacked$new(self$name, private$.direction, private$.unit, values, private$.length, bounds)
+    CoordinatesPacked$new(self$name, private$.direction, private$.unit, values, rng[2L] - rng[1L] + 1L, bounds)
   }
 ),
   active = list(
@@ -631,13 +632,12 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     #' @param attributes Optional. A `list` of attributes of the coordinates.
     #' @return An instance of this class or an error.
     initialize = function(name, direction, unit, epoch, calendar = 'standard', values, bounds = NULL, attributes = list()) {
-      super$initialize(name, direction, unit, values, NULL, attributes) # bounds are managed here, not in the ancestor
-
       private$.time <- try(CFtime::CFTime$new(definition = paste(unit, 'since', epoch),
                                      calendar = calendar, offsets = values), silent = TRUE)
       if (inherits(private$.time, 'try-error'))
         stop('Arguments do not form a valid calendar definition', call. = FALSE)
 
+      super$initialize(name, direction, unit, private$.time$offsets, NULL, attributes) # bounds are managed here, not in the ancestor
       if (!is.null(bounds))
         self$bounds <- bounds
     },
@@ -646,10 +646,24 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     #' @return A new instance of `CoordinatesTime`.
     copy = function() {
       time_def <- strsplit(private$.time$calendar$definition, ' ', fixed = TRUE)[[1L]]
-      bounds <- private$.bounds
       CoordinatesTime$new(private$.name, private$.direction,
                  time_def[1L], time_def[3L], private$.time$calendar$name,
-                 private$.values, bounds, private$.attributes)
+                 private$.values, private$.bounds, private$.attributes)
+    },
+
+    #' @description Return time coordinates spanning a smaller coordinate range.
+    #' @param rng The range of indices to include in the returned time coordinates.
+    #' @return A new `CoordinatesTime` instance covering the indicated range of
+    #'   indices, including boundary values, present.
+    subset = function(rng) {
+      time_def <- strsplit(private$.time$calendar$definition, ' ', fixed = TRUE)[[1L]]
+      values <- private$.values[rng[1L]:rng[2L]]
+      bounds <- private$.time$bounds
+      if (!is.null(bounds))
+        bounds <- bounds[ , rng[1L]:rng[2L], drop = FALSE]
+      CoordinatesTime$new(private$.name, private$.direction,
+                          time_def[1L], time_def[3L], private$.time$calendar$name,
+                          values, bounds, private$.attributes)
     },
 
     #' @description Retrieve the indices of the time axis falling between two
@@ -735,6 +749,7 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
 #' @export
 CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
   inherit = CoordinatesPacked,
+  cloneable = FALSE,
   private = list(
     .bottom = 0L # The lowest index value
   ),
@@ -753,7 +768,9 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
       if (!is.integer(length) || length(length) != 1L || length < 1L)
         stop('Argument `length` must be a positive integer value', call. = FALSE)
 
-      super$initialize(name, direction, unit = '-', values = c(low, 1L), length, attributes)
+      super$initialize(name = name, direction = direction, unit = '-',
+                       values = c(low, 1L), length = length,
+                       attributes = attributes)
       private$.bottom = low
     },
 

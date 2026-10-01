@@ -80,7 +80,7 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     #'   and a `geozarr_group` for a group node with GeoZarr conventions
     #'   declared in its attributes. Either the "spatial" or "cs" convention
     #'   has to be declared or the Zarr store has to be formatted using XArray
-    #'   or NCZarr or this domain will decline to manage the node.
+    #'   or this domain will decline to manage the node.
     #' @param name The name of the node.
     #' @param metadata List with the metadata of the node.
     #' @param parent The parent node of this new node. May be `NULL` for a root
@@ -95,8 +95,6 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
         if (private$is_xarray_array(name, metadata, parent, store)) {
           return(geozarr_array$new(name, metadata, parent, store))
         }
-
-        # Check for NCZarr
 
         # No fun
         return(FALSE)
@@ -139,11 +137,12 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 #'   specific CRSs of the coordinate system. In the `spatial` convention there
 #'   can only be 1 CRS which must be of type "compound" or "spatial" and which
 #'   is registered at the root of the "attributes" of the GeoZarr array.
-#' @param external_group Optional, the path to the group, relative to the
+#' @param ... Optional argument specific to the conventions. Currently supported
+#'   arguments are "external_group": the path to the group, relative to the
 #'   location of the array, that stores any external arrays with coordinate
-#'   values.
-#' @param registration Optional, the registration point of the array for use
-#'   with the "spatial" convention. Defaults to "pixel".
+#'   values, default is ".." (the same group as the array); and "registration":
+#'   the registration point of the array for use with the "spatial" convention,
+#'   default is "pixel".
 #' @return A `list` with the metadata updated with convention attributes.
 #' @export
 #' @examples
@@ -161,16 +160,18 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 #' crs <- list(spatial = list(code = "EPSG:4326"))
 #'
 #' set_convention(ab$metadata(), cs, crs)
-set_convention <- function(metadata, coord_sys, crs = NULL, external_group, registration = 'pixel') {
+set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
   meta <- metadata
   atts <- meta$attributes %||% list()
   axes <- coord_sys$axes
+  additional <- list(...)
 
   # Drop any existing information
   meta$dimension_names <- NULL
   atts$zarr_conventions <- NULL
   if (length(atts)) {
-    atts <- atts[!startsWith(names(atts), c('spatial:', 'proj:'))] # Drop any old spatial and proj elements
+    atts <- atts[!startsWith(names(atts), 'spatial:')] # Drop any old spatial elements
+    atts <- atts[!startsWith(names(atts), 'proj:')]    # Drop any old proj elements
     atts$cs <- NULL # Remove any previous cs information
   }
 
@@ -200,7 +201,7 @@ set_convention <- function(metadata, coord_sys, crs = NULL, external_group, regi
     spatial$set_coordinates(shape = c(axes[[X_axis]]$length, axes[[Y_axis]]$length),
                             x = axes[[X_axis]]$coordinates$values$raw,
                             y = axes[[Y_axis]]$coordinates$values$raw,
-                            registration = registration)
+                            registration = additional$registration %||% 'pixel')
     atts <- c(atts, spatial$as_list())
 
     if (!is.null(crs) && is.list(crs) && length(crs) == 1L &&
@@ -241,7 +242,7 @@ set_convention <- function(metadata, coord_sys, crs = NULL, external_group, regi
         # The name of the external array is the same as the name of the axis. The
         # actual writing to the external array should be done in the calling code.
         has_external <<- TRUE
-        cs_conv$values_external(paste0(external_group, '/', ax$name))
+        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', ax$name))
       }
 
       # Boundary values
@@ -252,7 +253,7 @@ set_convention <- function(metadata, coord_sys, crs = NULL, external_group, regi
         # External boundary values: Write boundary values to an external array.
         # The name of the external array is `<axis_name>_bounds`. The
         # actual writing to the external array should be done in the calling code.
-        cs_conv$values_external(paste0(external_group, '/', paste0(ax$name, '_bounds')))
+        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', paste0(ax$name, '_bounds')))
       else NULL
 
       # Time

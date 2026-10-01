@@ -1,5 +1,10 @@
 # geozarr (development version)
 
+* New method `geozarr_array$subset()` can subset arrays over all axes using coordinate value ranges.
+* New function `create_geozarr_array()` can create a new GeoZarr array with a coordinate system.
+* Attributes are attached to coordinates.
+* Time axis printing improved.
+
 # geozarr 0.2.0
 
 * Coordinate system elements can have attributes.

@@ -46,6 +46,7 @@ coordinate values.}
   \itemize{
     \item \href{#method-CoordinatesTime-initialize}{\code{CoordinatesTime$new()}}
     \item \href{#method-CoordinatesTime-copy}{\code{CoordinatesTime$copy()}}
+    \item \href{#method-CoordinatesTime-subset}{\code{CoordinatesTime$subset()}}
     \item \href{#method-CoordinatesTime-slice}{\code{CoordinatesTime$slice()}}
   }
 }
@@ -63,7 +64,6 @@ coordinate values.}
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getRangeMeaning"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getRangeMeaning'><code>Coordinates$getRangeMeaning()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getUnit"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getUnit'><code>Coordinates$getUnit()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="print"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-print'><code>Coordinates$print()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="subset"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-subset'><code>Coordinates$subset()</code></a></span></li>
 </ul>
 </details>}}
 \if{html}{\out{<hr>}}
@@ -134,6 +134,29 @@ coordinate values are assumed to represent a point value.}
   }
   \subsection{Returns}{
     A new instance of \code{CoordinatesTime}.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinatesTime-subset"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinatesTime-subset}{}}}
+\subsection{\code{CoordinatesTime$subset()}}{
+  Return time coordinates spanning a smaller coordinate range.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinatesTime$subset(rng)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rng}}{The range of indices to include in the returned time coordinates.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{CoordinatesTime} instance covering the indicated range of
+indices, including boundary values, present.
   }
 }
 

@@ -19,7 +19,6 @@ after subsetting or other forms of selection the value may be different.
     \item \href{#method-CoordinatesOrdinal-initialize}{\code{CoordinatesOrdinal$new()}}
     \item \href{#method-CoordinatesOrdinal-copy}{\code{CoordinatesOrdinal$copy()}}
     \item \href{#method-CoordinatesOrdinal-subset}{\code{CoordinatesOrdinal$subset()}}
-    \item \href{#method-CoordinatesOrdinal-clone}{\code{CoordinatesOrdinal$clone()}}
   }
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
@@ -104,25 +103,6 @@ to include in the result.}
   \subsection{Returns}{
     A new \code{CoordinatesOrdinal} instance covering the indicated
 range of values.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinatesOrdinal-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinatesOrdinal-clone}{}}}
-\subsection{\code{CoordinatesOrdinal$clone()}}{
-  The objects of this class are cloneable with this method.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinatesOrdinal$clone(deep = FALSE)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{deep}}{Whether to make a deep clone.}
-    }
-    \if{html}{\out{</div>}}
   }
 }
 

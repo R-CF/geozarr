@@ -233,7 +233,7 @@ test_that("cs-irregular-memory", {
 
   # Scenario 2
   z <- as_geozarr(x = arr, name = "abc")
-  expect_equal(z$arrays, c("/abc", "/time"))
+  expect_equal(z$arrays, c("/time", "/abc"))
   expect_true(inherits(z[["/abc"]], "geozarr_array"))
   expect_true(inherits(z[["/time"]], "zarr_array"))
   expect_equal(CFtime::CFTime$new("days since 1970-01-01", "proleptic_gregorian", z[["/time"]][])$format(), sprintf("2026-%02d-01", 1:4))
@@ -249,7 +249,7 @@ test_that("cs-irregular-memory", {
   z <- create_zarr()
   grp <- z$add_group("/", "grp")
   gza <- as_geozarr(x = arr, name = "abc", location = grp)
-  expect_equal(z$arrays, c("/grp/abc", "/grp/time"))
+  expect_equal(z$arrays, c("/grp/time", "/grp/abc"))
   expect_true(inherits(z[["/grp/time"]], "zarr_array"))
   expect_equal(CFtime::CFTime$new("days since 1970-01-01", "proleptic_gregorian", z[["/grp/time"]][])$format(), sprintf("2026-%02d-01", 1:4))
   expect_true(inherits(gza, "geozarr_array"))
@@ -277,7 +277,7 @@ test_that("cs-irregular-filesystem", {
   # Scenario 4
   fn <- tempfile(fileext = ".zarr")
   z <- as_geozarr(x = arr, name = "abc", location = fn)
-  expect_equal(z$arrays, c("/abc", "/time"))
+  expect_equal(z$arrays, c("/time", "/abc"))
   expect_true(inherits(z[["/abc"]], "geozarr_array"))
   expect_true(inherits(z[["/time"]], "zarr_array"))
   expect_equal(CFtime::CFTime$new("days since 1970-01-01", "proleptic_gregorian", z[["/time"]][])$format(), sprintf("2026-%02d-01", 1:4))
@@ -298,7 +298,7 @@ test_that("cs-irregular-filesystem", {
   z <- create_zarr(fn)
   grp <- z$add_group("/", "grp")
   gza <- as_geozarr(x = arr, name = "abc", location = grp)
-  expect_equal(z$arrays, c("/grp/abc", "/grp/time"))
+  expect_equal(z$arrays, c("/grp/time", "/grp/abc"))
   expect_true(inherits(gza, "geozarr_array"))
   expect_true(inherits(z[["/grp/time"]], "zarr_array"))
   expect_equal(CFtime::CFTime$new("days since 1970-01-01", "proleptic_gregorian", z[["/grp/time"]][])$format(), sprintf("2026-%02d-01", 1:4))

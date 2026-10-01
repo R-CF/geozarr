@@ -85,7 +85,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
       # Internal function: Build one CoordinateSystemAxis from an axis definition.
       # dim_length is the number of elements along this dimension in the array;
       # pass 1L for scalar axes not present in dimension_names.
-      build_one_axis <- function(dim_name, ax_def, dim_length) {
+      build_one_axis <- function(dim_name, ax_def, dim_length, attributes = NULL) {
         if (is.null(ax_def))
           return(private$cs_ordinal_axis(dim_name, dim_length))
 
@@ -98,7 +98,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
           return(private$cs_ordinal_axis(dim_name, dim_length))
 
         coords_list <- lapply(seq_along(coord_defs), function(j) {
-          private$cs_build_coordinates(coord_defs[[j]], dim_name, j, dim_length, direction)
+          private$cs_build_coordinates(coord_defs[[j]], dim_name, j, dim_length, direction, attributes)
         })
         names(coords_list) <- vapply(coords_list, function(cd) cd$name, character(1L))
 
@@ -107,7 +107,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # 1. Dimensional axes, in dimension_names order.
       axes <- lapply(seq_along(dimension_names), function(i) {
-        build_one_axis(dimension_names[i], all_axes[[dimension_names[i]]], shape[i])
+        build_one_axis(dimension_names[i], all_axes[[dimension_names[i]]], shape[i],
+                       all_axes[[dimension_names[i]]]$attributes)
       })
       names(axes) <- dimension_names
 
@@ -133,7 +134,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
     # Build a Coordinates instance from one element of an axis's `coordinates`
     # array in the cs attribute.
-    cs_build_coordinates = function(coord_def, dim_name, index, dim_length, direction) {
+    cs_build_coordinates = function(coord_def, dim_name, index, dim_length, direction, attributes = NULL) {
       # Coordinate set name: use declared name or synthesise one
       crd_name <- coord_def$name %||% paste0(dim_name, '_coordinates', if (index > 1L) index else '')
       cv <- private$cs_build_values(coord_def$values, dim_name, dim_length)
@@ -147,17 +148,21 @@ geozarr_array <- R6::R6Class('geozarr_array',
       if (is.null(time)) {
         if (!is.null(cv$length))
           CoordinatesPacked$new(name = crd_name, direction = direction,
-                                unit = coord_def$unit %||% '', values = cv$values, length = cv$length, bounds = bounds)
+                                unit = coord_def$unit %||% '', values = cv$values,
+                                length = cv$length, bounds = bounds,
+                                attributes = attributes)
         else
           Coordinates$new(name = crd_name, direction = direction,
-                          unit = coord_def$unit %||% '', values = cv$values, bounds = bounds)
+                          unit = coord_def$unit %||% '', values = cv$values,
+                          bounds = bounds, attributes = attributes)
       } else {
         values <- cv$values
         if (!is.null(cv$length))
           values <- seq(from = values[1L], by = values[2L], length.out = cv$length)
         CoordinatesTime$new(name = crd_name, direction = direction, unit = time$unit,
                             epoch = time$epoch, calendar = time$calendar,
-                            values = values, bounds = bounds)
+                            values = values, bounds = bounds,
+                            attributes = attributes)
       }
     },
 
@@ -315,9 +320,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
       # Internal helper function
       .make_axis <- function(name, abbreviation, direction, units, values) {
         crd_name <- paste0(name, '_coordinates')
-        coords <- if (missing(values))
-          Coordinates$new(name = crd_name, direction = 'OTHER',
-                          unit = '1', values = CoordinateValuesOrdinal$new(shape[i]), bounds = NULL)
+        coords <- if (missing(values) || all(is.na(values)))
+          CoordinatesOrdinal$new(name = crd_name, direction = 'OTHER', shape[i])
         else
           Coordinates$new(name = crd_name, direction = direction,
                           unit = units, values = .make_coordinate_values(values), bounds = NULL)
@@ -505,7 +509,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #' @param .rightmost.closed Optional. Single logical value to indicate if
     #'   the upper boundary of range in each axis should be included.
     #' @param .name The name of the GeoZarr array to be created. If omitted, an
-    #'   array will be created at the root of a new in-memory Zarr store.
+    #'   array will be created at the root of a new in-memory Zarr store. The
+    #'   new array can then not have any associated arrays, such as for
+    #'   irregular coordinate values or boundaries.
     #' @param .location Optional. If supplied, either an existing [zarr_group]
     #'   in a [zarr] object, or a character string giving the location on a
     #'   local file system where to persist the data. If the argument is a
@@ -513,23 +519,18 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   the location for a new Zarr store then the location must be writable by
     #'   the calling code. As per the Zarr specification, it is recommended to
     #'   use a location that ends in ".zarr" when providing a location for a new
-    #'   store. If argument `.name` is given then the `geozarr_array` will be
-    #'   created in the root of the `zarr` store with that name. If the `.name`
-    #'   argument is not given, a single-array Zarr store will be created. If
-    #'   the `location` argument is not given, a `zarr` object is created in
-    #'   memory.
-    #' @return If the `.location` argument is a `zarr_group`, the new Zarr
+    #'   store. If the `.location` argument is not given, a `zarr` object is
+    #'   created in memory.
+    #' @return If the `.location` argument is a `zarr_group`, the new
     #'   `geozarr_array` is returned, with a subset of data from this GeoZarr
     #'   array, having the axes and attributes of this GeoZarr array. Otherwise,
     #'   the `zarr` object that is newly created and which contains the
-    #'   `geozarr_array` instance, or an error if the `zarr` object could not be
-    #'   created. If one or more of the selectors in the `...` argument fall
-    #'   entirely outside of the range of the axis `NULL` is returned.
+    #'   `geozarr_array` instance. If one or more of the selectors in the `...`
+    #'   argument fall entirely outside of the range of the axis `NULL` is
+    #'   returned.
     subset = function(..., .name = NULL, .location = NULL, .rightmost.closed = FALSE) {
       if (is.null(private$.cs))
         stop('Cannot subset a GeoZarr array without a coordinate system set', call. = FALSE)
-      if (!missing(.name) && !zarr::is_valid_node_name(.name))
-        stop('Invalid name for a Zarr array: ', .name, call. = FALSE)
 
       axes <- private$.cs$axes
       num_axes <- length(axes)
@@ -543,10 +544,11 @@ geozarr_array <- R6::R6Class('geozarr_array',
       sel_names <- names(selectors)
       axis_order <- private$check_selection_names(sel_names, names(axes))
 
-      # Subset the axes and make a new CoordinateSystem
-      out_axes <- vector('list', num_axes)
-      selection <- vector('list', num_axes)
-      for (ax in seq(num_axes)) {
+      # Subset the dimensional axes and make a new CoordinateSystem
+      dims <- length(self$shape)
+      out_axes <- vector('list', num_axes) # Scalar axes will be added later
+      selection <- vector('list', dims)
+      for (ax in seq(dims)) {
         axis <- axes[[ax]]
 
         # Set start and count values and create a corresponding axis
@@ -562,44 +564,33 @@ geozarr_array <- R6::R6Class('geozarr_array',
         out_axes[[ax]] <- out_axis
         selection[[ax]] <- idx
       }
-      names(out_axes) <- vapply(out_axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)
 
+      # Add any scalar axes back in
+      if (dims < num_axes) {
+        for (ax in (dims + 1L): num_axes) {
+          out_axes[[ax]] <- axes[[ax]]$copy()
+        }
+      }
+
+      names(out_axes) <- vapply(out_axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)
       cs <- CoordinateSystem$new(self$coordinate_system$name, out_axes)
 
       # Get the metadata of self and adjust the shape
       ab <- array_builder$new(self$metadata)
-      ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)
+      ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)[1:dims]
       new_meta <- set_convention(ab$metadata(), cs, external_group = '..')
       # FIXME: Must use CRS from self
       new_meta$chunk_key_encoding <- self$metadata$chunk_key_encoding
 
-      # Create the new GeoZarr array
-      if (inherits(.location, 'zarr_group')) {
-        # New gza at the location in the implicit zarr object: return the gza
-        gza <- geozarr_array$new(name = .name, metadata = new_meta, parent = .location, store = .location$store, coord_sys = cs)
-        gza$write(self$read(selection))
-        .location$set_node(gza)
-      } else {
-        # Create the store and add the array to make the store valid
-        store <- if (missing(.location) || is.null(.location) || !nzchar(.location))
-          zarr::zarr_memorystore$new()
-        else
-          zarr::zarr_localstore$new(root = .location)
+      # Get the attributes of self, modify and attach
+      atts <- self$attributes
+      atts$history <- paste0(format(Sys.time(), usetz = TRUE, digits = 0L),
+                             ': Subsetting array with R package geozarr ',
+                             utils::packageVersion('geozarr'), '; ', atts$history)
+      new_meta$attributes <- c(new_meta$attributes, atts)
 
-        if (missing(.name) || is.null(.name) || !nzchar(.name)) {
-          .name <- ''
-          store$create_array(name = '', metadata = new_meta)
-        } else {
-          store$create_group(name = '')
-          store$create_array(parent = '/', name = .name, metadata = new_meta)
-        }
-
-        # Create the Zarr object and get a handle on the newly created array
-        z <- zarr$new(store)
-        gza <- z[[paste0('/', .name)]]
-        gza$write(self$read(selection))
-        z
-      }
+      .create_gza(meta = new_meta, cs = cs, data = self$read(selection),
+                  name = .name, location = .location, external_group = '..')
     },
 
     #' @description Write any external coordinates of this array to the
@@ -633,12 +624,14 @@ geozarr_array <- R6::R6Class('geozarr_array',
               # Boundary values
               bnd_ext <- axis$coordinates[[j]]$boundaries$external
               if (!is.null(bnd_ext)) {
+                if (is.null(private$.parent))
+                  stop('Single-array Zarr store cannot have external boundary arrays', call. = FALSE)
                 path_parts_bnd <- strsplit(bnd_ext$ref$node, '/', fixed = TRUE)[[1L]]
                 ext_bnd_name <- path_parts_bnd[length(path_parts_bnd)]
                 path_parts_bnd <- path_parts_bnd[-(length(path_parts_bnd))]
                 grp_bnd <- self$walk_path(path_parts_bnd)
-                bnd_values <- crds$bounds  # 2 x n matrix, per coordinates.R
-                private$write_or_verify_external(grp_bnd, ext_bnd_name, bnd_values, crds$unit, c('bounds', ext_name))
+                crds <- private$.cs$axes[[axis_name]]$coordinates_list[[j]]
+                private$write_or_verify_external(grp_bnd, ext_bnd_name, crds$bounds, crds$unit, c('bounds', ext_bnd_name))
               }
             }
           }

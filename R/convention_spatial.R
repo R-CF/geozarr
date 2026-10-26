@@ -88,26 +88,28 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
       invisible(self)
     },
 
-    #' @description Write the data of this instance in the attributes of a Zarr
-    #'   object.
-    #' @param attributes A `list` with Zarr attributes for a group or array. The
-    #'   properties will be written at the root level of `attributes`.
-    #' @return The updated attributes.
-    write = function(attributes) {
+    #' @description Retrieve the data of this instance as a `list`.
+    #' @return A `list` with the attributes of this convention.
+    as_list = function() {
       if (!length(private$.dimensions))
-        stop('`spatial:dimensions` attribute must be set.', call. = FALSE)
-      if (private$.transform_type == 'affine' && !length(private$.transform))
-        stop('`spatial:transform` attribute must be set.', call. = FALSE)
+        stop('`spatial:dimensions` attribute must be set', call. = FALSE)
+      else
+        spatial <- list(`spatial:dimensions` = private$.dimensions,
+                        `spatial:registration` = private$.registration)
 
-      attributes$`spatial:dimensions` <- private$.dimensions
-      attributes$`spatial:transform_type` <- private$.transform_type
-      attributes$`spatial:transform` <- private$.transform
+      if (private$.transform_type == 'affine' && !length(private$.transform))
+        stop('`spatial:transform` attribute must be set', call. = FALSE)
+      else
+        spatial <- c(spatial,
+                     list(`spatial:transform_type` = private$.transform_type,
+                          `spatial:transform` = private$.transform)
+                    )
+
       if (length(private$.bbox))
-        attributes$`spatial:bbox` <- private$.bbox
+        spatial <- c(spatial, list(`spatial:bbox` = private$.bbox))
       if (length(private$.shape))
-        attributes$`spatial:shape` <- private$.shape
-      attributes$`spatial:registration` <- private$.registration
-      attributes
+        spatial <- c(spatial, list(`spatial:shape` = private$.shape))
+      spatial
     }
   ),
   active = list(

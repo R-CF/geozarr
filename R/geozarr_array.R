@@ -12,11 +12,16 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # The coordinate system of this array
     .cs = NULL,
 
-    .glyph = '\u2316',
-
-    # Print GeoZarr details as part of printing a group.
-    print_details = function() {
-      cat('\nCoordinate system:\n')
+    # Print GeoZarr details as part of printing a group. The withCLI argument
+    # indicates if package cli should be used.
+    print_details = function(withCLI = TRUE) {
+      thm <- zarr::zarr_options('zarr_theme')
+      if (is.list(thm)) {
+        this_div <- cli::cli_div(theme = thm)
+        cli::cli_rule('Coordinate system')
+        cli::cli_end(this_div)
+      } else
+        cat('\nCoordinate system:\n')
       private$.cs$print_axes()
     },
 
@@ -322,9 +327,16 @@ geozarr_array <- R6::R6Class('geozarr_array',
         crd_name <- paste0(name, '_coordinates')
         coords <- if (missing(values) || all(is.na(values)))
           CoordinatesOrdinal$new(name = crd_name, direction = 'OTHER', shape[i])
-        else
-          Coordinates$new(name = crd_name, direction = direction,
-                          unit = units, values = .make_coordinate_values(values), bounds = NULL)
+        else {
+          vals <- .make_coordinate_values(values)
+          if (is.null(vals$length))
+            Coordinates$new(name = crd_name, direction = direction,
+                            unit = units, values = vals$values, bounds = NULL)
+          else
+            CoordinatesPacked$new(name = crd_name, direction = direction,
+                                  unit = units, values = vals$values,
+                                  length = vals$length, bounds = NULL)
+        }
         CoordinateSystemAxis$new(name = name, abbreviation = abbreviation,
                                  coordinates = stats::setNames(list(coords), crd_name))
       }
@@ -337,7 +349,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         dim_prefix <- paste0(private$.parent$prefix, dim_names[i], "/")
         dim_meta   <- private$.store$get_metadata(dim_prefix)
         if (!is.null(dim_meta) && dim_meta$node_type == "array") {
-          dim_array <- zarr::zarr_array$new(dim_names[i], dim_meta, private$.parent, private$.store)
+          dim_array <- zarr::zarr_array$new(dim_names[i], dim_meta, private$.parent)
 
           abbr <- .common_axis_abbr[tolower(dim_names[i])]
           if (is.na(abbr)) abbr <- 'other'
@@ -397,7 +409,6 @@ geozarr_array <- R6::R6Class('geozarr_array',
         meta$attributes$units <- unit
         ext_arr$metadata <- meta
         ext_arr$save()
-        grp$set_node(ext_arr)
       } else {
         # Check existing array for coincidence with `values`
         ok <- length(ext_arr$shape) == length(shp) && all(ext_arr$shape == shp) &&
@@ -416,16 +427,17 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #' @param name The name of the GeoZarr array.
     #' @param metadata List with the metadata of the array.
     #' @param parent The parent `zarr_group` instance of this new array, can be
-    #'   missing or `NULL` if the Zarr object should have just this array.
-    #' @param store The [zarr_store] instance to persist data in.
+    #'   can be a `zarr` instance if the Zarr object should have just this
+    #'   array.
     #' @param coord_sys Optional, an instance of [CoordinateSystem] providing
     #'   the coordinate system of the array. If not provided, the coordinate
     #'   system is constructed from the metadata of the array persisted in the
     #'   store.
     #' @return An instance of `geozarr_array`.
-    initialize = function(name, metadata, parent, store, coord_sys) {
-      super$initialize(name, metadata, parent, store)
+    initialize = function(name, metadata, parent, coord_sys) {
+      super$initialize(name, metadata, parent)
       private$.domain <- 'GeoZarr'
+      private$.glyph <- '\u2316'
 
       # Build the coordinate system for the array - defer to the conventions and formats
       if (!missing(coord_sys) && inherits(coord_sys, 'CoordinateSystem'))
@@ -521,13 +533,10 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   use a location that ends in ".zarr" when providing a location for a new
     #'   store. If the `.location` argument is not given, a `zarr` object is
     #'   created in memory.
-    #' @return If the `.location` argument is a `zarr_group`, the new
-    #'   `geozarr_array` is returned, with a subset of data from this GeoZarr
-    #'   array, having the axes and attributes of this GeoZarr array. Otherwise,
-    #'   the `zarr` object that is newly created and which contains the
-    #'   `geozarr_array` instance. If one or more of the selectors in the `...`
-    #'   argument fall entirely outside of the range of the axis `NULL` is
-    #'   returned.
+    #' @return The new `geozarr_array`, with a subset of data from this GeoZarr
+    #'   array, having the axes and attributes of this GeoZarr array. If one or
+    #'   more of the selectors in the `...` argument fall entirely outside of
+    #'   the range of the axis `NULL` is returned.
     subset = function(..., .name = NULL, .location = NULL, .rightmost.closed = FALSE) {
       if (is.null(private$.cs))
         stop('Cannot subset a GeoZarr array without a coordinate system set', call. = FALSE)

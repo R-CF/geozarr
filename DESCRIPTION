@@ -18,7 +18,7 @@ Imports:
     CFtime (>= 1.7.3),
     R6
 Depends:
-    R (>= 4.2),
+    R (>= 4.4),
     zarr (>= 0.5.1)
 Suggests: 
     testthat (>= 3.0.0)

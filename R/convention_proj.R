@@ -52,22 +52,20 @@ zarr_conv_proj <- R6::R6Class('zarr_conv_proj',
       }
     },
 
-    #' @description Write the data of this instance in the attributes of a Zarr
-    #'   object.
-    #' @param attributes A `list` with Zarr attributes for a group or array. The
-    #'   properties will be written at the root level of `attributes`.
-    #' @return The updated attributes.
-    write = function(attributes) {
+    #' @description Retrieve the data of this instance as a `list`.
+    #' @return A `list` with the attributes of this convention.
+    as_list = function() {
       if (!nzchar(private$.code) && !nzchar(private$.wkt2) && !nzchar(private$.projjson))
         stop('At least one of the attributes must be set', call. = FALSE)
+      proj <- list()
 
       if (nzchar(private$.code))
-        attributes$`proj:code` <- private$.code
+        proj <- c(proj, list(`proj:code` = private$.code))
       if (nzchar(private$.wkt2))
-        attributes$`proj:wkt2` <- private$.wkt2
+        proj <- c(proj, list(`proj:wkt2` = private$.wkt2))
       if (nzchar(private$.projjson))
-        attributes$`proj:projjson` <- private$.projjson
-      attributes
+        proj <- c(proj, list(`proj:projjson` = private$.projjson))
+      proj
     }
   ),
   active = list(

@@ -53,7 +53,7 @@ has to be declared or the Zarr store has to be formatted using XArray
 or this domain will decline to manage the node.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{zarr_domain_geozarr$build(name, metadata, parent, store)}
+    \preformatted{zarr_domain_geozarr$build(name, metadata, parent)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -63,7 +63,6 @@ or this domain will decline to manage the node.
       \item{\code{metadata}}{List with the metadata of the node.}
       \item{\code{parent}}{The parent node of this new node. May be \code{NULL} for a root
 node.}
-      \item{\code{store}}{The store to persist data in.}
     }
     \if{html}{\out{</div>}}
   }

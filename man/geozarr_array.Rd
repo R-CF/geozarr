@@ -41,6 +41,8 @@ this array.}
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="save"><a href='../../zarr/html/zarr_node.html#method-zarr_node-save'><code>zarr::zarr_node$save()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="walk_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-walk_path'><code>zarr::zarr_node$walk_path()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="copy_to"><a href='../../zarr/html/zarr_array.html#method-zarr_array-copy_to'><code>zarr::zarr_array$copy_to()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="details"><a href='../../zarr/html/zarr_array.html#method-zarr_array-details'><code>zarr::zarr_array$details()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="flush"><a href='../../zarr/html/zarr_array.html#method-zarr_array-flush'><code>zarr::zarr_array$flush()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy_nodes'><code>zarr::zarr_array$hierarchy_nodes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
@@ -57,7 +59,7 @@ this array.}
   Initialize a new GeoZarr array.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_array$new(name, metadata, parent, store, coord_sys)}
+    \preformatted{geozarr_array$new(name, metadata, parent, coord_sys)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -66,8 +68,8 @@ this array.}
       \item{\code{name}}{The name of the GeoZarr array.}
       \item{\code{metadata}}{List with the metadata of the array.}
       \item{\code{parent}}{The parent \code{zarr_group} instance of this new array, can be
-missing or \code{NULL} if the Zarr object should have just this array.}
-      \item{\code{store}}{The \link[zarr:zarr_store]{zarr_store} instance to persist data in.}
+can be a \code{zarr} instance if the Zarr object should have just this
+array.}
       \item{\code{coord_sys}}{Optional, an instance of \link{CoordinateSystem} providing
 the coordinate system of the array. If not provided, the coordinate
 system is constructed from the metadata of the array persisted in the
@@ -196,13 +198,10 @@ the key is that the specification in argument \code{...} uses the same
 domain of values as the respective axes in \code{x} use.
   }
   \subsection{Returns}{
-    If the \code{.location} argument is a \code{zarr_group}, the new
-\code{geozarr_array} is returned, with a subset of data from this GeoZarr
-array, having the axes and attributes of this GeoZarr array. Otherwise,
-the \code{zarr} object that is newly created and which contains the
-\code{geozarr_array} instance. If one or more of the selectors in the \code{...}
-argument fall entirely outside of the range of the axis \code{NULL} is
-returned.
+    The new \code{geozarr_array}, with a subset of data from this GeoZarr
+array, having the axes and attributes of this GeoZarr array. If one or
+more of the selectors in the \code{...} argument fall entirely outside of
+the range of the axis \code{NULL} is returned.
   }
 }
 

@@ -152,14 +152,14 @@ represent a point value.}
 \if{html}{\out{<a id="method-Coordinates-brief"></a>}}
 \if{latex}{\out{\hypertarget{method-Coordinates-brief}{}}}
 \subsection{\code{Coordinates$brief()}}{
-  Some details of the axis.
+  Some details of the coordinates.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{Coordinates$brief()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A 1-row \code{data.frame} with some details of the axis.
+    A 1-row \code{data.frame} with some details of the coordinates.
   }
 }
 

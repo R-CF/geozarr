@@ -149,6 +149,8 @@ Coordinates <- R6::R6Class('Coordinates',
 
       if (!is.vector(values))
         stop('Argument `values` must be a vector of coordinate values', call. = FALSE)
+      if (!.monotonicity(values))
+        stop('Argument `values` must have monotonic coordinate values', call. = FALSE)
       private$.values <- values
 
       if (!missing(bounds) && !is.null(bounds)) {
@@ -162,22 +164,33 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @param ... Ignored.
     #' @return Self, invisible.
     print = function(...) {
-      cat('<Coordinates> ', private$.name, '\n', sep = '')
-      cat('Length    :', private$coordinate_length(), '\n')
-      cat('Direction :', private$.direction, '\n')
       if (self$length == 1L)
         vals <- paste0('[', private$.values, ']')
       else {
         vals <- private$coordinate_range()
         vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']')
       }
-      cat('Values    :', vals, private$.unit, '\n')
+
+      thm <- zarr::zarr_options('zarr_theme')
+      if (is.list(thm)) {
+        this_div <- cli::cli_div(theme = thm)
+        cli::cli_h1('Coordinates {.array {private$.name}}')
+        cli::cli_alert_info('{.label Length    :} {.text {private$coordinate_length()}}')
+        cli::cli_alert_info('{.label Direction :} {.text {private$.direction}}')
+        cli::cli_alert_info('{.label Values    :} {.text {vals} {private$.unit}}')
+        cli::cli_end(this_div)
+      } else {
+        cat('<Coordinates> ', private$.name, '\n', sep = '')
+        cat('Length    :', private$coordinate_length(), '\n')
+        cat('Direction :', private$.direction, '\n')
+        cat('Values    :', vals, private$.unit, '\n')
+      }
       self$print_attributes()
       invisible(self)
     },
 
-    #' @description Some details of the axis.
-    #' @return A 1-row `data.frame` with some details of the axis.
+    #' @description Some details of the coordinates.
+    #' @return A 1-row `data.frame` with some details of the coordinates.
     brief = function() {
       nm <- private$.name
 
@@ -194,7 +207,9 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @description Return an exact copy of these coordinates.
     #' @return A new instance of `Coordinates`.
     copy = function() {
-      Coordinates$new(private$.name, private$.direction, private$.unit, private$.values, private$.bounds)
+      Coordinates$new(name = private$.name, direction = private$.direction,
+                      unit = private$.unit, values = private$.values,
+                      bounds = private$.bounds, attributes = self$attributes)
     },
 
     #' @description Return coordinates spanning a smaller coordinate range.
@@ -203,10 +218,19 @@ Coordinates <- R6::R6Class('Coordinates',
     #'   indices, including boundary values, present.
     subset = function(rng) {
       values <- private$.values[rng[1L]:rng[2L]]
+      crds <- .make_coordinate_values(values)
       bounds <- if (is.null(private$.bounds)) NULL
                 else if (is.matrix(private$.bounds)) private$.bounds[ , rng[1L]:rng[2L], drop = FALSE] # Matrix form
-                else private$.bounds                                                     # Packed form
-      Coordinates$new(self$name, private$.direction, private$.unit, values, bounds)
+                else private$.bounds                                                                   # Packed form
+      if (is.null(crds$length))
+        Coordinates$new(name = self$name, direction = private$.direction,
+                        unit = private$.unit, values = values, bounds = bounds,
+                        attributes = self$attributes)
+      else
+        CoordinatesPacked$new(name = self$name, direction = private$.direction,
+                              unit = private$.unit, values = crds$values,
+                              length = crds$length, bounds = bounds,
+                              attributes = self$attributes)
     },
 
     #' @description Given a range of domain coordinate values, returns the
@@ -413,7 +437,10 @@ public = list(
   #' @description Return an exact copy of these coordinates.
   #' @return A new instance of `CoordinatesPacked`.
   copy = function() {
-    CoordinatesPacked$new(private$.name, private$.direction, private$.unit, private$.values, private$.length, private$.bounds)
+    CoordinatesPacked$new(name = private$.name, direction = private$.direction,
+                          unit = private$.unit, values = private$.values,
+                          length = private$.length, bounds = private$.bounds,
+                          attributes = self$attributes)
   },
 
   #' @description Return coordinates spanning a smaller coordinate range.
@@ -425,7 +452,10 @@ public = list(
     bounds <- if (is.null(private$.bounds)) NULL
               else if (is.matrix(private$.bounds)) private$.bounds[ , rng[1L]:rng[2L]] # Matrix form
               else private$.bounds                                                     # Packed form
-    CoordinatesPacked$new(self$name, private$.direction, private$.unit, values, rng[2L] - rng[1L] + 1L, bounds)
+    CoordinatesPacked$new(name = self$name, direction = private$.direction,
+                          unit = private$.unit, values = values,
+                          length = rng[2L] - rng[1L] + 1L, bounds,
+                          attributes = self$attributes)
   }
 ),
   active = list(
@@ -474,8 +504,9 @@ CoordinatesString <- R6::R6Class('CoordinatesString',
     #' @description Return an exact copy of these coordinates.
     #' @return A new instance of `CoordinatesString`.
     copy = function() {
-      CoordinatesString$new(private$.name, private$.direction, private$.unit,
-                            private$.values, attributes = private$.attributes)
+      CoordinatesString$new(name = private$.name, direction = private$.direction,
+                            unit = private$.unit, values = private$.values,
+                            attributes = private$.attributes)
     },
 
     #' @description Return coordinates spanning a smaller coordinate range.
@@ -483,8 +514,8 @@ CoordinatesString <- R6::R6Class('CoordinatesString',
     #' @return A new `CoordinatesString` instance covering the indicated range of
     #'   indices.
     subset = function(rng) {
-      CoordinatesString$new(self$name, private$.direction, private$.unit,
-                            private$.values[rng[1L]:rng[2L]],
+      CoordinatesString$new(name = self$name, direction = private$.direction,
+                            unit = private$.unit, values = private$.values[rng[1L]:rng[2L]],
                             attributes = private$.attributes)
     }
   )
@@ -646,9 +677,11 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
     #' @return A new instance of `CoordinatesTime`.
     copy = function() {
       time_def <- strsplit(private$.time$calendar$definition, ' ', fixed = TRUE)[[1L]]
-      CoordinatesTime$new(private$.name, private$.direction,
-                 time_def[1L], time_def[3L], private$.time$calendar$name,
-                 private$.values, private$.bounds, private$.attributes)
+      CoordinatesTime$new(name = private$.name, direction = private$.direction,
+                          unit = time_def[1L], epoch = time_def[3L],
+                          calendar = private$.time$calendar$name,
+                          values = private$.values, bounds = private$.bounds,
+                          attributes = private$.attributes)
     },
 
     #' @description Return time coordinates spanning a smaller coordinate range.
@@ -661,9 +694,10 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
       bounds <- private$.time$bounds
       if (!is.null(bounds))
         bounds <- bounds[ , rng[1L]:rng[2L], drop = FALSE]
-      CoordinatesTime$new(private$.name, private$.direction,
-                          time_def[1L], time_def[3L], private$.time$calendar$name,
-                          values, bounds, private$.attributes)
+      CoordinatesTime$new(name = private$.name, direction = private$.direction,
+                          unit = time_def[1L], epoch = time_def[3L],
+                          calendar = private$.time$calendar$name, values = values,
+                          bounds = bounds, attributes = private$.attributes)
     },
 
     #' @description Retrieve the indices of the time axis falling between two
@@ -777,7 +811,9 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
     #' @description Return an exact copy of these coordinates.
     #' @return A new instance of `CoordinatesOrdinal`.
     copy = function() {
-      CoordinatesOrdinal$new(private$.name, private$.direction, private$.length, private$.bottom)
+      CoordinatesOrdinal$new(name = private$.name, direction = private$.direction,
+                             length = private$.length, low = private$.bottom,
+                             attributes = private$.attributes)
     },
 
     #' @description Return a subset of the coordinate values.
@@ -787,7 +823,9 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
     #'   range of values.
     subset = function(rng) {
       rng <- range(rng)
-      CoordinatesOrdinal$new(rng[2L] - rng[1L] + 1L, rng[1L])
+      CoordinatesOrdinal$new(name = private$.name, direction = private$.direction,
+                             length = rng[2L] - rng[1L] + 1L, low = rng[1L],
+                             attributes = private$.attributes)
     }
   )
 )
@@ -800,7 +838,6 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
 #' This function cannot deal with time coordinate values.
 #'
 #' @param values The values to process, a vector.
-#'
 #' @returns A `list` with elements "mode" and "values" and optionally "length"
 #'   if the values are regular. If the `storage.mode` is not supported, `NULL`
 #'   is returned.

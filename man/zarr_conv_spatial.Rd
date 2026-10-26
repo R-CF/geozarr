@@ -57,12 +57,11 @@ recorded.}
   \itemize{
     \item \href{#method-zarr_conv_spatial-initialize}{\code{zarr_conv_spatial$new()}}
     \item \href{#method-zarr_conv_spatial-set_coordinates}{\code{zarr_conv_spatial$set_coordinates()}}
-    \item \href{#method-zarr_conv_spatial-write}{\code{zarr_conv_spatial$write()}}
+    \item \href{#method-zarr_conv_spatial-as_list}{\code{zarr_conv_spatial$as_list()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="as_list"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-as_list'><code>zarr::zarr_convention$as_list()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="clear"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-clear'><code>zarr::zarr_convention$clear()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="register"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-register'><code>zarr::zarr_convention$register()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_convention" data-id="set"><a href='../../zarr/html/zarr_convention.html#method-zarr_convention-set'><code>zarr::zarr_convention$set()</code></a></span></li>
@@ -116,26 +115,17 @@ the center of each grid cell.}
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-zarr_conv_spatial-write"></a>}}
-\if{latex}{\out{\hypertarget{method-zarr_conv_spatial-write}{}}}
-\subsection{\code{zarr_conv_spatial$write()}}{
-  Write the data of this instance in the attributes of a Zarr
-object.
+\if{html}{\out{<a id="method-zarr_conv_spatial-as_list"></a>}}
+\if{latex}{\out{\hypertarget{method-zarr_conv_spatial-as_list}{}}}
+\subsection{\code{zarr_conv_spatial$as_list()}}{
+  Retrieve the data of this instance as a \code{list}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{zarr_conv_spatial$write(attributes)}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Arguments}{
-    \if{html}{\out{<div class="arguments">}}
-    \describe{
-      \item{\code{attributes}}{A \code{list} with Zarr attributes for a group or array. The
-properties will be written at the root level of \code{attributes}.}
-    }
+    \preformatted{zarr_conv_spatial$as_list()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    The updated attributes.
+    A \code{list} with the attributes of this convention.
   }
 }
 

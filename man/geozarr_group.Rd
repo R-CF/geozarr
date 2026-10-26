@@ -32,6 +32,7 @@ GeoZarr group is a container for other groups and arrays.
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_array"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_array'><code>zarr::zarr_group$add_array()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="add_group"><a href='../../zarr/html/zarr_group.html#method-zarr_group-add_group'><code>zarr::zarr_group$add_group()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="build_hierarchy"><a href='../../zarr/html/zarr_group.html#method-zarr_group-build_hierarchy'><code>zarr::zarr_group$build_hierarchy()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="copy_to"><a href='../../zarr/html/zarr_group.html#method-zarr_group-copy_to'><code>zarr::zarr_group$copy_to()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="count_arrays"><a href='../../zarr/html/zarr_group.html#method-zarr_group-count_arrays'><code>zarr::zarr_group$count_arrays()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete'><code>zarr::zarr_group$delete()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_group" data-id="delete_all"><a href='../../zarr/html/zarr_group.html#method-zarr_group-delete_all'><code>zarr::zarr_group$delete_all()</code></a></span></li>
@@ -50,7 +51,7 @@ GeoZarr group is a container for other groups and arrays.
   Open a GeoZarr group in a Zarr hierarchy.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_group$new(name, metadata, parent, store)}
+    \preformatted{geozarr_group$new(name, metadata, parent)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -61,7 +62,6 @@ string \code{""}.}
       \item{\code{metadata}}{List with the metadata of the group.}
       \item{\code{parent}}{The parent Zarr group instance of this new group, can be
 missing or \code{NULL} for the root group.}
-      \item{\code{store}}{The \link[zarr:zarr_store]{zarr_store} instance to persist data in.}
     }
     \if{html}{\out{</div>}}
   }

@@ -30,9 +30,7 @@ interprets them as the centers of grid cells. In both cases the elements in
 the array are assumed to represent an area.}
 }
 \value{
-If the \code{.location} argument is a \code{zarr_group}, the new
-\code{geozarr_array} is returned. Otherwise, the \code{zarr} object that is newly
-created and which contains the \code{geozarr_array} instance.
+The new \code{geozarr_array}.
 }
 \description{
 This function creates a GeoZarr object from an R matrix or array. A GeoZarr

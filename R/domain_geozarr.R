@@ -85,15 +85,14 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     #' @param metadata List with the metadata of the node.
     #' @param parent The parent node of this new node. May be `NULL` for a root
     #'   node.
-    #' @param store The store to persist data in.
     #' @return A `geozarr_array` or `geozarr_group` instance if supported,
     #'   `FALSE` otherwise.
-    build = function(name, metadata, parent, store) {
+    build = function(name, metadata, parent) {
       conv <- metadata$attributes$zarr_conventions
       if (is.null(conv)) {
         # Check for XArray
-        if (private$is_xarray_array(name, metadata, parent, store)) {
-          return(geozarr_array$new(name, metadata, parent, store))
+        if (private$is_xarray_array(name, metadata, parent)) {
+          return(geozarr_array$new(name, metadata, parent))
         }
 
         # No fun
@@ -104,16 +103,16 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
       for (cv in seq_along(conv)) {
         if (conv[[cv]]$name %in% gz_conv$name) {
           if (metadata$node_type == 'array')
-            return(geozarr_array$new(name, metadata, parent, store))
+            return(geozarr_array$new(name, metadata, parent))
           else
-            return(geozarr_group$new(name, metadata, parent, store))
+            return(geozarr_group$new(name, metadata, parent))
         }
       }
 
       # `spatial` convention: array may use parent attributes
       if (metadata$node_type == 'array' && inherits(parent, 'geozarr_group') &&
           'spatial' %in% parent$attributes$zarr_conventions)
-        return(geozarr_array$new(name, metadata, parent, store))
+        return(geozarr_array$new(name, metadata, parent))
 
       FALSE
     }
@@ -188,30 +187,31 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
   # Set GeoZarr convention attributes
   if (length(X_axis) && length(Y_axis) && length(ax_abbr) <= 3L &&
       !('Z' %in% ax_abbr) && !('T' %in% ax_abbr) &&
-      inherits(axes[[X_axis]]$coordinates$values, 'CoordinateValuesNumericPacked') && # == numeric & regular
-      inherits(axes[[Y_axis]]$coordinates$values, 'CoordinateValuesNumericPacked') &&
-      axes[[Y_axis]]$coordinates$values$raw[2L] < 0) {                                # == Y values descending
+      inherits(axes[[X_axis]]$coordinates, 'CoordinatesPacked') && # == numeric & regular
+      inherits(axes[[Y_axis]]$coordinates, 'CoordinatesPacked') &&
+      axes[[Y_axis]]$coordinates$raw[2L] < 0) {                    # == Y values descending
     # spatial convention
     # X + Y, optionally a band, no others, and X + Y coordinates are numeric and regular
     spatial <- zarr_conv_spatial$new()
     atts <- spatial$register(atts)
 
-    dimensions <- c(axes[[Y_axis]]$name, axes[[X_axis]]$name)
-    spatial$dimensions <- dimensions
+    spatial$dimensions <- c(axes[[Y_axis]]$name, axes[[X_axis]]$name)
     spatial$set_coordinates(shape = c(axes[[X_axis]]$length, axes[[Y_axis]]$length),
-                            x = axes[[X_axis]]$coordinates$values$raw,
-                            y = axes[[Y_axis]]$coordinates$values$raw,
+                            x = axes[[X_axis]]$coordinates$raw,
+                            y = axes[[Y_axis]]$coordinates$raw,
                             registration = additional$registration %||% 'pixel')
     atts <- c(atts, spatial$as_list())
 
-    if (!is.null(crs) && is.list(crs) && length(crs) == 1L &&
-        all(names(crs) %in% c('compound', 'spatial')) && length(crs[[1L]]) &&
-        all(names(crs[[1L]]) %in% c('code', 'wkt2', 'projjson'))) {
-      proj <- zarr_conv_proj$new(crs[[1L]])
-      atts <- proj$register(atts)
-      atts <- proj$write(atts)
-    } else
-      stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)
+    if (!is.null(crs)) {
+      if (is.list(crs) && length(crs) == 1L &&
+          all(names(crs) %in% c('compound', 'spatial')) && length(crs[[1L]]) &&
+          all(names(crs[[1L]]) %in% c('code', 'wkt2', 'projjson'))) {
+       proj <- zarr_conv_proj$new(crs[[1L]])
+        atts <- proj$register(atts)
+        atts <- c(atts, proj$as_list())
+      } else
+        stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)
+    }
   } else {
     # cs convention
     cs_conv <- zarr_convention_cs$new()
@@ -285,20 +285,24 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')], type = 'temporal')
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
     } else {
-      proj <- if (is.null(crs$spatial)) NULL else zarr_conv_proj$new(crs$spatial)
+      make_proj <- function(type) {
+        conv <- zarr_conv_proj$new(type)
+        atts <<- conv$register(atts)
+        conv
+      }
+
+      proj <- if (is.null(crs$spatial)) NULL else make_proj(crs$spatial)
       cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar', id = proj)
-      proj <- if (is.null(crs$vertical)) NULL else zarr_conv_proj$new(crs$vertical)
+      proj <- if (is.null(crs$vertical)) NULL else make_proj(crs$vertical)
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')], type = 'vertical', id = proj)
-      proj <- if (is.null(crs$temporal)) NULL else zarr_conv_proj$new(crs$temporal)
+      proj <- if (is.null(crs$temporal)) NULL else make_proj(crs$temporal)
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')], type = 'temporal', id = proj)
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
 
       if (!is.null(crs$compound)) {
-        proj <- zarr_conv_proj$new(crs$compound)
+        proj <- make_proj(crs$compound)
         cs_conv$cs_crs <- proj
       }
-      if (!is.null(proj))
-        atts <- proj$register(atts)
     }
 
     atts <- c(list(cs = cs_conv$as_list()), atts)

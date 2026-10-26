@@ -47,9 +47,7 @@
 #'   as being the upper-left corner of each grid cell. Node registration
 #'   interprets them as the centers of grid cells. In both cases the elements in
 #'   the array are assumed to represent an area.
-#' @return If the `.location` argument is a `zarr_group`, the new
-#'   `geozarr_array` is returned. Otherwise, the `zarr` object that is newly
-#'   created and which contains the `geozarr_array` instance.
+#' @return The new `geozarr_array`.
 #' @docType methods
 #' @export
 #' @examples
@@ -112,15 +110,10 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 
   # Build the array metadata from x
   ab <- zarr::array_builder$new()
-  ab$data_type <- switch(storage.mode(x),
-                         'logical'   = 'bool',
-                         'integer'   = 'int32',
-                         'double'    = 'float64',
-                         'character' = 'string',
-                         stop('Unsupported data type:', storage.mode(x), call. = FALSE))
+  ab$data_type_from_storage.mode <- storage.mode(x)
   d <- dim(x) %||% length(x)
   ab$shape <- d
-  # ab$chunk_shape <- zarr::auto_chunk(d) enable after zarr next release
+  ab$chunk_shape <- zarr::auto_chunk(d)
   if (prod(d) > zarr::zarr_options('min_compress'))
     ab$add_codec('blosc', list(clevel = 6L))
 
@@ -378,11 +371,8 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
   ab$chunk_shape <- zarr::optimal_chunking(shp, chunking)
   meta <- set_convention(ab$metadata(), cs, external_group = conv$coordinate_group %||% '..',
                          registration = conv$registration %||% 'pixel')
-  meta <- location$store$create_array(location$path, name, meta)
-  gza <- geozarr_array$new(name, meta, location, location$store, cs)
-  location$set_node(gza)
+  gza <- geozarr_array$new(name, meta, location, cs)
   gza$write_external_coordinates()
-
   gza
 }
 

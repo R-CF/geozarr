@@ -28,10 +28,9 @@ geozarr_group <- R6::R6Class('geozarr_group',
     #' @param metadata List with the metadata of the group.
     #' @param parent The parent Zarr group instance of this new group, can be
     #'   missing or `NULL` for the root group.
-    #' @param store The [zarr_store] instance to persist data in.
     #' @return An instance of `geozarr_group`.
-    initialize = function(name, metadata, parent, store) {
-      super$initialize(name, metadata, parent, store)
+    initialize = function(name, metadata, parent) {
+      super$initialize(name, metadata, parent)
       private$.domain <- 'GeoZarr'
     }
   )

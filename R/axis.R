@@ -53,17 +53,35 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     #' @return Self, invisible.
     print = function(...) {
       coords <- private$.active_coordinates
-      cat('<Axis> ', private$.name, '\n', sep = '')
-      cat('Abbreviation :', if (nzchar(private$.abbreviation)) private$.abbreviation else '-', '\n')
-      if (inherits(coords, "CoordinatesTime")) {
-        cat('Calendar     :', coords$time$calendar$name, '\n')
-        cat('Epoch        :', paste0(coords$time$calendar$origin_date, "T",
-                                     coords$time$calendar$origin_time), '\n')
-      }
-      cat('Coordinates  : [', coords$length, ']\n', sep = '')
       all_coords <- do.call(rbind, lapply(private$.coordinates, function(crd) crd$brief()))
       if (nrow(all_coords) == 1L) all_coords$name <- NULL
-      print(.slim.data.frame(all_coords, ...), right = FALSE, row.names = FALSE)
+
+      thm <- zarr::zarr_options('zarr_theme')
+      if (is.list(thm)) {
+        this_div <- cli::cli_div(theme = thm)
+        cli::cli_h1('Axis {.array {private$.name}}')
+        cli::cli_alert_info('{.label Abbreviation :} {.text {if (nzchar(private$.abbreviation)) private$.abbreviation else "-"}}')
+        if (inherits(coords, "CoordinatesTime")) {
+          cli::cli_alert_info('{.label Calendar     :} {.text {coords$time$calendar$name}}')
+          cli::cli_alert_info('{.label Epoch        :} {.text {paste0(coords$time$calendar$origin_date, "T", coords$time$calendar$origin_time)}}')
+        }
+        cli::cli_alert_info('{.label Coordinates  :} {.text {coords$length}}')
+        lines <- capture.output(print(.slim.data.frame(all_coords, ...), right = FALSE, row.names = FALSE))
+        lines[1L]  <- cli::format_inline('{.label {lines[1L]}}')
+        lines[-1L] <- vapply(lines[-1L], function(l) cli::format_inline('{.text {l}}'), '', USE.NAMES = FALSE)
+        cli::cli_verbatim(lines)
+        cli::cli_end(this_div)
+      } else {
+        cat('<Axis> ', private$.name, '\n', sep = '')
+        cat('Abbreviation :', if (nzchar(private$.abbreviation)) private$.abbreviation else '-', '\n')
+        if (inherits(coords, "CoordinatesTime")) {
+          cat('Calendar     :', coords$time$calendar$name, '\n')
+          cat('Epoch        :', paste0(coords$time$calendar$origin_date, "T",
+                                       coords$time$calendar$origin_time), '\n')
+        }
+        cat('Coordinates  : ', coords$length, '\n', sep = '')
+        print(.slim.data.frame(all_coords, ...), right = FALSE, row.names = FALSE)
+      }
       if (length(private$.attributes)) self$print_attributes()
       else private$.active_coordinates$print_attributes()
       invisible(self)

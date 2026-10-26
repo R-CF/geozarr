@@ -44,7 +44,13 @@ CoordinateSystem <- R6::R6Class("CoordinateSystem",
     #' @param ... Ignored.
     #' @return Self, invisibly.
     print = function(...) {
-      cat("<Coordinate System>\n")
+      thm <- zarr::zarr_options('zarr_theme')
+      if (is.list(thm)) {
+        this_div <- cli::cli_div(theme = thm)
+        cli::cli_h1('Coordinate system')
+        cli::cli_end(this_div)
+      } else
+        cat("<Coordinate System>\n")
       self$print_axes(...)
       self$print_attributes()
       invisible(self)
@@ -55,7 +61,16 @@ CoordinateSystem <- R6::R6Class("CoordinateSystem",
     #' @param ... Arguments passed on to `data.frame` printing.
     print_axes = function(...) {
       axes <- do.call(rbind, lapply(private$.axes, function(a) a$brief()))
-      print(.slim.data.frame(axes, ...), right = FALSE, row.names = FALSE)
+      thm <- zarr::zarr_options('zarr_theme')
+      if (is.list(thm)) {
+        this_div <- cli::cli_div(theme = thm)
+        lines <- capture.output(print(.slim.data.frame(axes, ...), right = FALSE, row.names = FALSE))
+        lines[1L]  <- cli::format_inline('{.label {lines[1L]}}')
+        lines[-1L] <- vapply(lines[-1L], function(l) cli::format_inline('{.text {l}}'), '', USE.NAMES = FALSE)
+        cli::cli_verbatim(lines)
+        cli::cli_end(this_div)
+      } else
+        print(.slim.data.frame(axes, ...), right = FALSE, row.names = FALSE)
     },
 
     #' @description Retrieve the dimension of the coordinate system, the number

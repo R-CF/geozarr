@@ -104,7 +104,7 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
         stop('Every element of `axes` must be a non-empty list', call. = FALSE)
 
       crs <- list(type = type, axes = axes)
-      if (!is.null(id)) crs$id <- id$write(crs$id)
+      if (!is.null(id)) crs$id <- id$as_list()
       if (!is.null(geolocation)) crs$geolocation <- geolocation
 
       private$.crs <- c(private$.crs, list(crs))

@@ -157,9 +157,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
                                 length = cv$length, bounds = bounds,
                                 attributes = attributes)
         else
-          Coordinates$new(name = crd_name, direction = direction,
-                          unit = coord_def$unit %||% '', values = cv$values,
-                          bounds = bounds, attributes = attributes)
+          CoordinatesIrregular$new(name = crd_name, direction = direction,
+                                 unit = coord_def$unit %||% '', values = cv$values,
+                                 bounds = bounds, attributes = attributes)
       } else {
         values <- cv$values
         if (!is.null(cv$length))
@@ -236,8 +236,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # Fallback: a 0-based ordinal axis for dimensions carrying no cs metadata.
     cs_ordinal_axis = function(dim_name, dim_length) {
       crd_name <- paste0(dim_name, '_coordinates')
-      values   <- CoordinatesOrdinal$new(dim_length)
-      coords   <- Coordinates$new(name = crd_name, direction = 'OTHER', unit = '', values = values)
+      coords   <- CoordinatesOrdinal$new(name = crd_name, direction = 'OTHER', length = dim_length)
       CoordinateSystemAxis$new(name = dim_name, abbreviation = '', coordinates = setNames(list(coords), crd_name))
     },
 
@@ -287,35 +286,35 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # Build the coordinate system
       # X and Y coordinates are always numeric and always present
+      half <- if (registration == 'pixel') 0.5 else 0
       coords <- CoordinatesPacked$new(name = paste0(dimensions[2L], '_coordinates'), direction = 'EAST',
-                                      unit = '', values = c(transform[3L], transform[1L]),
+                                      unit = '', values = c(transform[3L] + transform[1L] * half, transform[1L]),
                                       length = meta$shape[dim_order[2L]],
-                                      bounds = if (registration == 'pixel') c(transform[1L], 0) else NULL)
+                                      bounds = c(-0.5, 0.5) * transform[1L])
       X_axis <- CoordinateSystemAxis$new(name = dimensions[2L], abbreviation = 'X',
                                          coordinates = list(X_coordinates = coords))
 
       coords <- CoordinatesPacked$new(name = paste0(dimensions[1L], '_coordinates'), direction = 'NORTH',
-                                      unit = '', values = c(transform[6L], transform[5L]),
+                                      unit = '', values = c(transform[6L] + transform[5L] * half, transform[5L]),
                                       length = meta$shape[dim_order[1L]],
-                                      bounds = if (registration == 'pixel') c(transform[5L], 0) else NULL)
+                                      bounds = c(-0.5, 0.5) * abs(transform[5L]))
       Y_axis <- CoordinateSystemAxis$new(name = dimensions[1L], abbreviation = 'Y',
                                          coordinates = list(Y_coordinates = coords))
 
       # Add any other axes, if present. These will all be ordinal axes as there
       # are no coordinates available in the metadata or attributes.
-      others <- which(!dimension_names %in% atts$`spatial:dimensions`)
-      other_axes <- if (length(others)) {
-        lapply(others, function(ndx) {
-          name <- dimension_names[ndx]
+      axes <- lapply(seq_along(dimension_names), function(ndx) {
+        name <- dimension_names[ndx]
+        if (ndx == dim_order[2L]) X_axis
+        else if (ndx == dim_order[1L]) Y_axis
+        else {
           coords <- CoordinatesOrdinal$new(name = paste0(name, '_coordinates'), direction = 'OTHER',
-                                           length = private$.metadata$shape[ndx])
-          axis <- CoordinateSystemAxis$new(name = name, abbreviation = '',
-                                           coordinates = setNames(list(coords), paste0(name, '_coordinates')))
-        })
-      } else list()
-
-      axes <- c(list(X_axis, Y_axis), other_axes)
-      axes <- setNames(axes, vapply(axes, function(ax) ax$name, FUN.VALUE = character(1L), USE.NAMES = FALSE))
+                                           length = meta$shape[ndx])
+          CoordinateSystemAxis$new(name = name, abbreviation = '',
+                                   coordinates = setNames(list(coords), paste0(name, '_coordinates')))
+        }
+      })
+      names(axes) <- dimension_names
 
       CoordinateSystem$new(name = 'local_CS', axes = axes)
     },
@@ -330,8 +329,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
         else {
           vals <- .make_coordinate_values(values)
           if (is.null(vals$length))
-            Coordinates$new(name = crd_name, direction = direction,
-                            unit = units, values = vals$values, bounds = NULL)
+            CoordinatesIrregular$new(name = crd_name, direction = direction,
+                                     unit = units, values = vals$values, bounds = NULL)
           else
             CoordinatesPacked$new(name = crd_name, direction = direction,
                                   unit = units, values = vals$values,
@@ -364,6 +363,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         } else
           axes[[i]] <- .make_axis(dim_names[i], '')
       }
+      axes <- setNames(axes, vapply(axes, function(ax) ax$name, FUN.VALUE = character(1L), USE.NAMES = FALSE))
 
       CoordinateSystem$new(name = 'local_CS', axes = axes)
     },
@@ -389,6 +389,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       ax_na <- which(is.na(is_axis))
       is_axis[ax_na] <- is_orient[ax_na]
+      if (anyDuplicated(is_axis, incomparables = NA))
+        stop("Duplicated axis selection by name and abbreviation not allowed", call. = FALSE)
       is_axis
     },
 
@@ -403,7 +405,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
       ext_arr <- grp$children[[ext_name]]
       if (is.null(ext_arr)) {
         # No existing array -- write new array
-        ext_arr <- zarr::as_zarr(x = values, name = ext_name, location = grp)
+        # FIXME: zarr::as_zarr() should return the array, update here after next release of zarr
+        ext_grp <- zarr::as_zarr(x = values, name = ext_name, location = grp)
+        ext_arr <- ext_grp$children[[ext_name]]
         meta <- ext_arr$metadata
         meta$dimension_names <- dim_names
         meta$attributes$units <- unit
@@ -518,8 +522,6 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   case-sensitive and can be specified in any order. If values for the
     #'   range per axis fall outside of the extent of the axis, the range is
     #'   clipped to the extent of the axis.
-    #' @param .rightmost.closed Optional. Single logical value to indicate if
-    #'   the upper boundary of range in each axis should be included.
     #' @param .name The name of the GeoZarr array to be created. If omitted, an
     #'   array will be created at the root of a new in-memory Zarr store. The
     #'   new array can then not have any associated arrays, such as for
@@ -537,7 +539,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   array, having the axes and attributes of this GeoZarr array. If one or
     #'   more of the selectors in the `...` argument fall entirely outside of
     #'   the range of the axis `NULL` is returned.
-    subset = function(..., .name = NULL, .location = NULL, .rightmost.closed = FALSE) {
+    subset = function(..., .name = NULL, .location = NULL) {
       if (is.null(private$.cs))
         stop('Cannot subset a GeoZarr array without a coordinate system set', call. = FALSE)
 
@@ -619,7 +621,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
               # Coordinate values
               ext <- axis$coordinates[[j]]$values$external
               if (!is.null(ext)) {
-                if (is.null(private$.parent))
+                if (!inherits(private$.parent, 'zarr_group'))
                   stop('Single-array Zarr store cannot have external coordinate arrays', call. = FALSE)
                 path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
                 ext_name <- path_parts[length(path_parts)]

@@ -66,11 +66,6 @@ object.}
     \item \href{#method-Coordinates-copy}{\code{Coordinates$copy()}}
     \item \href{#method-Coordinates-subset}{\code{Coordinates$subset()}}
     \item \href{#method-Coordinates-slice}{\code{Coordinates$slice()}}
-    \item \href{#method-Coordinates-getDirection}{\code{Coordinates$getDirection()}}
-    \item \href{#method-Coordinates-getUnit}{\code{Coordinates$getUnit()}}
-    \item \href{#method-Coordinates-getMinimumValue}{\code{Coordinates$getMinimumValue()}}
-    \item \href{#method-Coordinates-getMaximumValue}{\code{Coordinates$getMaximumValue()}}
-    \item \href{#method-Coordinates-getRangeMeaning}{\code{Coordinates$getRangeMeaning()}}
   }
 }
 \if{html}{\out{<details open><summary>Inherited methods</summary>
@@ -114,7 +109,7 @@ value, respectively. Otherwise, a matrix with two rows and as many
 columns as there are elements, with the offset to the boundary below
 the coordinate value in row 1 and the offset to the boundary above the
 coordinate value in row 2. The boundaries represent the finite extent
-around the boundary value that this value is representative for. If
+around the coordinate value that this value is representative for. If
 this argument is not provided, the coordinate values are assumed to
 represent a point value.}
       \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinates.}
@@ -227,87 +222,6 @@ coordinates to return.}
 into the axis that fall within the range of coordinates in argument
 \code{rng}. Returns \code{NULL} if no (boundary) values of the axis fall within
 the range of coordinates.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Coordinates-getDirection"></a>}}
-\if{latex}{\out{\hypertarget{method-Coordinates-getDirection}{}}}
-\subsection{\code{Coordinates$getDirection()}}{
-  Retrieve the direction of the coordinates. This method is
-mandatory in the OGC standard for an axis.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$getDirection()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Character string with the direction of the coordinates.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Coordinates-getUnit"></a>}}
-\if{latex}{\out{\hypertarget{method-Coordinates-getUnit}{}}}
-\subsection{\code{Coordinates$getUnit()}}{
-  Retrieve the unit of measure of the coordinates. This method
-is mandatory in the OGC standard for an axis.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$getUnit()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Character string with the unit of measure of the axis.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Coordinates-getMinimumValue"></a>}}
-\if{latex}{\out{\hypertarget{method-Coordinates-getMinimumValue}{}}}
-\subsection{\code{Coordinates$getMinimumValue()}}{
-  Retrieve the minimum coordinate value of this set of
-coordinates, in units of the unit of measure of the coordinates.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$getMinimumValue()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Negative infinity.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Coordinates-getMaximumValue"></a>}}
-\if{latex}{\out{\hypertarget{method-Coordinates-getMaximumValue}{}}}
-\subsection{\code{Coordinates$getMaximumValue()}}{
-  Retrieve the maximum coordinate value of this set of
-coordinates, in units of the unit of measure of the coordinates.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$getMaximumValue()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Positive infinity.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Coordinates-getRangeMeaning"></a>}}
-\if{latex}{\out{\hypertarget{method-Coordinates-getRangeMeaning}{}}}
-\subsection{\code{Coordinates$getRangeMeaning()}}{
-  Retrieve the interpretation of coordinate values, either as
-a direct value ("EXACT") or as a wrap-around value between the minimum
-and maximum value of the coordinates ("WRAPAROUND").
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{Coordinates$getRangeMeaning()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    The character string 'EXACT'.
   }
 }
 

@@ -99,7 +99,10 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
         return(FALSE)
       }
 
+      # FIXME: Matching should not be by name but uuid, schema, spec
+      # Schema matching has to be by version.
       gz_conv <- GeoZarr.options$conventions
+      gz_conv <- gz_conv[gz_conv$name %in% c('cs', 'spatial'), ]
       for (cv in seq_along(conv)) {
         if (conv[[cv]]$name %in% gz_conv$name) {
           if (metadata$node_type == 'array')
@@ -111,7 +114,7 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 
       # `spatial` convention: array may use parent attributes
       if (metadata$node_type == 'array' && inherits(parent, 'geozarr_group') &&
-          'spatial' %in% parent$attributes$zarr_conventions)
+          'spatial' %in% vapply(parent$attributes$zarr_conventions, function(conv) conv$name, character(1)))
         return(geozarr_array$new(name, metadata, parent))
 
       FALSE
@@ -179,6 +182,8 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
 
   # Axis abbreviation
   ax_abbr <- vapply(axes, function(ax) ax$abbreviation, FUN.VALUE = character(1), USE.NAMES = FALSE)
+  ax_abbr <- toupper(ax_abbr)
+  ax_abbr[which(!ax_abbr %in% c('X', 'Y', 'Z', 'T', 'OTHER'))] <- 'OTHER'
   X_axis <- which(ax_abbr == 'X')
   Y_axis <- which(ax_abbr == 'Y')
   if (!length(X_axis) && !length(Y_axis))
@@ -194,12 +199,17 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
     # X + Y, optionally a band, no others, and X + Y coordinates are numeric and regular
     spatial <- zarr_conv_spatial$new()
     atts <- spatial$register(atts)
-
     spatial$dimensions <- c(axes[[Y_axis]]$name, axes[[X_axis]]$name)
+
+    registration <- additional$registration %||% 'pixel'
+    x <- axes[[X_axis]]$coordinates$raw
+    y <- axes[[Y_axis]]$coordinates$raw
+    if (registration == 'pixel') {
+      x[1L] <- x[1L] - x[2L] * 0.5
+      y[1L] <- y[1L] - y[2L] * 0.5
+    }
     spatial$set_coordinates(shape = c(axes[[X_axis]]$length, axes[[Y_axis]]$length),
-                            x = axes[[X_axis]]$coordinates$raw,
-                            y = axes[[Y_axis]]$coordinates$raw,
-                            registration = additional$registration %||% 'pixel')
+                            x = x, y = y, registration = registration)
     atts <- c(atts, spatial$as_list())
 
     if (!is.null(crs)) {
@@ -265,8 +275,8 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
       # Coordinates and axis
       coords_def <- cs_conv$coordinates(values_def, unit = ax$coordinates$unit,
                                         boundaries = bnds_def, time = time_def)
-      abbr <- ax$abbreviation
-      if (abbr == ' ') abbr <- 'OTHER'
+      abbr <- toupper(ax$abbreviation)
+      if (!abbr %in% c('X', 'Y', 'Z', 'T', 'OTHER')) abbr <- 'OTHER'
       direction  <- cs_direction[[abbr]]
       if (abbr == 'OTHER') abbr <- ''
       cs_conv$axis(list(coords_def), abbreviation = abbr, direction = direction)

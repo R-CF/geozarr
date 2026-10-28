@@ -37,12 +37,6 @@ thus not with the axis.
     \item \href{#method-CoordinateSystemAxis-copy}{\code{CoordinateSystemAxis$copy()}}
     \item \href{#method-CoordinateSystemAxis-subset}{\code{CoordinateSystemAxis$subset()}}
     \item \href{#method-CoordinateSystemAxis-slice}{\code{CoordinateSystemAxis$slice()}}
-    \item \href{#method-CoordinateSystemAxis-getAbbreviation}{\code{CoordinateSystemAxis$getAbbreviation()}}
-    \item \href{#method-CoordinateSystemAxis-getDirection}{\code{CoordinateSystemAxis$getDirection()}}
-    \item \href{#method-CoordinateSystemAxis-getUnit}{\code{CoordinateSystemAxis$getUnit()}}
-    \item \href{#method-CoordinateSystemAxis-getMinimumValue}{\code{CoordinateSystemAxis$getMinimumValue()}}
-    \item \href{#method-CoordinateSystemAxis-getMaximumValue}{\code{CoordinateSystemAxis$getMaximumValue()}}
-    \item \href{#method-CoordinateSystemAxis-getRangeMeaning}{\code{CoordinateSystemAxis$getRangeMeaning()}}
     \item \href{#method-CoordinateSystemAxis-clone}{\code{CoordinateSystemAxis$clone()}}
   }
 }
@@ -198,102 +192,6 @@ coordinates to return.}
 into the axis that fall within the range of coordinates in argument
 \code{rng}. Returns \code{NULL} if no (boundary) values of the axis fall within
 the range of coordinates.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getAbbreviation"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getAbbreviation}{}}}
-\subsection{\code{CoordinateSystemAxis$getAbbreviation()}}{
-  Retrieve the abbreviation of the axis. This method is
-mandatory in the OGC standard.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getAbbreviation()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Character string with the abbreviation of the axis.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getDirection"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getDirection}{}}}
-\subsection{\code{CoordinateSystemAxis$getDirection()}}{
-  Retrieve the direction of the axis. This method is
-mandatory in the OGC standard.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getDirection()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Character string with the direction of the axis.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getUnit"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getUnit}{}}}
-\subsection{\code{CoordinateSystemAxis$getUnit()}}{
-  Retrieve the unit of measure of the axis. This method is
-mandatory in the OGC standard.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getUnit()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Character string with the unit of measure of the axis.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getMinimumValue"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getMinimumValue}{}}}
-\subsection{\code{CoordinateSystemAxis$getMinimumValue()}}{
-  Retrieve the minimum coordinate value of this axis, in units
-of the unit of measure of the axis.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getMinimumValue()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Negative infinity.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getMaximumValue"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getMaximumValue}{}}}
-\subsection{\code{CoordinateSystemAxis$getMaximumValue()}}{
-  Retrieve the maximum coordinate value of this axis, in units
-of the unit of measure of the axis.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getMaximumValue()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    Positive infinity.
-  }
-}
-
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoordinateSystemAxis-getRangeMeaning"></a>}}
-\if{latex}{\out{\hypertarget{method-CoordinateSystemAxis-getRangeMeaning}{}}}
-\subsection{\code{CoordinateSystemAxis$getRangeMeaning()}}{
-  Retrieve the minimum coordinate value of this axis, in units
-of the unit of measure of the axis.
-  \subsection{Usage}{
-    \if{html}{\out{<div class="r">}}
-    \preformatted{CoordinateSystemAxis$getRangeMeaning()}
-    \if{html}{\out{</div>}}
-  }
-  \subsection{Returns}{
-    The character string 'EXACT'.
   }
 }
 

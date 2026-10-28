@@ -5,8 +5,8 @@
 #'
 #' ```{r schema, eval = FALSE}
 #' {
-#'   "schema_url": "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json",
-#'   "spec_url": "https://github.com/zarr-conventions/spatial/blob/v1/README.md",
+#'   "schema_url": "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v0.1/schema.json",
+#'   "spec_url": "https://github.com/zarr-conventions/spatial/blob/v0.1/README.md",
 #'   "uuid": "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4",
 #'   "name": "spatial",
 #'   "description": "Spatial coordinate information"
@@ -48,9 +48,9 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
     #' @return A new instance of a "spatial" convention agent.
     initialize = function() {
       super$initialize(name   = 'spatial',
-                       schema = 'https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json',
+                       schema = 'https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v0.1/schema.json',
                        uuid   = '689b58e2-cf7b-45e0-9fff-9cfc0883d6b4')
-      private$.spec <- 'https://github.com/zarr-conventions/spatial/blob/v1/README.md'
+      private$.spec <- 'https://github.com/zarr-conventions/spatial/blob/v0.1/README.md'
       private$.description <- 'Spatial coordinate information'
     },
 
@@ -78,13 +78,11 @@ zarr_conv_spatial <- R6::R6Class('zarr_conv_spatial',
       private$.transform <- c(x[2L], 0, x[1L], 0, y[2L], y[1L])
       private$.registration <- registration
 
-      private$.bbox <- if (registration == 'pixel')
-        c(x[1L], y[1L] + shape[2L] * y[2L], x[1L] + shape[1L] * x[2L], y[1L])
-      else {
-        halfx <- x[2L] * 0.5
-        halfy <- y[2L] * 0.5
-        c(x[1L] - halfx, y[1L] + shape[2L] * y[2L] - halfy, x[1L] + shape[1L] * x[2L] - halfx, y[1L] - halfy)
-      }
+      # Spec bbox: outer cell edges ("pixel") or outer cell centres ("node")
+      n  <- shape - if (registration == 'pixel') 0L else 1L
+      xr <- range(x[1L], x[1L] + n[1L] * x[2L])
+      yr <- range(y[1L], y[1L] + n[2L] * y[2L])
+      private$.bbox <- c(xr[1L], yr[1L], xr[2L], yr[2L])
       invisible(self)
     },
 

@@ -16,10 +16,10 @@ GeoZarr.options <- new.env(parent = emptyenv())
   # Register the conventions supported by GeoZarr (and Zarr)
   assign('conventions', rbind(data.frame(
     name   = c('cs', 'spatial', 'proj', 'geolocation'),
-    schema = c('https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/schema.json',
-               'https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json',
-               'https://raw.githubusercontent.com/zarr-conventions/geo-proj/refs/tags/v1/schema.json',
-               'https://raw.githubusercontent.com/R-CF/zarr_convention_geolocation/refs/heads/main/schema.json'),
+    schema = c('https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/schema.json',
+               'https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v0.1/schema.json',
+               'https://raw.githubusercontent.com/zarr-conventions/proj/refs/tags/v0.1/schema.json',
+               'https://raw.githubusercontent.com/R-CF/zarr_convention_geolocation/refs/tags/v1.0.0/schema.json'),
     uuid   = c('e4dbf0b7-7a00-4ce6-b23e-484292014ab4',
                '689b58e2-cf7b-45e0-9fff-9cfc0883d6b4',
                'f17cb550-5864-4468-aeb7-f3180cfb622f',

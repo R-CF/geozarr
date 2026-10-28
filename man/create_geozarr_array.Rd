@@ -47,11 +47,11 @@ structured as follows:
 \item \code{coordinates}: A vector of coordinate values. The length of the vector
 becomes the length of the corresponding dimension in the array.
 \item \code{boundaries}: Optional. For boundaries that are regular, meaning that the
-lower offset \verb{(-\eqn{\infty}, 0)} for each coordinate is constant and the same for the
-higher offset \verb{(0, \eqn{\infty})}, then a vector of the lower and higher offset, in
-that order, may be supplied. Otherwise a matrix has to be supplied with as
-many columns as there are coordinates and the lower offsets in row 1 and
-the higher offsets in row 2.
+lower offset \verb{(-\eqn{\infty}, 0)} for each coordinate is constant and the
+same for the higher offset \verb{(0, \eqn{\infty})}, then a vector of the lower
+and higher offset, in that order, may be supplied. Otherwise a matrix has
+to be supplied with as many columns as there are coordinates and the lower
+offsets in row 1 and the higher offsets in row 2.
 \item \code{abbreviation}: A character from the set \verb{(X, Y, Z, T)}. These values
 indicate the spatio-temporal dimensions of the array. If omitted, an empty
 string or a space character the axis will have no spatio-temporal meaning,
@@ -109,6 +109,9 @@ fields are ignored.
 If a \code{.convention} element is present in the top-level \code{axes} list then it
 is searched for a \code{registration} member. Its value is a character string
 with a value of "node" or "pixel". If omitted, a value of "pixel" is used.
+Pixel registration records the coordinates of the upper-left corner of each
+grid cell. Node registration records the centers of grid cells. In both
+cases the elements in the array are assumed to represent an area.
 
 \strong{"cs" convention:} The "cs" convention is used for all cases where the
 "spatial" convention does not apply. All fields for the \code{axis} sub-lists in

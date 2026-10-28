@@ -9,8 +9,8 @@ This class implements the GeoZarr "spatial" convention. In
 particular, the following convention is implemented here:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{\{
-  "schema_url": "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v1/schema.json",
-  "spec_url": "https://github.com/zarr-conventions/spatial/blob/v1/README.md",
+  "schema_url": "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v0.1/schema.json",
+  "spec_url": "https://github.com/zarr-conventions/spatial/blob/v0.1/README.md",
   "uuid": "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4",
   "name": "spatial",
   "description": "Spatial coordinate information"

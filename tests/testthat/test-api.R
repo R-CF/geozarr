@@ -318,3 +318,37 @@ test_that("cs-irregular-filesystem", {
 
   geozarr_options("max_explicit", old_max_explicit)
 })
+
+test_that("as_geozarr() requires dimnames", {
+  expect_error(as_geozarr(arr_bare), "dimnames are set")
+})
+
+test_that("as_geozarr() rejects duplicate axes", {
+  a <- arr_bare
+  dimnames(a) <- list(x = 100000 + 0:4 * 10000, lon = 0:19 * 5000, time = sprintf("2026-01-%02d", 1:4))
+  expect_error(as_geozarr(a), "Duplicate axes")
+})
+
+test_that("as_geozarr() passes the registration to the spatial convention", {
+  a <- arr_bare
+  dimnames(a) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = sprintf("band-%02d", 1:4))
+  g <- as_geozarr(a, registration = "node")
+  expect_identical(g$metadata$attributes[["spatial:registration"]], "node")
+})
+
+test_that("as_geozarr() with irregular numeric and unknown-named axes", {
+  a <- arr_bare
+  dimnames(a) <- list(x = c(1, 2, 4, 8, 16), y = 0:19 * 5000, lvl = c(1000, 850, 500, 250))
+  g <- as_geozarr(a)
+  axes <- g$coordinate_system$axes
+  expect_false(inherits(axes$x$coordinates, "CoordinatesPacked"))
+  expect_identical(axes$lvl$abbreviation, "OTHER")
+  expect_identical(g$metadata$attributes$zarr_conventions[[1L]]$name, "cs")
+})
+
+test_that("as_geozarr() time axis direction", {
+  a <- arr_bare
+  dimnames(a) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-01-%02d", 4:1))
+  g <- suppressWarnings(as_geozarr(a)) # CFtime warns about decreasing offsets
+  expect_identical(g$coordinate_system$axes$time$coordinates$direction, "PAST")
+})

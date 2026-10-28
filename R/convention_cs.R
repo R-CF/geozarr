@@ -12,8 +12,8 @@
 #'
 #' ```{r schema, eval = FALSE}
 #' {
-#'   "schema_url": "https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/schema.json",
-#'   "spec_url":   "https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/README.md",
+#'   "schema_url": "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/schema.json",
+#'   "spec_url":   "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/README.md",
 #'   "uuid":       "e4dbf0b7-7a00-4ce6-b23e-484292014ab4",
 #'   "name":       "cs",
 #'   "description": "Coordinate set convention for Zarr arrays"
@@ -57,7 +57,7 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
   cloneable = FALSE,
   private = list(
     # Optional top-level name for the coordinate set.
-    .name = character(0),
+    .cs_name = character(0),
 
     # Optional top-level CRS identifier, a `zarr_conv_proj` instance when set.
     .crs_id = NULL,
@@ -72,10 +72,10 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     initialize = function() {
       super$initialize(
         name   = 'cs',
-        schema = 'https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/schema.json',
+        schema = 'https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/schema.json',
         uuid   = 'e4dbf0b7-7a00-4ce6-b23e-484292014ab4'
       )
-      private$.spec        <- 'https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/README.md'
+      private$.spec        <- 'https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/README.md'
       private$.description <- 'Coordinate set convention for Zarr arrays'
     },
 
@@ -118,8 +118,8 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
         stop('At least one CRS must be added via `add_crs()`', call. = FALSE)
 
       cs <- if (is.null(private$.crs_id)) list(crs = private$.crs)
-            else list(crs = private$.crs, id = private$.crs_id$write(list()))
-      if (length(private$.name)) cs <- c(list(name = private$.name), cs)
+            else list(crs = private$.crs, id = private$.crs_id$as_list())
+      if (length(private$.cs_name)) cs <- c(list(name = private$.cs_name), cs)
       cs
     },
 
@@ -296,14 +296,14 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     }
   ),
   active = list(
-    #' @field name Optional descriptive name for the coordinate set.
-    name = function(value) {
+    #' @field cs_name Optional descriptive name for the coordinate set.
+    cs_name = function(value) {
       if (missing(value))
-        private$.name
+        private$.cs_name
       else if (is.character(value) && length(value) == 1L && nzchar(value))
-        private$.name <- value
+        private$.cs_name <- value
       else
-        stop('`name` must be a non-empty character string.', call. = FALSE)
+        stop('`cs_name` must be a non-empty character string', call. = FALSE)
     },
 
     #' @field cs_crs Optional top-level CRS identifier, an instance of

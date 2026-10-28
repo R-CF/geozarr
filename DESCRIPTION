@@ -19,7 +19,7 @@ Imports:
     R6
 Depends:
     R (>= 4.4),
-    zarr (>= 0.5.1)
+    zarr (>= 1.0.0)
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

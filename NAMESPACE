@@ -2,7 +2,7 @@
 
 export(CoordinateSystem)
 export(CoordinateSystemAxis)
-export(Coordinates)
+export(CoordinatesIrregular)
 export(CoordinatesOrdinal)
 export(CoordinatesPacked)
 export(CoordinatesString)

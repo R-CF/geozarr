@@ -16,8 +16,8 @@ coordinates.
 The convention is registered via the following CMO:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{\{
-  "schema_url": "https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/schema.json",
-  "spec_url":   "https://raw.githubusercontent.com/R-CF/zarr_convention_cs/main/README.md",
+  "schema_url": "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/schema.json",
+  "spec_url":   "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/README.md",
   "uuid":       "e4dbf0b7-7a00-4ce6-b23e-484292014ab4",
   "name":       "cs",
   "description": "Coordinate set convention for Zarr arrays"
@@ -59,7 +59,7 @@ for inclusion as the "cs" attribute in the Zarr node metadata.
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
-    \item{\code{name}}{Optional descriptive name for the coordinate set.}
+    \item{\code{cs_name}}{Optional descriptive name for the coordinate set.}
 
     \item{\code{cs_crs}}{Optional top-level CRS identifier, an instance of
 \link{zarr_conv_proj}.}

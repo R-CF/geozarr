@@ -125,12 +125,7 @@ array, with the range along each axis to extract expressed in
 coordinate values of the domain of each axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_array$subset(
-  ...,
-  .name = NULL,
-  .location = NULL,
-  .rightmost.closed = FALSE
-)}
+    \preformatted{geozarr_array$subset(..., .name = NULL, .location = NULL)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -156,8 +151,6 @@ the calling code. As per the Zarr specification, it is recommended to
 use a location that ends in ".zarr" when providing a location for a new
 store. If the \code{.location} argument is not given, a \code{zarr} object is
 created in memory.}
-      \item{\code{.rightmost.closed}}{Optional. Single logical value to indicate if
-the upper boundary of range in each axis should be included.}
     }
     \if{html}{\out{</div>}}
   }

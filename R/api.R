@@ -42,11 +42,11 @@
 #'   per the Zarr specification, it is recommended to use a location that ends
 #'   in ".zarr" when providing a location for a new store. If the `location`
 #'   argument is not given, a `zarr` object is created in memory.
-#' @param registration Either "pixel" (the default) or "node". Pixel
-#'   registration interprets the coordinates in the "dimnames" of argument `x`
-#'   as being the upper-left corner of each grid cell. Node registration
-#'   interprets them as the centers of grid cells. In both cases the elements in
-#'   the array are assumed to represent an area.
+#' @param registration Optional, for the "spatial" convention only. Either
+#'   "pixel" (the default) or "node". Pixel registration records the coordinates
+#'   of the upper-left corner of each grid cell. Node registration records the
+#'   centers of grid cells. In both cases the elements in the array are assumed
+#'   to represent an area.
 #' @return The new `geozarr_array`.
 #' @docType methods
 #' @export
@@ -77,8 +77,8 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
           CoordinatesPacked$new(name = paste0(nm, '_coordinates'),
                                 direction = 'OTHER', unit = '-', values = crds$values, length = crds$length)
         else
-          Coordinates$new(name = paste0(nm, '_coordinates'),
-                          direction = 'OTHER', unit = '-', values = crds$values)
+          CoordinatesIrregular$new(name = paste0(nm, '_coordinates'),
+                                 direction = 'OTHER', unit = '-', values = crds$values)
       },
       'character' = {
         if (!requireNamespace('CFtime', quietly = TRUE))
@@ -138,11 +138,11 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 #'   * `coordinates`: A vector of coordinate values. The length of the vector
 #'   becomes the length of the corresponding dimension in the array.
 #'   * `boundaries`: Optional. For boundaries that are regular, meaning that the
-#'   lower offset `(-\eqn{\infty}, 0)` for each coordinate is constant and the same for the
-#'   higher offset `(0, \eqn{\infty})`, then a vector of the lower and higher offset, in
-#'   that order, may be supplied. Otherwise a matrix has to be supplied with as
-#'   many columns as there are coordinates and the lower offsets in row 1 and
-#'   the higher offsets in row 2.
+#'   lower offset `(-\eqn{\infty}, 0)` for each coordinate is constant and the
+#'   same for the higher offset `(0, \eqn{\infty})`, then a vector of the lower
+#'   and higher offset, in that order, may be supplied. Otherwise a matrix has
+#'   to be supplied with as many columns as there are coordinates and the lower
+#'   offsets in row 1 and the higher offsets in row 2.
 #'   * `abbreviation`: A character from the set `(X, Y, Z, T)`. These values
 #'   indicate the spatio-temporal dimensions of the array. If omitted, an empty
 #'   string or a space character the axis will have no spatio-temporal meaning,
@@ -200,6 +200,9 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 #'   If a `.convention` element is present in the top-level `axes` list then it
 #'   is searched for a `registration` member. Its value is a character string
 #'   with a value of "node" or "pixel". If omitted, a value of "pixel" is used.
+#'   Pixel registration records the coordinates of the upper-left corner of each
+#'   grid cell. Node registration records the centers of grid cells. In both
+#'   cases the elements in the array are assumed to represent an area.
 #'
 #'   **"cs" convention:** The "cs" convention is used for all cases where the
 #'   "spatial" convention does not apply. All fields for the `axis` sub-lists in
@@ -296,7 +299,7 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
     abbr <- axes[[i]]$abbreviation
     if (is.null(abbr) || !nzchar(abbr) || abbr == ' ') {
       abbr <- unname(.common_axis_abbr[tolower(nm)])
-      if (is.na(abbr)) abbr <- 'OTHER'
+      abbr <- if (is.na(abbr)) 'OTHER' else toupper(abbr)
     }
     if (!abbr %in% c('X', 'Y', 'Z', 'T', 'OTHER'))
       stop('Bad abbreviation for axis "', nm, '"', call. = FALSE)
@@ -330,9 +333,9 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
                                   unit = unit %||% '-', values = crds$values,
                                   length = crds$length, bounds = axes[[i]]$boundaries)
           else {
-            Coordinates$new(name = paste0(nm, '_coordinates'), direction = dir,
-                            unit = unit %||% '-', values = crds$values,
-                            bounds = axes[[i]]$boundaries)
+            CoordinatesIrregular$new(name = paste0(nm, '_coordinates'), direction = dir,
+                                   unit = unit %||% '-', values = crds$values,
+                                   bounds = axes[[i]]$boundaries)
           }
         },
         'character' = {
@@ -340,8 +343,8 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
             stop('You must install package `CFtime` for this functionality', call. = FALSE)
           epoch <- epoch %||% '1970-01-01'
           calendar <- calendar %||% 'proleptic_gregorian'
-          if (is.null(unit) || unit == '-') units <- 'days'
-          t <- try(CFtime::CFTime$new(paste(units, 'since', epoch), calendar, crds$values), silent = TRUE)
+          unit_time <- if (is.null(unit) || unit == '-') 'days' else unit
+          t <- try(CFtime::CFTime$new(paste(unit_time, 'since', epoch), calendar, crds$values), silent = TRUE)
           if (inherits(t, 'try-error'))
             # String axis
             CoordinatesString$new(name = paste0(nm, '_coordinates'), direction = dir,
@@ -349,7 +352,7 @@ create_geozarr_array <- function(name, location, axes, data_type, fill_value) {
           else
             # Time axis
             CoordinatesTime$new(name = paste0(nm, '_coordinates'), direction = dir,
-                                unit = unit, epoch = epoch, calendar = calendar,
+                                unit = unit_time, epoch = epoch, calendar = calendar,
                                 values = t$offsets, bounds = axes[[i]]$boundaries)
         }
       )

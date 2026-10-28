@@ -102,12 +102,12 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
         vals <- paste0('[', vals[1L], ' ... ', vals[2L], ']')
       }
 
-      unit <- private$.active_coordinates$getUnit()
+      unit <- private$.active_coordinates$unit
       if (!nzchar(unit)) unit <- '-'
 
       data.frame(abbr = private$.abbreviation,
                  name = self$name,
-                 direction = private$.active_coordinates$getDirection(),
+                 direction = private$.active_coordinates$direction,
                  length = private$.active_coordinates$length,
                  values = vals,
                  unit = unit)
@@ -153,48 +153,6 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     #'   the range of coordinates.
     slice = function(rng) {
       private$.active_coordinates$slice(rng)
-    },
-
-    #' @description Retrieve the abbreviation of the axis. This method is
-    #'   mandatory in the OGC standard.
-    #' @return Character string with the abbreviation of the axis.
-    getAbbreviation = function() {
-      private$.abbreviation
-    },
-
-    #' @description Retrieve the direction of the axis. This method is
-    #'   mandatory in the OGC standard.
-    #' @return Character string with the direction of the axis.
-    getDirection = function() {
-      private$.direction
-    },
-
-    #' @description Retrieve the unit of measure of the axis. This method is
-    #'   mandatory in the OGC standard.
-    #' @return Character string with the unit of measure of the axis.
-    getUnit = function() {
-      private$.unit
-    },
-
-    #' @description Retrieve the minimum coordinate value of this axis, in units
-    #' of the unit of measure of the axis.
-    #' @return Negative infinity.
-    getMinimumValue = function() {
-      -Inf
-    },
-
-    #' @description Retrieve the maximum coordinate value of this axis, in units
-    #' of the unit of measure of the axis.
-    #' @return Positive infinity.
-    getMaximumValue = function() {
-      +Inf
-    },
-
-    #' @description Retrieve the minimum coordinate value of this axis, in units
-    #' of the unit of measure of the axis.
-    #' @return The character string 'EXACT'.
-    getRangeMeaning = function() {
-      'EXACT'
     }
   ),
   active = list(

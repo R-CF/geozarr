@@ -71,7 +71,7 @@ IdentifiedObject <- R6::R6Class("IdentifiedObject",
     #' @param id Character vector with identifiers for the object.
     #' @return Self, invisibly.
     setIdentifiers = function(id) {
-      if (is.character(alias) && all(nzchar(id)))
+      if (is.character(id) && all(nzchar(id)))
         private$.identifiers <- id
       else
         stop("Object identifiers must be set using a character vector.", call. = FALSE)

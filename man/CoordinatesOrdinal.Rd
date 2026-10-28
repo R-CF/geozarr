@@ -29,11 +29,6 @@ after subsetting or other forms of selection the value may be different.
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="print_attributes"><a href='../../zarr/html/zarr_object.html#method-zarr_object-print_attributes'><code>zarr::zarr_object$print_attributes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_object" data-id="set_attribute"><a href='../../zarr/html/zarr_object.html#method-zarr_object-set_attribute'><code>zarr::zarr_object$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="brief"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-brief'><code>Coordinates$brief()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getDirection"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getDirection'><code>Coordinates$getDirection()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getMaximumValue"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getMaximumValue'><code>Coordinates$getMaximumValue()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getMinimumValue"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getMinimumValue'><code>Coordinates$getMinimumValue()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getRangeMeaning"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getRangeMeaning'><code>Coordinates$getRangeMeaning()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="getUnit"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-getUnit'><code>Coordinates$getUnit()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="print"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-print'><code>Coordinates$print()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="geozarr" data-topic="Coordinates" data-id="slice"><a href='../../geozarr/html/Coordinates.html#method-Coordinates-slice'><code>Coordinates$slice()</code></a></span></li>
 </ul>

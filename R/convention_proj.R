@@ -5,8 +5,8 @@
 #'
 #' ```{r schema, eval = FALSE}
 #' {
-#'   "schema_url": "https://raw.githubusercontent.com/zarr-conventions/geo-proj/refs/tags/v1/schema.json",
-#'   "spec_url": "https://github.com/zarr-conventions/geo-proj/blob/v1/README.md",
+#'   "schema_url": "https://raw.githubusercontent.com/zarr-conventions/proj/refs/tags/v0.1/schema.json",
+#'   "spec_url": "https://github.com/zarr-conventions/proj/blob/v0.1/README.md",
 #'   "uuid": "f17cb550-5864-4468-aeb7-f3180cfb622f",
 #'   "name": "proj",
 #'   "description": "Coordinate reference system information for geospatial data"
@@ -38,15 +38,16 @@ zarr_conv_proj <- R6::R6Class('zarr_conv_proj',
     #' @return A new instance of a "proj" convention agent.
     initialize = function(attributes) {
       super$initialize(name   = 'proj',
-                       schema = 'https://raw.githubusercontent.com/zarr-conventions/geo-proj/refs/tags/v1/schema.json',
+                       schema = 'https://raw.githubusercontent.com/zarr-conventions/proj/refs/tags/v0.1/schema.json',
                        uuid   = 'f17cb550-5864-4468-aeb7-f3180cfb622f')
-      private$.spec <- 'https://github.com/zarr-conventions/geo-proj/blob/v1/README.md'
-      private$.description <- 'Spatial coordinate information'
+      private$.spec <- 'https://github.com/zarr-conventions/proj/blob/v0.1/README.md'
+      private$.description <- 'Coordinate reference system information for geospatial data'
 
       # Set attributes
       if (!missing(attributes)) {
         if (is.list(attributes) && all(names(attributes) %in% c('code', 'wkt2', 'projjson')))
-          lapply(names(attributes), function(c) {eval(parse(text = paste0('private$.', c, ' <- \'', attributes[[c]], '\'')))})
+          for (nm in names(attributes))
+            self[[nm]] <- attributes[[nm]]
         else
           stop('Argument `attributes` for `proj` convention is misformed', call. = FALSE)
       }
@@ -75,7 +76,7 @@ zarr_conv_proj <- R6::R6Class('zarr_conv_proj',
       if (missing(value))
         private$.code
       else if (is.character(value) && length(value) == 1L &&
-               grepl('[a-zA-Z0-9]+:[0-9]+', value))
+               grepl('^[^: ]+:[^: ]+$', value))
         private$.code <- value
       else
         stop('`proj:code` must be character string in the right format', call. = FALSE)

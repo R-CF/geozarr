@@ -27,7 +27,8 @@ argument is not given, a \code{zarr} object is created in memory.}
 "pixel" (the default) or "node". Pixel registration records the coordinates
 of the upper-left corner of each grid cell. Node registration records the
 centers of grid cells. In both cases the elements in the array are assumed
-to represent an area.}
+to represent an area and the coordinate is located in the center of the
+grid cell.}
 }
 \value{
 The new \code{geozarr_array}.

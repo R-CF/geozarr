@@ -368,12 +368,39 @@ geozarr_array <- R6::R6Class('geozarr_array',
       CoordinateSystem$new(name = 'local_CS', axes = axes)
     },
 
+    # The CRS definitions in the metadata of this array, in the form of the
+    # `crs` argument of set_convention(), or NULL if there are none.
+    crs_from_metadata = function() {
+      unproj <- function(p) {
+        if (!length(p)) return(NULL)
+        names(p) <- sub('^proj:', '', names(p))
+        p
+      }
+      proj_of <- function(a) unproj(a[grepl('^proj:', names(a))])
+
+      atts <- private$.metadata$attributes
+      if (is.null(atts$cs))
+        crs <- list(spatial = proj_of(atts) %||% proj_of(private$.parent$metadata$attributes))
+      else {
+        types <- c(planar = 'spatial', vertical = 'vertical', temporal = 'temporal')
+        crs <- lapply(atts$cs$crs, function(c) unproj(c$id))
+        names(crs) <- types[vapply(atts$cs$crs, function(c) c$type %||% 'unknown', character(1L))]
+        crs <- crs[!is.na(names(crs))]
+        crs$compound <- unproj(atts$cs$id)
+      }
+      crs <- Filter(Negate(is.null), crs)
+      if (length(crs)) crs
+    },
+
     # Check that names passed as arguments to $subset() are valid. This means
     # that they must refer to an axis by name or abbreviation and there can be
     # no duplication. It returns an integer vector with the order in which the
     # axes are specified. This function assumes that the coordinate system is
     # set and having axes.
     check_selection_names = function(selection, axis_names) {
+      if (is.null(selection) || !all(nzchar(selection)))
+        stop("All selections must be named with an axis name or abbreviation", call. = FALSE)
+
       is_axis <- match(selection, axis_names)
       if (anyDuplicated(is_axis, incomparables = NA))
         stop("Duplicated axis names not allowed", call. = FALSE)
@@ -389,6 +416,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       ax_na <- which(is.na(is_axis))
       is_axis[ax_na] <- is_orient[ax_na]
+      if (anyNA(is_axis))
+        stop("Unknown axis name or abbreviation: ", paste(selection[is.na(is_axis)], collapse = ", "), call. = FALSE)
       if (anyDuplicated(is_axis, incomparables = NA))
         stop("Duplicated axis selection by name and abbreviation not allowed", call. = FALSE)
       is_axis
@@ -550,7 +579,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       # Organize the selectors
       selectors <- list(...)
-      if (is.list(selectors[[1L]]))
+      if (length(selectors) == 1L && is.list(selectors[[1L]]))
         selectors <- selectors[[1L]]
       sel_names <- names(selectors)
       axis_order <- private$check_selection_names(sel_names, names(axes))
@@ -586,22 +615,22 @@ geozarr_array <- R6::R6Class('geozarr_array',
       names(out_axes) <- vapply(out_axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)
       cs <- CoordinateSystem$new(self$coordinate_system$name, out_axes)
 
-      # Get the metadata of self and adjust the shape
+      # Get the metadata of self and adjust the shape. The convention
+      # attributes are replaced in .create_gza(), with the CRS of self.
       ab <- array_builder$new(self$metadata)
       ab$shape <- vapply(out_axes, function(ax) ax$length, integer(1L), USE.NAMES = FALSE)[1:dims]
-      new_meta <- set_convention(ab$metadata(), cs, external_group = '..')
-      # FIXME: Must use CRS from self
+      new_meta <- ab$metadata()
       new_meta$chunk_key_encoding <- self$metadata$chunk_key_encoding
 
-      # Get the attributes of self, modify and attach
       atts <- self$attributes
       atts$history <- paste0(format(Sys.time(), usetz = TRUE, digits = 0L),
                              ': Subsetting array with R package geozarr ',
                              utils::packageVersion('geozarr'), '; ', atts$history)
-      new_meta$attributes <- c(new_meta$attributes, atts)
+      new_meta$attributes <- atts
 
       .create_gza(meta = new_meta, cs = cs, data = self$read(selection),
-                  name = .name, location = .location, external_group = '..')
+                  name = .name, location = .location,
+                  crs = private$crs_from_metadata(), external_group = '..')
     },
 
     #' @description Write any external coordinates of this array to the

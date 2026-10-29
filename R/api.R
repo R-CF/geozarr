@@ -46,7 +46,8 @@
 #'   "pixel" (the default) or "node". Pixel registration records the coordinates
 #'   of the upper-left corner of each grid cell. Node registration records the
 #'   centers of grid cells. In both cases the elements in the array are assumed
-#'   to represent an area.
+#'   to represent an area and the coordinate is located in the center of the
+#'   grid cell.
 #' @return The new `geozarr_array`.
 #' @docType methods
 #' @export
@@ -202,7 +203,8 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
 #'   with a value of "node" or "pixel". If omitted, a value of "pixel" is used.
 #'   Pixel registration records the coordinates of the upper-left corner of each
 #'   grid cell. Node registration records the centers of grid cells. In both
-#'   cases the elements in the array are assumed to represent an area.
+#'   cases the elements in the array are assumed to represent an area and the
+#'   coordinate is located in the center of the grid cell.
 #'
 #'   **"cs" convention:** The "cs" convention is used for all cases where the
 #'   "spatial" convention does not apply. All fields for the `axis` sub-lists in

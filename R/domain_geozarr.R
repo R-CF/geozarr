@@ -99,22 +99,19 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
         return(FALSE)
       }
 
-      # FIXME: Matching should not be by name but uuid, schema, spec
-      # Schema matching has to be by version.
-      gz_conv <- GeoZarr.options$conventions
-      gz_conv <- gz_conv[gz_conv$name %in% c('cs', 'spatial'), ]
-      for (cv in seq_along(conv)) {
-        if (conv[[cv]]$name %in% gz_conv$name) {
-          if (metadata$node_type == 'array')
-            return(geozarr_array$new(name, metadata, parent))
-          else
-            return(geozarr_group$new(name, metadata, parent))
-        }
+      # Claim the node if it declares a principal GeoZarr convention
+      matched <- vapply(conv, .match_convention, character(1L), USE.NAMES = FALSE)
+      if (any(matched %in% c('cs', 'spatial'))) {
+        if (metadata$node_type == 'array')
+          return(geozarr_array$new(name, metadata, parent))
+        else
+          return(geozarr_group$new(name, metadata, parent))
       }
 
       # `spatial` convention: array may use parent attributes
       if (metadata$node_type == 'array' && inherits(parent, 'geozarr_group') &&
-          'spatial' %in% vapply(parent$attributes$zarr_conventions, function(conv) conv$name, character(1)))
+          'spatial' %in% vapply(parent$attributes$zarr_conventions, .match_convention,
+                                character(1L), USE.NAMES = FALSE))
         return(geozarr_array$new(name, metadata, parent))
 
       FALSE
@@ -213,15 +210,16 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
     atts <- c(atts, spatial$as_list())
 
     if (!is.null(crs)) {
-      if (is.list(crs) && length(crs) == 1L &&
-          all(names(crs) %in% c('compound', 'spatial')) && length(crs[[1L]]) &&
-          all(names(crs[[1L]]) %in% c('code', 'wkt2', 'projjson'))) {
-       proj <- zarr_conv_proj$new(crs[[1L]])
+      # One CRS for the X/Y plane: the planar CRS, else a compound CRS (which
+      # for these axes describes nothing more)
+      p <- if (is.list(crs) && all(names(crs) %in% c('compound', 'spatial')))
+        crs$spatial %||% crs$compound
+      if (length(p) && all(names(p) %in% c('code', 'wkt2', 'projjson'))) {
+        proj <- zarr_conv_proj$new(p)
         atts <- proj$register(atts)
         atts <- c(atts, proj$as_list())
       } else
-        stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)
-    }
+        stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)    }
   } else {
     # cs convention
     cs_conv <- zarr_convention_cs$new()

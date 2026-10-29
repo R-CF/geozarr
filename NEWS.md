@@ -1,10 +1,11 @@
 # geozarr (development version)
 
 * Implements the new API from `zarr` 1.0.0.
-* New method `geozarr_array$subset()` can subset arrays over all axes using coordinate value ranges.
+* New method `geozarr_array$subset()` can subset arrays over all axes using coordinate value ranges. Better checks on selector values.
 * New function `create_geozarr_array()` can create a new GeoZarr array with a coordinate system.
 * Check on monotonicity of coordinate values added.
 * Attributes are attached to coordinates.
+* Convention matching follows the Zarr conventions spec: by UUID, then schema, then spec. A "principal" convention (providing coordinates, like "cs" and "spatial") must be declared
 * Printing to the console uses the `cli` package if available. Time axis printing improved.
 * `spatial` and `proj` attribute saving fixed.
 * R version bumped to 4.4 to align with the `zarr` package.

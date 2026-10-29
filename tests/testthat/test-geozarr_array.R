@@ -335,6 +335,18 @@ test_that("subset() rejects duplicate selectors", {
   expect_error(g$subset(X = c(20, 40), X = c(20, 30)), "Duplicated axis abbreviations")
 })
 
+test_that("subset() rejects an unknown axis", {
+  g <- as_geozarr(spatial_arr())
+  expect_error(g$subset(z = c(1, 2)), "Unknown axis name or abbreviation: z")
+  expect_error(g$subset(x = c(20, 40), lat = 1), "Unknown axis name or abbreviation: lat")
+})
+
+test_that("subset() rejects unnamed selections", {
+  g <- as_geozarr(spatial_arr())
+  expect_error(g$subset(c(20, 40)), "must be named")
+  expect_error(g$subset(x = c(20, 40), c(1, 2)), "must be named")
+})
+
 test_that("subset() rejects a name and abbreviation for the same axis", {
   g <- as_geozarr(spatial_arr())
   expect_error(g$subset(x = c(20, 40), X = c(20, 30)), "Duplicated")
@@ -391,4 +403,61 @@ test_that("subset() of a re-opened spatial array with a categorical axis", {
   # Re-opened pixel-registered cells have bounds, so [20, 40] overlaps 3 cells
   s <- open_zarr(fn)[["/s"]]$subset(X = c(20, 40))
   expect_identical(s$shape, c(2L, 6L, 4L))
+})
+
+# CRS through subset() ----------------------------------------------------------
+
+crs_axis <- function(nm, ab, dir, v, n) CoordinateSystemAxis$new(nm, ab, CoordinatesPacked$new(paste0(nm, "_c"), dir, "m", v, n))
+
+crs_array <- function(cs, crs) {
+  g <- create_zarr()$add_group("/", "g")
+  a <- geozarr_array$new("a", set_convention(zarr::define_array("int32", c(5L, 6L))$metadata(), cs, crs), g, cs)
+  a$write(array(1:30, c(5, 6)))
+  a
+}
+
+test_that("subset() keeps the CRS of a spatial array", {
+  cs <- CoordinateSystem$new("cs", list(x = crs_axis("x", "X", "EAST", c(15, 10), 5L),
+                                        y = crs_axis("y", "Y", "NORTH", c(75, -10), 6L)))
+  s <- crs_array(cs, list(spatial = list(code = "EPSG:32631")))$subset(X = c(20, 40))
+  expect_identical(s$metadata$attributes[["proj:code"]], "EPSG:32631")
+})
+
+test_that("subset() keeps the CRS identifiers of a cs array", {
+  cs <- CoordinateSystem$new("cs", list(x = crs_axis("x", "X", "EAST", c(15, 10), 5L),
+                                        y = crs_axis("y", "Y", "NORTH", c(25, 10), 6L)))
+  s <- crs_array(cs, list(spatial = list(code = "EPSG:32631"), compound = list(code = "EPSG:9518")))$subset(X = c(20, 40))
+  expect_identical(s$metadata$attributes$cs$crs[[1L]]$id, list(`proj:code` = "EPSG:32631"))
+  expect_identical(s$metadata$attributes$cs$id, list(`proj:code` = "EPSG:9518"))
+})
+
+test_that("subset() does not duplicate convention attributes", {
+  cs <- CoordinateSystem$new("cs", list(x = crs_axis("x", "X", "EAST", c(15, 10), 5L),
+                                        y = crs_axis("y", "Y", "NORTH", c(25, 10), 6L)))
+  s <- crs_array(cs, NULL)$subset(X = c(20, 40))
+  expect_false(anyDuplicated(names(s$metadata$attributes)) > 0L)
+})
+
+test_that("subset() keeps the CRS when the convention changes from cs to spatial", {
+  cs <- CoordinateSystem$new("cs", list(
+    x = CoordinateSystemAxis$new("x", "X", CoordinatesIrregular$new("x_c", "EAST", "m", c(15, 25, 35, 45, 70))),
+    y = crs_axis("y", "Y", "NORTH", c(75, -10), 6L)))
+  a <- crs_array(cs, list(spatial = list(code = "EPSG:32631"), compound = list(code = "EPSG:9518")))
+  expect_false(is.null(a$metadata$attributes$cs))
+  s <- a$subset(X = c(10, 50))
+  expect_identical(s$metadata$attributes$zarr_conventions[[1L]]$name, "spatial")
+  expect_identical(s$metadata$attributes[["proj:code"]], "EPSG:32631")
+})
+
+test_that("subset() takes a spatial CRS from the parent group", {
+  grp_atts <- c(zarr_conv_spatial$new()$register(list()),
+                list(`spatial:dimensions` = c("y", "x"), `spatial:transform` = c(10, 0, 15, 0, -10, 75)))
+  grp_atts <- c(zarr_conv_proj$new()$register(grp_atts), list(`proj:code` = "EPSG:32631"))
+  a <- open_zarr(store_with(zarr_conv_spatial$new()$register(list()), group_atts = grp_atts))[["/a"]]
+  expect_identical(a$subset(X = c(20, 40))$metadata$attributes[["proj:code"]], "EPSG:32631")
+})
+
+test_that("subset() of a single-array spatial store without CRS", {
+  s <- as_geozarr(spatial_arr())$subset(X = c(20, 40))
+  expect_null(s$metadata$attributes[["proj:code"]])
 })

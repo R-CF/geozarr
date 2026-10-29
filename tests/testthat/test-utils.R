@@ -94,3 +94,95 @@ test_that(".conventions_supported() errors on unidentifiable conventions", {
   expect_error(gz$.conventions_supported(conv_meta(list(uuid = "nope"))),
                "unsupported conventions: nope")
 })
+
+# Convention matching -----------------------------------------------------------
+
+spatial_schema <- "https://raw.githubusercontent.com/zarr-conventions/spatial/refs/tags/v0.1/schema.json"
+spatial_spec   <- "https://github.com/zarr-conventions/spatial/blob/v0.1/README.md"
+
+test_that(".url_version() splits off a version segment", {
+  expect_identical(gz$.url_version(spatial_schema),
+                   list(base = "https://raw.githubusercontent.com/zarr-conventions/spatial/{ref}/schema.json",
+                        version = c(0L, 1L, 0L)))
+  expect_identical(gz$.url_version("https://x.org/a/1.2.3/s.json")$version, c(1L, 2L, 3L))
+  expect_identical(gz$.url_version("https://x.org/a/v2/s.json")$version, c(2L, 0L, 0L))
+})
+
+test_that(".url_version() treats refs/tags and short refs alike", {
+  expect_identical(gz$.url_version(spatial_schema)$base,
+                   gz$.url_version(sub("refs/tags/", "", spatial_schema))$base)
+})
+
+test_that(".url_version() gives a GitHub branch reference no version", {
+  u <- "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/refs/heads/main/schema.json"
+  expect_identical(gz$.url_version(u),
+                   list(base = "https://raw.githubusercontent.com/R-CF/zarr_conventions_cs/{ref}/schema.json",
+                        version = NULL))
+})
+
+test_that(".url_version() gives tag and branch references the same identity", {
+  expect_identical(gz$.url_version(spatial_spec)$base,
+                   gz$.url_version(sub("v0.1", "main", spatial_spec))$base)
+})
+
+test_that(".url_version() leaves unversioned non-GitHub URLs whole", {
+  expect_identical(gz$.url_version("https://x.org/a/schema.json"),
+                   list(base = "https://x.org/a/schema.json", version = NULL))
+})
+
+test_that(".versions_compatible() follows semantic versioning", {
+  expect_true(gz$.versions_compatible(c(1L, 0L, 0L), c(1L, 4L, 2L)))
+  expect_false(gz$.versions_compatible(c(1L, 0L, 0L), c(2L, 0L, 0L)))
+  expect_true(gz$.versions_compatible(c(0L, 1L, 0L), c(0L, 1L, 3L)))
+  expect_false(gz$.versions_compatible(c(0L, 1L, 0L), c(0L, 2L, 0L)))   # MAJOR 0: MINOR breaks
+  expect_true(gz$.versions_compatible(NULL, c(0L, 2L, 0L)))
+})
+
+test_that(".match_convention() identifies by uuid, not by name", {
+  expect_identical(gz$.match_convention(list(uuid = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4")), "spatial")
+  expect_identical(gz$.match_convention(list(name = "spatial")), NA_character_)
+  # A present uuid decides identity, even when the schema would match
+  expect_identical(gz$.match_convention(list(uuid = "nope", schema_url = spatial_schema)), NA_character_)
+})
+
+test_that(".match_convention() checks the version of a uuid match", {
+  uuid <- "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
+  expect_identical(gz$.match_convention(list(uuid = uuid, schema_url = sub("v0.1", "v0.1.2", spatial_schema))), "spatial")
+  expect_identical(gz$.match_convention(list(uuid = uuid, schema_url = sub("v0.1", "v1", spatial_schema))), NA_character_)
+  expect_identical(gz$.match_convention(list(uuid = uuid, spec_url = sub("v0.1", "v0.2", spatial_spec))), NA_character_)
+})
+
+test_that(".match_convention() accepts a relocated convention by uuid", {
+  uuid <- "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
+  moved <- "https://raw.githubusercontent.com/some-org/spatial/refs/tags/v0.1/schema.json"
+  expect_identical(gz$.match_convention(list(uuid = uuid, schema_url = moved)), "spatial")
+  expect_identical(gz$.match_convention(list(schema_url = moved)), NA_character_)
+})
+test_that(".match_convention() matches by schema, with compatible versions", {
+  expect_identical(gz$.match_convention(list(schema_url = spatial_schema)), "spatial")
+  expect_identical(gz$.match_convention(list(schema_url = sub("v0.1", "v0.1.4", spatial_schema))), "spatial")
+  expect_identical(gz$.match_convention(list(schema_url = sub("v0.1", "v0.2", spatial_schema))), NA_character_)
+})
+
+test_that(".match_convention() matches by spec when no schema is given", {
+  expect_identical(gz$.match_convention(list(spec_url = spatial_spec)), "spatial")
+  expect_identical(gz$.match_convention(list(spec_url = sub("v0.1", "v1", spatial_spec))), NA_character_)
+})
+
+test_that(".match_convention() identifies by unversioned URLs", {
+  expect_identical(gz$.match_convention(list(spec_url = sub("v0.1", "main", spatial_spec))), "spatial")
+  expect_identical(gz$.match_convention(list(schema_url = sub("refs/tags/v0.1", "main", spatial_schema))), "spatial")
+})
+
+test_that(".match_convention() takes the version from the schema before the spec", {
+  # Unversioned spec: the schema version decides
+  expect_identical(gz$.match_convention(list(schema_url = sub("v0.1", "v0.2", spatial_schema),
+                                             spec_url = sub("v0.1", "main", spatial_spec))), NA_character_)
+  # Unversioned schema: the spec version decides
+  expect_identical(gz$.match_convention(list(schema_url = sub("refs/tags/v0.1", "main", spatial_schema),
+                                             spec_url = spatial_spec)), "spatial")
+})
+
+test_that(".match_convention() knows zarr's conventions", {
+  expect_identical(gz$.match_convention(list(uuid = "3bbe438d-df37-49fe-8e2b-739296d46dfb")), "uom")
+})

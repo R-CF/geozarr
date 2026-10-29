@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 # ⌖ geozarr
 
 <!-- badges: start -->
-[![Lifecycle: Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](https://lifecycle.r-lib.org/articles/stages.html) [![CRAN Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr) [![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org) [![Last commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
+[![Lifecycle: Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](https://lifecycle.r-lib.org/articles/stages.html) [![CRAN Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr) [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org) [![Last commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)[![Codecov test coverage](https://codecov.io/gh/R-CF/geozarr/graph/badge.svg)](https://app.codecov.io/gh/R-CF/geozarr)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial data on top of the Zarr specification. It builds on the `zarr` package, a native R implementation of the Zarr specification that can read and write Zarr v.3 stores in memory, on the local file system and over HTTP. 
@@ -50,8 +50,11 @@ x <- array(1:400, c(5, 20, 4))
 # `spatial` convention
 # Set named dim_names with `x` and `y` (decreasing values), third dimension is class-based
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
-z <- as_geozarr(x, name = "spatial_data")
-z[["/spatial_data"]]
+arr <- as_geozarr(x, name = "spatial_data")
+arr
+
+# Get the `zarr` object that manages the array
+z <- arr$zarr
 
 # GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
 z$hierarchy() 
@@ -61,7 +64,7 @@ z$hierarchy()
 # Named dimensions with `y` coordinates in natural order, third dimension is time (regular)
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-06-%02d", 1:4))
 arr <- as_geozarr(x, name = "cs_data", location = z[["/"]])
-z[["/cs_data"]]
+arr
 z$hierarchy()
 
 # Irregular time dimension in months: 31, 28, 31 and 30 days
@@ -71,7 +74,7 @@ geozarr_options("max_explicit", 3L) # Force writing of external Zarr array
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-%02d-01", 1:4))
 grp <- z$add_group("/", "irregular")
 arr <- as_geozarr(x, name = "cs_data_irregular_time", location = grp)
-z[["/irregular/cs_data_irregular_time"]]
+arr
 
 # "time" is a regular Zarr array, it uses the ⌗ glyph
 z$hierarchy()

@@ -11,10 +11,12 @@ Experimental](https://img.shields.io/badge/Lifecycle-Experimental-green.svg)](ht
 Status](https://www.r-pkg.org/badges/version/geozarr)](https://cran.r-project.org/package=geozarr)
 [![CRAN
 Downloads](https://cranlogs.r-pkg.org/badges/grand-total/geozarr)](https://cran.r-project.org/package=geozarr)
-[![License: GPL
-v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://mit-license.org)
 [![Last
-commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)
+commit](https://img.shields.io/github/last-commit/R-CF/geozarr)](https://github.com/R-CF/geozarr/commits/main)[![R-CMD-check](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/R-CF/geozarr/actions/workflows/R-CMD-check.yaml)[![Codecov
+test
+coverage](https://codecov.io/gh/R-CF/geozarr/graph/badge.svg)](https://app.codecov.io/gh/R-CF/geozarr)
 <!-- badges: end -->
 
 The `geozarr` package implements a set of conventions for geospatial
@@ -93,50 +95,51 @@ x <- array(1:400, c(5, 20, 4))
 # `spatial` convention
 # Set named dim_names with `x` and `y` (decreasing values), third dimension is class-based
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 19:0 * 5000, cls = letters[1:4])
-z <- as_geozarr(x, name = "spatial_data")
-z[["/spatial_data"]]
-#> <Zarr array> ⌖ spatial_data 
-#> Path      : /spatial_data 
-#> Domain    : GeoZarr 
-#> Data type : int32 
-#> Shape     : 5 20 4 [x, y, cls]
-#> Chunking  : 5 20 4 
-#> 
-#> Coordinate system:
+arr <- as_geozarr(x, name = "spatial_data")
+arr
+#> ── Zarr array ⌖ spatial_data ───────────────────────────────────────────────────
+#> ℹ Path      : /spatial_data
+#> ℹ Domain    : GeoZarr
+#> ℹ Data type : int32
+#> ℹ Shape     : 5, 20, 4 [x, y, cls]
+#> ℹ Chunk grid: 1, 1, 1 [5 x 20 x 4]
+#> ── Coordinate system ───────────────────────────────────────────────────────────
 #>  abbr  name direction length values             unit
 #>  X     x    OTHER      5     [1e+05 ... 140000] -   
 #>  Y     y    OTHER     20     [95000 ... 0]      -   
 #>  OTHER cls  OTHER      4     [a ... d]          -
 
+# Get the `zarr` object that manages the array
+z <- arr$zarr
+
 # GeoZarr arrays use the ⌖ glyph, groups use the ☰ glyph.
 z$hierarchy() 
-#> <Zarr hierarchy> 
+#> ── Zarr hierarchy  ─────────────────────────────────────────────────────────────
 #> ☰ / (root group)
-#> └ ⌖ spatial_data
+#>   ⌖ spatial_data [int32] [x = 5, y = 20, cls = 4]
 
 # `cs` convention
 # Create the new array in the existing zarr object in the root group
 # Named dimensions with `y` coordinates in natural order, third dimension is time (regular)
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-06-%02d", 1:4))
 arr <- as_geozarr(x, name = "cs_data", location = z[["/"]])
-z[["/cs_data"]]
-#> <Zarr array> ⌖ cs_data 
-#> Path      : /cs_data 
-#> Domain    : GeoZarr 
-#> Data type : int32 
-#> Shape     : 5 20 4 [x, y, time]
-#> Chunking  : 5 20 4 
-#> 
-#> Coordinate system:
+arr
+#> ── Zarr array ⌖ cs_data ────────────────────────────────────────────────────────
+#> ℹ Path      : /cs_data
+#> ℹ Domain    : GeoZarr
+#> ℹ Data type : int32
+#> ℹ Shape     : 5, 20, 4 [x, y, time]
+#> ℹ Chunk grid: 1, 1, 1 [5 x 20 x 4]
+#> ── Coordinate system ───────────────────────────────────────────────────────────
 #>  abbr name direction length values                      unit
 #>  X    x    OTHER      5     [1e+05 ... 140000]          -   
 #>  Y    y    OTHER     20     [0 ... 95000]               -   
 #>  T    time FUTURE     4     [2026-06-01 ... 2026-06-04] days
 z$hierarchy()
-#> <Zarr hierarchy> 
+#> ── Zarr hierarchy  ─────────────────────────────────────────────────────────────
 #> ☰ / (root group)
-#> ├ ⌖ spatial_data
-#> └ ⌖ cs_data
+#>   ⌖ spatial_data [int32] [x = 5, y = 20, cls = 4]
+#>   ⌖ cs_data [int32] [x = 5, y = 20, time = 4]
 
 # Irregular time dimension in months: 31, 28, 31 and 30 days
 # Create the new array in the existing zarr object in a new group
@@ -145,15 +148,14 @@ geozarr_options("max_explicit", 3L) # Force writing of external Zarr array
 dimnames(x) <- list(x = 100000 + 0:4 * 10000, y = 0:19 * 5000, time = sprintf("2026-%02d-01", 1:4))
 grp <- z$add_group("/", "irregular")
 arr <- as_geozarr(x, name = "cs_data_irregular_time", location = grp)
-z[["/irregular/cs_data_irregular_time"]]
-#> <Zarr array> ⌖ cs_data_irregular_time 
-#> Path      : /irregular/cs_data_irregular_time 
-#> Domain    : GeoZarr 
-#> Data type : int32 
-#> Shape     : 5 20 4 [x, y, time]
-#> Chunking  : 5 20 4 
-#> 
-#> Coordinate system:
+arr
+#> ── Zarr array ⌖ cs_data_irregular_time ─────────────────────────────────────────
+#> ℹ Path      : /irregular/cs_data_irregular_time
+#> ℹ Domain    : GeoZarr
+#> ℹ Data type : int32
+#> ℹ Shape     : 5, 20, 4 [x, y, time]
+#> ℹ Chunk grid: 1, 1, 1 [5 x 20 x 4]
+#> ── Coordinate system ───────────────────────────────────────────────────────────
 #>  abbr name direction length values                      unit
 #>  X    x    OTHER      5     [1e+05 ... 140000]          -   
 #>  Y    y    OTHER     20     [0 ... 95000]               -   
@@ -161,13 +163,13 @@ z[["/irregular/cs_data_irregular_time"]]
 
 # "time" is a regular Zarr array, it uses the ⌗ glyph
 z$hierarchy()
-#> <Zarr hierarchy> 
+#> ── Zarr hierarchy  ─────────────────────────────────────────────────────────────
 #> ☰ / (root group)
-#> ├ ⌖ spatial_data
-#> ├ ⌖ cs_data
-#> └ ☰ irregular
-#>   ├ ⌖ cs_data_irregular_time
-#>   └ ⌗ time
+#>   ⌖ spatial_data [int32] [x = 5, y = 20, cls = 4]
+#>   ⌖ cs_data [int32] [x = 5, y = 20, time = 4]
+#>   ☰ irregular
+#>     ⌖ cs_data_irregular_time [int32] [x = 5, y = 20, time = 4]
+#>     ⌗ time [float64] [time = 4]
 geozarr_options("max_explicit", old_explicit)
 ```
 

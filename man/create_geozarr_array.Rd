@@ -111,7 +111,8 @@ is searched for a \code{registration} member. Its value is a character string
 with a value of "node" or "pixel". If omitted, a value of "pixel" is used.
 Pixel registration records the coordinates of the upper-left corner of each
 grid cell. Node registration records the centers of grid cells. In both
-cases the elements in the array are assumed to represent an area.
+cases the elements in the array are assumed to represent an area and the
+coordinate is located in the center of the grid cell.
 
 \strong{"cs" convention:} The "cs" convention is used for all cases where the
 "spatial" convention does not apply. All fields for the \code{axis} sub-lists in

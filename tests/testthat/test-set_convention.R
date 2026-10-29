@@ -80,9 +80,15 @@ test_that("set_convention() spatial rejects a malformed CRS", {
   cs <- make_cs(regx(), regyd())
   expect_error(set_convention(list(), cs, list(vertical = list(code = "EPSG:5703"))), "formatted CRS")
   expect_error(set_convention(list(), cs, list(spatial = list(epsg = 1))), "formatted CRS")
-  expect_error(set_convention(list(), cs, list(spatial = list(code = "EPSG:1"), compound = list(code = "EPSG:2"))),
-               "formatted CRS")
   expect_error(set_convention(list(), cs, "EPSG:4326"), "formatted CRS")
+})
+
+test_that("set_convention() spatial prefers the planar over the compound CRS", {
+  cs <- make_cs(regx(), regyd())
+  m <- set_convention(list(), cs, list(spatial = list(code = "EPSG:32631"), compound = list(code = "EPSG:9518")))
+  expect_identical(m$attributes[["proj:code"]], "EPSG:32631")
+  m <- set_convention(list(), cs, list(compound = list(code = "EPSG:9518")))
+  expect_identical(m$attributes[["proj:code"]], "EPSG:9518")
 })
 
 test_that("set_convention() cs with per-CRS proj identifiers", {

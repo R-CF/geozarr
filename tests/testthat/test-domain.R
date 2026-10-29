@@ -70,3 +70,12 @@ test_that("array listing an unsupported convention among GeoZarr ones fails to o
   atts$zarr_conventions <- c(atts$zarr_conventions, list(list(name = "bogus", uuid = "0000")))
   expect_error(open_zarr(group_store(list(), atts)), "unsupported conventions: bogus")
 })
+
+test_that("array with a brief CMO (schema only, no uuid) is claimed", {
+  atts <- zarr_conv_spatial$new()$register(list(`spatial:dimensions` = c("y", "x"),
+                                                `spatial:transform` = c(10, 0, 15, 0, -10, 75)),
+                                           brief = TRUE)
+  expect_null(atts$zarr_conventions[[1L]]$uuid)
+  z <- open_zarr(group_store(list(), atts))
+  expect_s3_class(z[["/a"]], "geozarr_array")
+})

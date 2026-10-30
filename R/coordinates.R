@@ -204,7 +204,7 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @description Return an exact copy of these coordinates.
     #' @return A new instance of `Coordinates`.
     copy = function() {
-      stop('Descendant classes must implement this method')
+      stop('Descendant classes must implement this method') # nocov
     },
 
     #' @description Return coordinates spanning a smaller coordinate range.
@@ -212,7 +212,7 @@ Coordinates <- R6::R6Class('Coordinates',
     #' @return A new `Coordinates` instance covering the indicated range of
     #'   indices, including boundary values, present.
     subset = function(rng) {
-      stop('Descendant classes must implement this method')
+      stop('Descendant classes must implement this method') # nocov
     },
 
     #' @description Given a range of domain coordinate values, returns the

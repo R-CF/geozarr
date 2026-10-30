@@ -1,4 +1,4 @@
-# geozarr (development version)
+# geozarr 0.3.0
 
 * Implements the new API from `zarr` 1.0.0.
 * New method `geozarr_array$subset()` can subset arrays over all axes using coordinate value ranges. Better checks on selector values.

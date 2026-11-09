@@ -28,8 +28,10 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # Remove domain attributes prior to printing this geozarr_array
     display_attributes = function() {
       atts <- private$.metadata[['attributes']]
-      nms <- names(atts)
-      atts[!(startsWith(nms, 'spatial:') | (nms %in% c('zarr_conventions', 'cs')))]
+      if (length(atts)) {
+        nms <- names(atts)
+        atts[!(startsWith(nms, 'spatial:') | (nms %in% c('zarr_conventions', 'cs', 'geolocation')))]
+      } else list()
     },
 
     # This function resolves a `ref` element in the array attributes. Argument
@@ -44,7 +46,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
       if (missing(uri) || is.null(uri) || !nzchar(uri)) {
         # Local reference: Resolve the path relative to this array
         parts <- strsplit(node, split = '/', fixed = TRUE)[[1L]]
-        if ((len <- length(parts)) < 2L)
+        if (!(len <- length(parts)) || startsWith(node, '/'))
           stop('Argument `node` must be a relative path from the referring array or group', call. = FALSE)
         referred_node <- self
         ndx <- 1L
@@ -58,12 +60,35 @@ geozarr_array <- R6::R6Class('geozarr_array',
         stop('Not yet supported', call. = FALSE)
       }
 
-      if (missing(attribute))
+      if (missing(attribute) || is.null(attribute))
         referred_node
-      else {
-        # Get the requested attribute from referred_node
-        stop('Not yet supported', call. = FALSE)
-      }
+      else if (!is.null(referred_node))
+        .json_pointer(referred_node$metadata, attribute)
+    },
+
+    # The CRS objects of the "cs" attribute in metadata `meta`. A CRS object
+    # referenced in a group is resolved and the references in it are rebased
+    # to this array. A geolocation object in a CRS object is kept only if the
+    # node that defines the CRS object declares the geolocation convention.
+    cs_crs = function(meta) {
+      array_geo <- .declares(meta, 'geolocation')
+      lapply(meta$attributes$cs$crs, function(crs) {
+        ref <- crs$ref
+        if (is.null(ref)) {
+          if (!array_geo) crs$geolocation <- NULL
+          return(crs)
+        }
+        if (!is.null(ref$uri))
+          stop('CRS references to an external store are not yet supported', call. = FALSE)
+        grp <- private$resolve_external_node(node = ref$node)
+        resolved <- if (!is.null(grp) && !is.null(ref$attribute))
+          .json_pointer(grp$metadata, ref$attribute)
+        if (!is.list(resolved) || is.null(resolved$axes))
+          stop('CRS reference "', ref$node, '" with attribute "', ref$attribute %||% '',
+               '" does not resolve to a CRS object', call. = FALSE)
+        if (!.declares(grp$metadata, 'geolocation')) resolved$geolocation <- NULL
+        .rebase_refs(resolved, ref$node)
+      })
     },
 
     # Create a coordinate system using the cs convention.
@@ -77,12 +102,13 @@ geozarr_array <- R6::R6Class('geozarr_array',
         stop('Required attribute "cs" not found in array metadata', call. = FALSE)
       if (!length(cs$crs))
         stop('Attribute "cs" must contain at least one CRS object', call. = FALSE)
+      crs_list <- private$cs_crs(meta)
 
       # Collect all axis definitions from all CRS objects, keyed by dimension
       # name. Later CRS objects win on name collision (should not occur in a
       # valid store, but we need a deterministic rule).
       all_axes <- list()
-      for (crs in cs$crs) {
+      for (crs in crs_list) {
         if (!is.null(crs$axes))
           all_axes[names(crs$axes)] <- crs$axes
       }
@@ -134,7 +160,21 @@ geozarr_array <- R6::R6Class('geozarr_array',
         axes <- c(axes, scalar_axes)
       }
 
-      CoordinateSystem$new(name = cs$name %||% 'cs', axes = axes)
+      # 3. Geolocation, possibly attached to any of the CRS objects
+      geo <- do.call(c, lapply(crs_list, function(crs) crs$geolocation))
+      if (anyDuplicated(names(geo)))
+        stop('Attribute "cs" has more than one "', names(geo)[anyDuplicated(names(geo))],
+             '" geolocation', call. = FALSE)
+
+      private$attach_geolocation(CoordinateSystem$new(name = cs$name %||% 'cs', axes = axes), geo)
+    },
+
+    # Set the geolocation `geo`, a `geolocation` object read from metadata, on
+    # coordinate system `cs`, if there is one. Returns `cs`.
+    attach_geolocation = function(cs, geo) {
+      if (length(geo))
+        cs$geolocation <- zarr_convention_geolocation$new(geo)
+      cs
     },
 
     # Build a Coordinates instance from one element of an axis's `coordinates`
@@ -316,7 +356,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
       })
       names(axes) <- dimension_names
 
-      CoordinateSystem$new(name = 'local_CS', axes = axes)
+      private$attach_geolocation(CoordinateSystem$new(name = 'local_CS', axes = axes),
+                                 if (.declares(meta, 'geolocation')) atts$geolocation)
     },
 
     # Create a coordinate system from sibling "coordinate variable" arrays.
@@ -383,8 +424,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
         crs <- list(spatial = proj_of(atts) %||% proj_of(private$.parent$metadata$attributes))
       else {
         types <- c(planar = 'spatial', vertical = 'vertical', temporal = 'temporal')
-        crs <- lapply(atts$cs$crs, function(c) unproj(c$id))
-        names(crs) <- types[vapply(atts$cs$crs, function(c) c$type %||% 'unknown', character(1L))]
+        crs_list <- private$cs_crs(private$.metadata)
+        crs <- lapply(crs_list, function(c) unproj(c$id))
+        names(crs) <- types[vapply(crs_list, function(c) c$type %||% 'undefined', character(1L))]
         crs <- crs[!is.na(names(crs))]
         crs$compound <- unproj(atts$cs$id)
       }
@@ -423,22 +465,46 @@ geozarr_array <- R6::R6Class('geozarr_array',
       is_axis
     },
 
+    # Walk `node_names` from this array like `zarr_node$walk_path()`, returning
+    # the zarr_group that is found. With `create = TRUE`, missing child groups
+    # are created along the way; ".." still requires an existing parent.
+    # FIXME: Replace with `walk_path(node_names, create)` once available in zarr.
+    walk_to_group = function(node_names, create = FALSE) {
+      node <- if (create) {
+        nd <- self
+        for (nm in node_names) {
+          nd <- if (nm == '..') {
+            if (!inherits(nd$parent, 'zarr_node'))
+              stop('Target Zarr node specified beyond the root node', call. = FALSE)
+            nd$parent
+          } else if (!inherits(nd, 'zarr_group'))
+            stop('Target Zarr node specifies non-existent child node', call. = FALSE)
+          else
+            nd$children[[nm]] %||% nd$add_group(nm)
+        }
+        nd
+      } else
+        self$walk_path(node_names)
+      if (!inherits(node, 'zarr_group'))
+        stop('Target Zarr node for external arrays is not a group', call. = FALSE)
+      node
+    },
+
     # Create a new external Zarr array at `ext_name` in `grp`, or verify that an
     # existing one is compatible with `values`. `values` may be a vector (a
     # single-dimension coordinate array) or a matrix (e.g. a 2 x n bounds array),
     # in R-native shape/ordering. `dim_names` must have one entry per dimension
     # of `values`, in the same order.
-    write_or_verify_external = function(grp, ext_name, values, unit, dim_names) {
+    write_or_verify_external = function(grp, ext_name, values, unit, dim_names, attributes = list()) {
       shp <- dim(values) %||% length(values)
 
       ext_arr <- grp$children[[ext_name]]
       if (is.null(ext_arr)) {
         # No existing array -- write new array
-        # FIXME: zarr::as_zarr() should return the array, update here after next release of zarr
-        ext_grp <- zarr::as_zarr(x = values, name = ext_name, location = grp)
-        ext_arr <- ext_grp$children[[ext_name]]
+        ext_arr <- zarr::as_zarr(x = values, name = ext_name, location = grp)
         meta <- ext_arr$metadata
         meta$dimension_names <- dim_names
+        meta$attributes <- c(meta$attributes, attributes[names(attributes) != 'units'])
         meta$attributes$units <- unit
         ext_arr$metadata <- meta
         ext_arr$save()
@@ -506,6 +572,21 @@ geozarr_array <- R6::R6Class('geozarr_array',
       }
     },
 
+    #' @description Produce a named character vector with a summary of the array
+    #'   including its name, data type, shape (with axis names, including scalar
+    #'   ones) and the chunking.
+    #' @return Named character vector with details of the array.
+    details = function() {
+      nm <- private$.name
+      if (!nzchar(nm))
+        nm <- '(root array)'
+      axes <- private$.cs$axes
+      names <- names(axes)
+      shp <- vapply(axes, function(ax) ax$length, integer(1L))
+      shp <- paste(names, ' = ', shp, collapse = ', ')
+      c(name = nm, data_type = private$.data_type$data_type, shape = shp)
+    },
+
     #' @description This method extracts a subset of values from the GeoZarr
     #'   array, with the range along each axis to extract expressed in
     #'   coordinate values of the domain of each axis.
@@ -531,6 +612,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   The extracted data has the same dimensional structure as the data in
     #'   the array, with degenerate dimensions preserved. The order of the axes
     #'   in argument `...` does not reorder the axes in the result.
+    #'
+    #'   Geolocation arrays of the coordinate system are not subset, so the
+    #'   result has no geolocation.
     #'
     #'   Arguments following `...` must be explicitly named, like
     #'   `.rightmost.closed = TRUE`, to avoid the argument being treated as an
@@ -633,13 +717,143 @@ geozarr_array <- R6::R6Class('geozarr_array',
                   crs = private$crs_from_metadata(), external_group = '..')
     },
 
+    #' @description Retrieve the geolocation arrays of this array. The arrays
+    #'   are referenced from the coordinate system, for its axes with
+    #'   abbreviation "X" and "Y".
+    #' @details The geolocation arrays must have the names of the "X" and "Y"
+    #'   axes of this array in their `dimension_names`. Any other dimension of
+    #'   a geolocation array must also be a dimension of this array. The
+    #'   lengths of matching dimensions must be equal; their order is not
+    #'   constrained. Boundary arrays, if given, must have the dimensions of
+    #'   their geolocation array plus one vertex dimension of length 4. An error
+    #'   is thrown when a geolocation or boundary array cannot be found or when
+    #'   its dimensions do not match.
+    #' @param kind Character string, either "geodetic" (default) or "planar".
+    #' @return A `list` with elements "x" and "y" holding the `zarr_array`
+    #'   instances of the geolocation arrays and, if the geolocation has
+    #'   boundaries, "x_bounds" and "y_bounds" holding those of the boundary
+    #'   arrays; or `NULL` if this array has no geolocation of the requested
+    #'   `kind`. The CRS of the geolocation arrays, if given, is available from
+    #'   the `geolocation` field of the coordinate system.
+    geolocation = function(kind = c('geodetic', 'planar')) {
+      kind <- match.arg(kind)
+      geo <- private$.cs$geolocation
+      arrays <- if (!is.null(geo)) geo$as_list()[[kind]]
+      if (is.null(arrays)) return(NULL)
+
+      axes <- private$.cs$axes
+      abbr <- vapply(axes, function(a) a$abbreviation, character(1L))
+      xy <- list(axes[[which(abbr == 'X')]], axes[[which(abbr == 'Y')]])
+      xy_names <- vapply(xy, function(a) a$name, character(1L))
+      dims <- private$.metadata$dimension_names
+
+      resolve <- function(ref, what) {
+        arr <- private$resolve_external_node(node = ref$node, uri = ref$uri)
+        if (!inherits(arr, 'zarr_array'))
+          stop(what, ' array "', ref$node, '" not found', call. = FALSE)
+        arr
+      }
+
+      out <- lapply(c(x = 'x', y = 'y'), function(k) {
+        ref <- arrays[[k]]$values$ref
+        arr <- resolve(ref, 'Geolocation')
+        geo_dims <- unlist(arr$metadata$dimension_names)
+        if (!all(xy_names %in% geo_dims))
+          stop('Geolocation array "', ref$node, '" must have dimensions "',
+               paste(xy_names, collapse = '" and "'), '"', call. = FALSE)
+        pos <- match(geo_dims, dims)
+        if (length(geo_dims) != length(arr$shape) || anyNA(pos))
+          stop('Geolocation array "', ref$node, '" has dimensions that are not in the array', call. = FALSE)
+        if (any(arr$shape != self$shape[pos]))
+          stop('Geolocation array "', ref$node, '" does not match the lengths of the array dimensions', call. = FALSE)
+        arr
+      })
+
+      if (!is.null(arrays$x$boundaries)) {
+        bnds <- lapply(c(x_bounds = 'x', y_bounds = 'y'), function(k) {
+          ref <- arrays[[k]]$boundaries$ref
+          arr <- resolve(ref, 'Boundary')
+          b_dims <- unlist(arr$metadata$dimension_names)
+          v_dims <- unlist(out[[k]]$metadata$dimension_names)
+          vertex <- setdiff(b_dims, v_dims)
+          pos <- match(v_dims, b_dims)
+          if (length(b_dims) != length(arr$shape) || anyNA(pos) || length(vertex) != 1L ||
+              length(b_dims) != length(v_dims) + 1L)
+            stop('Boundary array "', ref$node, '" must have the dimensions of its geolocation array and one vertex dimension', call. = FALSE)
+          if (any(arr$shape[pos] != out[[k]]$shape) || arr$shape[b_dims == vertex] != 4L)
+            stop('Boundary array "', ref$node, '" does not match the lengths of its geolocation array and 4 vertices', call. = FALSE)
+          arr
+        })
+        out <- c(out, bnds)
+      }
+      out
+    },
+
+    #' @description Write the geolocation data of the coordinate system of
+    #'   this array, set with `CoordinateSystem$set_geolocation()`, to the Zarr
+    #'   arrays referenced in the geolocation object in the metadata of this
+    #'   array. If an array already exists, as when geolocation arrays are
+    #'   shared by multiple arrays, it is verified to be identical instead.
+    #'   After writing, the data is removed from memory and the `geolocation`
+    #'   field of the coordinate system references the written arrays.
+    #' @details The groups that the geolocation arrays are written to must
+    #'   exist, unless `create_groups = TRUE`. An error is thrown when a group
+    #'   does not exist and is not created, when the metadata of this array has no
+    #'   geolocation object for the data, when this array is the only array in
+    #'   its Zarr store, or when an existing array differs from the data in its
+    #'   dimension names, shape, units or values.
+    #' @param create_groups Logical, default `FALSE`. If `TRUE`, missing groups
+    #'   on the path to the geolocation arrays are created. Only groups below
+    #'   the nodes that the path moves up to ("..") can be created.
+    #' @return Self, invisibly.
+    write_geolocation = function(create_groups = FALSE) {
+      data <- private$.cs$geolocation_data
+      if (!length(data)) return(invisible(self))
+      if (!inherits(private$.parent, 'zarr_group'))
+        stop('Single-array Zarr store cannot have geolocation arrays', call. = FALSE)
+
+      atts <- private$.metadata$attributes
+      refs <- atts$geolocation %||% do.call(c, lapply(atts$cs$crs, function(crs) crs$geolocation))
+      for (kind in names(data)) {
+        d <- data[[kind]]
+        if (is.null(refs[[kind]]))
+          stop('No "', kind, '" geolocation in the metadata of the array; use `set_convention()` first', call. = FALSE)
+        write <- function(node, values, unit, dims, attributes = list()) {
+          parts <- strsplit(node, '/', fixed = TRUE)[[1L]]
+          name  <- parts[length(parts)]
+          grp   <- private$walk_to_group(parts[-length(parts)], create_groups)
+          ext   <- grp$children[[name]]
+          if (!is.null(ext) && !identical(unlist(ext$metadata$dimension_names), dims))
+            stop('Incompatible external array "', name, '" already exists', call. = FALSE)
+          private$write_or_verify_external(grp, name, values, unit, dims, attributes)
+        }
+        for (xy in c('x', 'y')) {
+          crd  <- refs[[kind]][[xy]]
+          atts_xy <- d[[xy]]$attributes
+          unit <- atts_xy$units %||% ''
+          write(crd$values$ref$node, d[[xy]]$values, unit, d$dims, atts_xy)
+          if (!is.null(d[[xy]]$bounds)) {
+            if (is.null(crd$boundaries))
+              stop('No boundaries for "', kind, '" geolocation in the metadata of the array; use `set_convention()` first', call. = FALSE)
+            write(crd$boundaries$ref$node, d[[xy]]$bounds$values, unit, d$bounds_dims)
+          }
+        }
+      }
+      private$.cs$geolocation <- zarr_convention_geolocation$new(refs)
+      invisible(self)
+    },
+
     #' @description Write any external coordinates of this array to the
     #'   underlying Zarr store. The metadata of this array is scanned for `ref`
     #'   objects in the `cs` convention attributes. The values of the external
     #'   coordinates are taken from the [CoordinateSystem] instance of this
-    #'   array.
+    #'   array. Any geolocation data of the coordinate system is written with
+    #'   `write_geolocation()`.
+    #' @param create_groups Logical, default `FALSE`. If `TRUE`, missing groups
+    #'   on the path to the external arrays are created. Only groups below the
+    #'   nodes that the path moves up to ("..") can be created.
     #' @return Self, invisibly.
-    write_external_coordinates = function() {
+    write_external_coordinates = function(create_groups = FALSE) {
       crs <- private$.metadata$attributes$cs$crs
       if (!is.null(crs)) {
         for (i in seq_along(crs))
@@ -655,7 +869,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
                 path_parts <- strsplit(ext$ref$node, '/', fixed = TRUE)[[1L]]
                 ext_name <- path_parts[length(path_parts)]
                 path_parts <- path_parts[-(length(path_parts))] # Strip the coordinate array name
-                grp <- self$walk_path(path_parts)
+                grp <- private$walk_to_group(path_parts, create_groups)
                 crds <- private$.cs$axes[[axis_name]]$coordinates_list[[j]]
                 values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
                 private$write_or_verify_external(grp, ext_name, values, crds$unit, ext_name)
@@ -669,13 +883,14 @@ geozarr_array <- R6::R6Class('geozarr_array',
                 path_parts_bnd <- strsplit(bnd_ext$ref$node, '/', fixed = TRUE)[[1L]]
                 ext_bnd_name <- path_parts_bnd[length(path_parts_bnd)]
                 path_parts_bnd <- path_parts_bnd[-(length(path_parts_bnd))]
-                grp_bnd <- self$walk_path(path_parts_bnd)
+                grp_bnd <- private$walk_to_group(path_parts_bnd, create_groups)
                 crds <- private$.cs$axes[[axis_name]]$coordinates_list[[j]]
                 private$write_or_verify_external(grp_bnd, ext_bnd_name, crds$bounds, crds$unit, c('bounds', ext_bnd_name))
               }
             }
           }
       }
+      self$write_geolocation(create_groups)
       invisible(self)
     }
   ),

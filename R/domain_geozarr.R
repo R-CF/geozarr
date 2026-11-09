@@ -139,9 +139,13 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
 #' @param ... Optional argument specific to the conventions. Currently supported
 #'   arguments are "external_group": the path to the group, relative to the
 #'   location of the array, that stores any external arrays with coordinate
-#'   values, default is ".." (the same group as the array); and "registration":
-#'   the registration point of the array for use with the "spatial" convention,
-#'   default is "pixel".
+#'   values, default is ".." (the same group as the array); "geolocation_group":
+#'   the path to the group, relative to the location of the array, where
+#'   geolocation data set with `CoordinateSystem$set_geolocation()` is to be
+#'   stored, default is the value of "external_group"; and "registration": the
+#'   registration point of the array for use with the "spatial" convention,
+#'   default is "pixel". The groups for external arrays must exist when the
+#'   arrays are written.
 #' @return A `list` with the metadata updated with convention attributes.
 #' @export
 #' @examples
@@ -172,10 +176,13 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
     atts <- atts[!startsWith(names(atts), 'spatial:')] # Drop any old spatial elements
     atts <- atts[!startsWith(names(atts), 'proj:')]    # Drop any old proj elements
     atts$cs <- NULL # Remove any previous cs information
+    atts$geolocation <- NULL
   }
+  geo <- .geolocation_refs(coord_sys, additional$geolocation_group %||% additional$external_group %||% '..')
 
-  # dimension_names
-  meta <- append(meta, list(dimension_names = vapply(axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)))
+  # dimension_names, axes associated with dimensions only
+  axis_names <- vapply(axes, function(ax) ax$name, character(1L), USE.NAMES = FALSE)
+  meta <- append(meta, list(dimension_names = axis_names[1L:length(meta$shape)]))
 
   # Axis abbreviation
   ax_abbr <- vapply(axes, function(ax) ax$abbreviation, FUN.VALUE = character(1), USE.NAMES = FALSE)
@@ -220,6 +227,11 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
         atts <- c(atts, proj$as_list())
       } else
         stop('Argument `crs` when provided must be a `list` with formatted CRS elements', call. = FALSE)    }
+
+    if (!is.null(geo)) {
+      atts <- geo$register(atts)
+      atts$geolocation <- geo$as_list()
+    }
   } else {
     # cs convention
     cs_conv <- zarr_convention_cs$new()
@@ -286,9 +298,12 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
       atts <- ref_conv$register(atts)
     }
 
+    if (!is.null(geo))
+      atts <- geo$register(atts)
+
     # Group axes into separate CRS objects by axis category
     if (is.null(crs)) {
-      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar')
+      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar', geolocation = geo)
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')], type = 'vertical')
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'T')], type = 'temporal')
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'OTHER')])
@@ -300,7 +315,7 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
       }
 
       proj <- if (is.null(crs$spatial)) NULL else make_proj(crs$spatial)
-      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar', id = proj)
+      cs_conv$add_crs(axes = axis_defs[c(X_axis, Y_axis)], type = 'planar', id = proj, geolocation = geo)
       proj <- if (is.null(crs$vertical)) NULL else make_proj(crs$vertical)
       cs_conv$add_crs(axes = axis_defs[which(ax_abbr == 'Z')], type = 'vertical', id = proj)
       proj <- if (is.null(crs$temporal)) NULL else make_proj(crs$temporal)
@@ -319,4 +334,25 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
   meta$attributes <- NULL # Remove any previous attributes
   meta$attributes <- atts
   meta
+}
+
+# The geolocation of coordinate system `cs` as a `zarr_convention_geolocation`
+# instance, or NULL. Geolocation data that has not yet been written is
+# referenced in group `group`, a path relative to the array.
+.geolocation_refs <- function(cs, group) {
+  data <- cs$geolocation_data
+  if (!length(data)) return(cs$geolocation)
+
+  refs <- if (is.null(cs$geolocation)) list() else cs$geolocation$as_list()
+  for (kind in names(data)) {
+    d <- data[[kind]]
+    crd <- function(c) {
+      out <- list(values = list(ref = list(node = paste0(group, '/', c$name))))
+      if (!is.null(c$bounds)) out$boundaries <- list(ref = list(node = paste0(group, '/', c$bounds$name)))
+      out
+    }
+    refs[[kind]] <- list(x = crd(d$x), y = crd(d$y))
+    if (!is.null(d$id)) refs[[kind]]$id <- d$id$as_list()
+  }
+  zarr_convention_geolocation$new(refs)
 }

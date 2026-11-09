@@ -119,7 +119,7 @@ vertical CRS plus a temporal CRS).
     \if{html}{\out{<div class="r">}}
     \preformatted{zarr_convention_cs$add_crs(
   axes,
-  type = "unknown",
+  type = "undefined",
   id = NULL,
   geolocation = NULL
 )}
@@ -132,12 +132,15 @@ vertical CRS plus a temporal CRS).
 that appears in the Zarr array's \code{dimension_names} metadata. If the
 argument is \code{NULL} or an empty list, the call is a no-op.}
       \item{\code{type}}{Optional, character string. Type of CRS, one of "compound",
-"planar", "vertical", "temporal", "unknown" (default).}
+"planar", "vertical", "temporal", "undefined" (default).}
       \item{\code{id}}{Optional. An instance of \link{zarr_conv_proj} providing the formal
 OGC description of the CRS.}
-      \item{\code{geolocation}}{Optional list. Geolocation grid definition for
-curvilinear grids. This should only be included for CRS's that
-represent a planar coordinate system.}
+      \item{\code{geolocation}}{Optional. An instance of
+\link{zarr_convention_geolocation} referencing the geolocation arrays for
+the axes of this CRS, typically for curvilinear grids. This should
+only be included for CRS's that represent a planar coordinate system.
+The caller must register the "geolocation" convention in the
+attributes of the Zarr node.}
     }
     \if{html}{\out{</div>}}
   }

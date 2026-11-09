@@ -22,7 +22,7 @@
     labels <- vapply(listed[is.na(matched)],
                      function(cv) cv$name %||% cv$uuid %||% cv$schema_url %||% cv$spec_url %||% '(unknown)',
                      character(1L), USE.NAMES = FALSE)
-    stop('Metadata lists unsupported conventions: ', paste(labels, collapse = ', '), call. = FALSE)
+    warning('Metadata lists unsupported conventions: ', paste(labels, collapse = ', '), call. = FALSE)
   }
 
   if ('cs' %in% matched) 'cs'
@@ -324,4 +324,54 @@ geozarr_options <- function(key, value) {
   gza$write(data)
   gza$write_external_coordinates()
   gza
+}
+
+#' Resolve a JSON pointer
+#'
+#' @param doc A `list` as parsed from a JSON document.
+#' @param pointer Character string with a JSON pointer (RFC 6901), such as
+#'   "/attributes/crs/WGS84".
+#' @return The element of `doc` that `pointer` refers to, or `NULL` if it
+#'   does not resolve.
+#' @noRd
+.json_pointer <- function(doc, pointer) {
+  tokens <- strsplit(pointer, '/', fixed = TRUE)[[1L]][-1L]
+  tokens <- gsub('~0', '~', gsub('~1', '/', tokens, fixed = TRUE), fixed = TRUE)
+  for (tk in tokens) {
+    doc <- if (!is.list(doc)) NULL
+           else if (!is.null(names(doc))) doc[[tk]]
+           else if (grepl('^(0|[1-9][0-9]*)$', tk) && as.integer(tk) < length(doc)) doc[[as.integer(tk) + 1L]]
+           else NULL
+    if (is.null(doc)) break
+  }
+  doc
+}
+
+#' Rebase references to a different referencing node
+#'
+#' A `ref` object with a relative path is resolved from the node in whose
+#' metadata it is defined. To use the object from another node, the path from
+#' that node to the defining node is prefixed to the paths of all `ref`
+#' objects. References to another store are left unchanged.
+#' @param x A `list` as parsed from JSON, e.g. a `crs` object.
+#' @param prefix Character string. Relative path from the using node to the
+#'   node where `x` is defined.
+#' @return `x` with rebased `ref` objects.
+#' @noRd
+.rebase_refs <- function(x, prefix) {
+  if (!is.list(x)) return(x)
+  if (is.list(x$ref) && is.character(x$ref$node) && is.null(x$ref$uri))
+    x$ref$node <- paste(prefix, x$ref$node, sep = '/')
+  for (i in seq_along(x))
+    if (!identical(names(x)[i], 'ref'))
+      x[i] <- list(.rebase_refs(x[[i]], prefix))
+  x
+}
+
+#' Does metadata declare a convention?
+#' @param meta A `list` with the metadata of a Zarr node.
+#' @param name Character string. Name of the convention.
+#' @noRd
+.declares <- function(meta, name) {
+  name %in% vapply(meta$attributes$zarr_conventions, .match_convention, character(1L), USE.NAMES = FALSE)
 }

@@ -114,7 +114,7 @@ as_geozarr <- function(x, name = NULL, location = NULL, registration = 'pixel') 
   ab$data_type_from_storage.mode <- storage.mode(x)
   d <- dim(x) %||% length(x)
   ab$shape <- d
-  ab$chunk_shape <- zarr::auto_chunk(d)
+  ab$chunk_shape <- zarr::optimal_chunking(d)
   if (prod(d) > zarr::zarr_options('min_compress'))
     ab$add_codec('blosc', list(clevel = 6L))
 

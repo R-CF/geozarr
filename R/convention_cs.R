@@ -88,24 +88,32 @@ zarr_convention_cs <- R6::R6Class('zarr_convention_cs',
     #'   that appears in the Zarr array's `dimension_names` metadata. If the
     #'   argument is `NULL` or an empty list, the call is a no-op.
     #' @param type Optional, character string. Type of CRS, one of "compound",
-    #'   "planar", "vertical", "temporal", "unknown" (default).
+    #'   "planar", "vertical", "temporal", "undefined" (default).
     #' @param id Optional. An instance of [zarr_conv_proj] providing the formal
     #'   OGC description of the CRS.
-    #' @param geolocation Optional list. Geolocation grid definition for
-    #'   curvilinear grids. This should only be included for CRS's that
-    #'   represent a planar coordinate system.
+    #' @param geolocation Optional. An instance of
+    #'   [zarr_convention_geolocation] referencing the geolocation arrays for
+    #'   the axes of this CRS, typically for curvilinear grids. This should
+    #'   only be included for CRS's that represent a planar coordinate system.
+    #'   The caller must register the "geolocation" convention in the
+    #'   attributes of the Zarr node.
     #' @return Self, invisibly.
-    add_crs = function(axes, type = "unknown", id = NULL, geolocation = NULL) {
+    add_crs = function(axes, type = "undefined", id = NULL, geolocation = NULL) {
       if (is.null(axes) || !length(axes)) return()
       if (!is.list(axes) || is.null(names(axes)) || any(!nzchar(names(axes))))
         stop('Argument `axes` must be a non-empty named list', call. = FALSE)
       bad <- vapply(axes, function(a) !is.list(a) || is.null(a[['coordinates']]), logical(1L))
       if (any(bad))
         stop('Every element of `axes` must be a non-empty list', call. = FALSE)
+      if (!is.null(geolocation) && !inherits(geolocation, 'zarr_convention_geolocation'))
+        stop('Argument `geolocation` must be an instance of `zarr_convention_geolocation`', call. = FALSE)
+      if (!is.character(type) || length(type) != 1L ||
+          !type %in% c("compound", "planar", "vertical", "temporal", "undefined"))
+        stop('Argument `type` must be one of "compound", "planar", "vertical", "temporal" or "undefined"', call. = FALSE)
 
       crs <- list(type = type, axes = axes)
       if (!is.null(id)) crs$id <- id$as_list()
-      if (!is.null(geolocation)) crs$geolocation <- geolocation
+      if (!is.null(geolocation)) crs$geolocation <- geolocation$as_list()
 
       private$.crs <- c(private$.crs, list(crs))
       invisible(self)

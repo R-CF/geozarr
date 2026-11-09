@@ -243,7 +243,7 @@ test_that("cs metadata errors are reported", {
                'missing the required "node"')
   expect_error(open_zarr(store_with(bad(list(values = list(external = list(ref = list(node = "../y", attribute = "/a"))))))),
                "attribute reference which is not supported")
-  expect_error(open_zarr(store_with(bad(list(values = list(external = list(ref = list(node = "y"))))))),
+  expect_error(open_zarr(store_with(bad(list(values = list(external = list(ref = list(node = "/y"))))))),
                "relative path")
   expect_error(open_zarr(store_with(bad(list(values = list(external = list(ref = list(node = "/y", uri = "s3://b/s.zarr"))))))),
                "Not yet supported")

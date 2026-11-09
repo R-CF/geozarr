@@ -19,6 +19,23 @@ extended with specific code for this package.
 coordinate system.}
 
     \item{\code{crs}}{Set or retreive the CRS identifier of the coordinate system.}
+
+    \item{\code{geolocation}}{Set or retrieve the geolocation arrays of the
+coordinate system, an instance of \link{zarr_convention_geolocation}, or
+\code{NULL} when there are none. The \code{x} and \code{y} arrays of the geolocation
+correspond to the axes of the coordinate system with abbreviation "X"
+and "Y", respectively. Set to \code{NULL} to remove the geolocation.
+Setting the field removes any geolocation data of the same kinds that
+was set with \code{set_geolocation()}.
+
+An error is thrown when setting a value that is not a
+\code{zarr_convention_geolocation} instance with geolocation arrays set, or
+when the coordinate system does not have exactly one axis with
+abbreviation "X" and one with abbreviation "Y".}
+
+    \item{\code{geolocation_data}}{(read-only) The geolocation data set with
+\code{set_geolocation()} that has not yet been written to a Zarr store, a
+\code{list} keyed by "geodetic" and/or "planar". Empty when there is none.}
   }
   \if{html}{\out{</div>}}
 }
@@ -30,6 +47,7 @@ coordinate system.}
     \item \href{#method-CoordinateSystem-print_axes}{\code{CoordinateSystem$print_axes()}}
     \item \href{#method-CoordinateSystem-getDimension}{\code{CoordinateSystem$getDimension()}}
     \item \href{#method-CoordinateSystem-getAxis}{\code{CoordinateSystem$getAxis()}}
+    \item \href{#method-CoordinateSystem-set_geolocation}{\code{CoordinateSystem$set_geolocation()}}
     \item \href{#method-CoordinateSystem-clone}{\code{CoordinateSystem$clone()}}
   }
 }
@@ -65,7 +83,11 @@ one axis.
     \describe{
       \item{\code{name}}{Character string. Name of the coordinate system.}
       \item{\code{axes}}{A \code{list} of instances of \link{CoordinateSystemAxis}. There must
-be at least one axis in the list.}
+be at least one axis in the list. The elements in the list must be in
+the order of the dimensions of the array that this coordinate system
+is used for; in other words, the first axis corresponds to the first
+array dimension, etc. - scalar axes (those not associated with an array
+dimension) are listed after the axes associated with a dimension.}
       \item{\code{crs}}{Optional, character string with the description of the CRS of
 this coordinate system, always assumed to be compound.}
       \item{\code{attributes}}{Optional. A \code{list} of attributes of the coordinate
@@ -158,6 +180,80 @@ number.
   \subsection{Returns}{
     The \link{CoordinateSystemAxis} that forms the \code{dimension} of the
 coordinate system, or an error if the \code{dimension} argument in deficient.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CoordinateSystem-set_geolocation"></a>}}
+\if{latex}{\out{\hypertarget{method-CoordinateSystem-set_geolocation}{}}}
+\subsection{\code{CoordinateSystem$set_geolocation()}}{
+  Set geolocation data for the coordinate system, giving
+coordinates in a geodetic or planar CRS for every element of the "X"
+and "Y" axes. The data is written to the Zarr store with
+\code{geozarr_array$write_geolocation()}, after which it is removed from
+memory and the \code{geolocation} field references the written arrays.
+Any geolocation of the same \code{kind} is replaced.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{CoordinateSystem$set_geolocation(
+  kind,
+  x,
+  y,
+  dims,
+  names,
+  id = NULL,
+  attributes = list(list(), list()),
+  x_bounds = NULL,
+  y_bounds = NULL,
+  bounds_dims = NULL,
+  bounds_names = NULL
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{kind}}{Character string, either "geodetic" or "planar".}
+      \item{\code{x, y}}{Numeric arrays with the coordinates of the X and Y axes in the
+target CRS, i.e. longitude and latitude for "geodetic".}
+      \item{\code{dims}}{Character vector with the names of the axes of the
+coordinate system that the dimensions of \code{x} and \code{y} correspond to, in
+order.}
+      \item{\code{names}}{Character vector of two values with the names of the Zarr
+arrays to write \code{x} and \code{y} to.}
+      \item{\code{id}}{Optional. An instance of \link{zarr_conv_proj} identifying the
+target CRS.}
+      \item{\code{attributes}}{Optional. A \code{list} of two named lists (not data
+frames) with the
+attributes to write with the arrays for \code{x} and \code{y}, such as "units"
+and "standard_name".}
+      \item{\code{x_bounds, y_bounds}}{Optional. Numeric arrays with the four vertices
+of each cell of \code{x} and \code{y}, in the order of the geolocation
+convention. Must supply both or neither.}
+      \item{\code{bounds_dims}}{Character vector with the names of the dimensions of
+\code{x_bounds} and \code{y_bounds}, in order: the names in \code{dims} plus the name
+of the vertex dimension, in any order. Required with \code{x_bounds} and
+\code{y_bounds}.}
+      \item{\code{bounds_names}}{Optional character vector of two values with the
+names of the Zarr arrays to write \code{x_bounds} and \code{y_bounds} to.
+Defaults to \code{names} with "_bnds" appended.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    An error is thrown when the coordinate system does not have
+exactly one axis with abbreviation "X" and one with abbreviation "Y";
+when \code{dims} does not include the names of these two axes or names an
+axis that is not in the coordinate system; when the dimensions of \code{x}
+or \code{y} do not match the lengths of the axes in \code{dims}; when only one
+of \code{x_bounds} and \code{y_bounds} is given; when \code{bounds_dims} is not
+\code{dims} plus one other name that is not an axis of the coordinate
+system; when the dimensions of \code{x_bounds} or \code{y_bounds} do not match
+the lengths of the axes in \code{bounds_dims}, with length 4 for the vertex
+dimension; or when the other arguments are malformed.
+  }
+  \subsection{Returns}{
+    Self, invisibly.
   }
 }
 

@@ -30,7 +30,7 @@ test_that("set_convention() uses spatial for north-up regular X/Y", {
 
 test_that("set_convention() spatial with a third, categorical axis", {
   band <- ax("band", "OTHER", CoordinatesString$new("b", "OTHER", "-", c("a", "b")))
-  m <- set_convention(list(), make_cs(regx(), regyd(), band))
+  m <- set_convention(list(shape = c(4, 3, 2)), make_cs(regx(), regyd(), band))
   expect_identical(conv_names(m), "spatial")
   expect_identical(m$dimension_names, c("x", "y", "band"))
 })
@@ -56,7 +56,8 @@ test_that("set_convention() falls back to cs when spatial does not apply", {
 # Existing attributes -----------------------------------------------------------
 
 test_that("set_convention() replaces previous convention attributes", {
-  meta <- list(dimension_names = c("a", "b"),
+  meta <- list(shape = c(4, 3),
+               dimension_names = c("a", "b"),
                attributes = list(title = "keep", `spatial:bbox` = 1:4, `proj:code` = "EPSG:1",
                                  cs = list(1), zarr_conventions = list(list(name = "old"))))
   m <- set_convention(meta, make_cs(regx(), regyu()))
@@ -115,7 +116,7 @@ cs_axes <- function(m) do.call(c, lapply(m$attributes$cs$crs, function(c) c$axes
 
 test_that("set_convention() cs groups axes by type", {
   t <- ax("t", "T", CoordinatesTime$new("t_c", "FUTURE", "days", "2020-01-01", values = c(0, 1)))
-  m <- set_convention(list(), make_cs(t, regyu(), regx()))
+  m <- set_convention(list(shape = c(2, 4, 3)), make_cs(t, regyu(), regx()))
   crs <- m$attributes$cs$crs
   expect_identical(vapply(crs, function(c) c$type, ""), c("planar", "temporal"))
   expect_identical(names(crs[[1L]]$axes), c("x", "y"))
@@ -175,7 +176,7 @@ test_that("set_convention() cs encodes 'OTHER' axes without abbreviation", {
   band <- ax("band", "OTHER", CoordinatesString$new("b", "OTHER", "-", c("a", "b")))
   m <- set_convention(list(), make_cs(regx(), regyu(), t, band))
   crs <- m$attributes$cs$crs
-  expect_identical(crs[[3L]]$type, "unknown")
+  expect_identical(crs[[3L]]$type, "undefined")
   expect_identical(crs[[3L]]$axes$band$abbreviation, "")
   expect_identical(crs[[3L]]$axes$band$direction, "OTHER")
   expect_identical(crs[[3L]]$axes$band$coordinates[[1L]]$values, list(explicit = list("a", "b")))

@@ -25,8 +25,10 @@ converts the raw values to intelligible coordinates, such as
 
     \item{\code{bounds}}{Set or retrieve the boundary values around time
 coordinates. When setting, assign a matrix with 2 rows and as many
-columns as there are coordinates values. When retrieving, a matrix as
-just described or \code{NULL} if boundary values have not been set.}
+columns as there are coordinates values, or a vector of two values with
+the lower and higher offset of the regular boundaries. When retrieving,
+a matrix as just described or \code{NULL} if boundary values have not been
+set.}
 
     \item{\code{bounds_raw}}{(read-only) Retrieve the boundary values around time
 coordinates, packed if possible. If the boundary values are packed, a

@@ -85,14 +85,14 @@ test_that(".conventions_supported() identifies the principal convention", {
   expect_identical(gz$.conventions_supported(conv_meta(proj_cmo)), NA_character_)
 })
 
-test_that(".conventions_supported() errors on unidentifiable conventions", {
-  expect_error(gz$.conventions_supported(conv_meta(list(name = "x", uuid = "nope"))),
-               "unsupported conventions: x")
+test_that(".conventions_supported() warns on unidentifiable conventions", {
+  expect_warning(gz$.conventions_supported(conv_meta(list(name = "x", uuid = "nope"))),
+                 "unsupported conventions: x")
   # Name alone is not a discovery field
-  expect_error(gz$.conventions_supported(conv_meta(list(name = "cs"))),
-               "unsupported conventions: cs")
-  expect_error(gz$.conventions_supported(conv_meta(list(uuid = "nope"))),
-               "unsupported conventions: nope")
+  expect_warning(gz$.conventions_supported(conv_meta(list(name = "cs"))),
+                 "unsupported conventions: cs")
+  expect_warning(gz$.conventions_supported(conv_meta(list(uuid = "nope"))),
+                 "unsupported conventions: nope")
 })
 
 # Convention matching -----------------------------------------------------------

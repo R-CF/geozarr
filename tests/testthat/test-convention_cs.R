@@ -109,12 +109,26 @@ test_that("cs add_crs() accumulates CRS objects", {
   expect_null(cs$add_crs(NULL))
   expect_null(cs$add_crs(list()))
   expect_invisible(cs$add_crs(list(lon = ax), type = "planar"))
-  cs$add_crs(list(time = ax), type = "temporal", id = zarr_conv_proj$new(list(code = "OGC:1")),
-             geolocation = list(foo = 1))
+  cs$add_crs(list(time = ax), type = "temporal", id = zarr_conv_proj$new(list(code = "OGC:1")))
   expect_length(cs$crs, 2L)
   expect_identical(cs$crs[[1L]], list(type = "planar", axes = list(lon = ax)))
   expect_identical(cs$crs[[2L]]$id, list(`proj:code` = "OGC:1"))
-  expect_identical(cs$crs[[2L]]$geolocation, list(foo = 1))
+})
+
+test_that("cs add_crs() nests a geolocation object", {
+  cs <- zarr_convention_cs$new()
+  ax <- cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))
+  geo <- zarr_convention_geolocation$new()
+  geo$set("geodetic", "../lon", "../lat")
+  cs$add_crs(list(x = ax, y = ax), type = "planar", geolocation = geo)
+  expect_identical(cs$crs[[1L]]$geolocation, geo$as_list())
+})
+
+test_that("cs add_crs() validates geolocation", {
+  cs <- zarr_convention_cs$new()
+  ax <- cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))
+  expect_error(cs$add_crs(list(x = ax), geolocation = list(foo = 1)), "zarr_convention_geolocation")
+  expect_error(cs$add_crs(list(x = ax), geolocation = zarr_convention_geolocation$new()), "`set\\(\\)`")
 })
 
 test_that("cs add_crs() validates axes", {
@@ -131,7 +145,7 @@ test_that("cs as_list()", {
   expect_error(cs$as_list(), "add_crs")
   ax <- cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))
   cs$add_crs(list(lon = ax))
-  expect_identical(cs$as_list()$crs, list(list(type = "unknown", axes = list(lon = ax))))
+  expect_identical(cs$as_list()$crs, list(list(type = "undefined", axes = list(lon = ax))))
   expect_error(cs$cs_name <- "", "non-empty")
 })
 
@@ -159,4 +173,28 @@ test_that("cs as_list() includes the compound CRS id", {
   cs$add_crs(list(lon = cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))))
   cs$cs_crs <- zarr_conv_proj$new(list(code = "EPSG:4326"))
   expect_identical(cs$as_list()$id, list(`proj:code` = "EPSG:4326"))
+})
+
+test_that("cs add_crs() defaults type to undefined", {
+  cs <- zarr_convention_cs$new()
+  cs$add_crs(list(lon = cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))))
+  expect_identical(cs$crs[[1L]]$type, "undefined")
+})
+
+test_that("cs add_crs() accepts every CRS type", {
+  cs <- zarr_convention_cs$new()
+  ax <- cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))
+  types <- c("compound", "planar", "vertical", "temporal", "undefined")
+  for (t in types) cs$add_crs(list(lon = ax), type = t)
+  expect_identical(vapply(cs$crs, function(c) c$type, character(1L)), types)
+})
+
+test_that("cs add_crs() rejects an invalid type", {
+  cs <- zarr_convention_cs$new()
+  ax <- cs$axis(list(cs$coordinates(cs$values_regular(0, 1))))
+  expect_error(cs$add_crs(list(lon = ax), type = "unknown"), "must be one of")
+  expect_error(cs$add_crs(list(lon = ax), type = "plan"), "must be one of")
+  expect_error(cs$add_crs(list(lon = ax), type = c("planar", "vertical")), "must be one of")
+  expect_error(cs$add_crs(list(lon = ax), type = 1), "must be one of")
+  expect_length(cs$crs, 0L)
 })

@@ -26,7 +26,10 @@ this array.}
     \item \href{#method-geozarr_array-initialize}{\code{geozarr_array$new()}}
     \item \href{#method-geozarr_array-post_open}{\code{geozarr_array$post_open()}}
     \item \href{#method-geozarr_array-build_coordsys}{\code{geozarr_array$build_coordsys()}}
+    \item \href{#method-geozarr_array-details}{\code{geozarr_array$details()}}
     \item \href{#method-geozarr_array-subset}{\code{geozarr_array$subset()}}
+    \item \href{#method-geozarr_array-geolocation}{\code{geozarr_array$geolocation()}}
+    \item \href{#method-geozarr_array-write_geolocation}{\code{geozarr_array$write_geolocation()}}
     \item \href{#method-geozarr_array-write_external_coordinates}{\code{geozarr_array$write_external_coordinates()}}
   }
 }
@@ -42,7 +45,6 @@ this array.}
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="set_attribute"><a href='../../zarr/html/zarr_node.html#method-zarr_node-set_attribute'><code>zarr::zarr_node$set_attribute()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_node" data-id="walk_path"><a href='../../zarr/html/zarr_node.html#method-zarr_node-walk_path'><code>zarr::zarr_node$walk_path()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="copy_to"><a href='../../zarr/html/zarr_array.html#method-zarr_array-copy_to'><code>zarr::zarr_array$copy_to()</code></a></span></li>
-  <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="details"><a href='../../zarr/html/zarr_array.html#method-zarr_array-details'><code>zarr::zarr_array$details()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="flush"><a href='../../zarr/html/zarr_array.html#method-zarr_array-flush'><code>zarr::zarr_array$flush()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="hierarchy_nodes"><a href='../../zarr/html/zarr_array.html#method-zarr_array-hierarchy_nodes'><code>zarr::zarr_array$hierarchy_nodes()</code></a></span></li>
   <li><span class="pkg-link" data-pkg="zarr" data-topic="zarr_array" data-id="print"><a href='../../zarr/html/zarr_array.html#method-zarr_array-print'><code>zarr::zarr_array$print()</code></a></span></li>
@@ -117,6 +119,23 @@ the \code{cs} convention.
 }
 
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-details"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-details}{}}}
+\subsection{\code{geozarr_array$details()}}{
+  Produce a named character vector with a summary of the array
+including its name, data type, shape (with axis names, including scalar
+ones) and the chunking.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$details()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Named character vector with details of the array.
+  }
+}
+
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-geozarr_array-subset"></a>}}
 \if{latex}{\out{\hypertarget{method-geozarr_array-subset}{}}}
 \subsection{\code{geozarr_array$subset()}}{
@@ -178,6 +197,9 @@ The extracted data has the same dimensional structure as the data in
 the array, with degenerate dimensions preserved. The order of the axes
 in argument \code{...} does not reorder the axes in the result.
 
+Geolocation arrays of the coordinate system are not subset, so the
+result has no geolocation.
+
 Arguments following \code{...} must be explicitly named, like
 \code{.rightmost.closed = TRUE}, to avoid the argument being treated as an
 axis name.
@@ -199,6 +221,83 @@ the range of the axis \code{NULL} is returned.
 }
 
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-geolocation"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-geolocation}{}}}
+\subsection{\code{geozarr_array$geolocation()}}{
+  Retrieve the geolocation arrays of this array. The arrays
+are referenced from the coordinate system, for its axes with
+abbreviation "X" and "Y".
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$geolocation(kind = c("geodetic", "planar"))}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{kind}}{Character string, either "geodetic" (default) or "planar".}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    The geolocation arrays must have the names of the "X" and "Y"
+axes of this array in their \code{dimension_names}. Any other dimension of
+a geolocation array must also be a dimension of this array. The
+lengths of matching dimensions must be equal; their order is not
+constrained. Boundary arrays, if given, must have the dimensions of
+their geolocation array plus one vertex dimension of length 4. An error
+is thrown when a geolocation or boundary array cannot be found or when
+its dimensions do not match.
+  }
+  \subsection{Returns}{
+    A \code{list} with elements "x" and "y" holding the \code{zarr_array}
+instances of the geolocation arrays and, if the geolocation has
+boundaries, "x_bounds" and "y_bounds" holding those of the boundary
+arrays; or \code{NULL} if this array has no geolocation of the requested
+\code{kind}. The CRS of the geolocation arrays, if given, is available from
+the \code{geolocation} field of the coordinate system.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-write_geolocation"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-write_geolocation}{}}}
+\subsection{\code{geozarr_array$write_geolocation()}}{
+  Write the geolocation data of the coordinate system of
+this array, set with \code{CoordinateSystem$set_geolocation()}, to the Zarr
+arrays referenced in the geolocation object in the metadata of this
+array. If an array already exists, as when geolocation arrays are
+shared by multiple arrays, it is verified to be identical instead.
+After writing, the data is removed from memory and the \code{geolocation}
+field of the coordinate system references the written arrays.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$write_geolocation(create_groups = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{create_groups}}{Logical, default \code{FALSE}. If \code{TRUE}, missing groups
+on the path to the geolocation arrays are created. Only groups below
+the nodes that the path moves up to ("..") can be created.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    The groups that the geolocation arrays are written to must
+exist, unless \code{create_groups = TRUE}. An error is thrown when a group
+does not exist and is not created, when the metadata of this array has no
+geolocation object for the data, when this array is the only array in
+its Zarr store, or when an existing array differs from the data in its
+dimension names, shape, units or values.
+  }
+  \subsection{Returns}{
+    Self, invisibly.
+  }
+}
+
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-geozarr_array-write_external_coordinates"></a>}}
 \if{latex}{\out{\hypertarget{method-geozarr_array-write_external_coordinates}{}}}
 \subsection{\code{geozarr_array$write_external_coordinates()}}{
@@ -206,10 +305,20 @@ the range of the axis \code{NULL} is returned.
 underlying Zarr store. The metadata of this array is scanned for \code{ref}
 objects in the \code{cs} convention attributes. The values of the external
 coordinates are taken from the \link{CoordinateSystem} instance of this
-array.
+array. Any geolocation data of the coordinate system is written with
+\code{write_geolocation()}.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_array$write_external_coordinates()}
+    \preformatted{geozarr_array$write_external_coordinates(create_groups = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{create_groups}}{Logical, default \code{FALSE}. If \code{TRUE}, missing groups
+on the path to the external arrays are created. Only groups below the
+nodes that the path moves up to ("..") can be created.}
+    }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{

@@ -17,8 +17,10 @@ geozarr_group <- R6::R6Class('geozarr_group',
     # Remove domain attributes prior to printing this geozarr_group
     display_attributes = function() {
       atts <- private$.metadata[['attributes']]
-      nms <- names(atts)
-      atts[!(startsWith(nms, 'spatial:') | (nms %in% 'zarr_conventions'))]
+      if (length(atts)) {
+        nms <- names(atts)
+        atts[!(startsWith(nms, 'spatial:') | (nms %in% 'zarr_conventions'))]
+      } else list()
     }
   ),
   public = list(

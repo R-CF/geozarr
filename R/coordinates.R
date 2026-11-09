@@ -767,8 +767,10 @@ CoordinatesTime <- R6::R6Class('CoordinatesTime',
 
     #' @field bounds Set or retrieve the boundary values around time
     #'   coordinates. When setting, assign a matrix with 2 rows and as many
-    #'   columns as there are coordinates values. When retrieving, a matrix as
-    #'   just described or `NULL` if boundary values have not been set.
+    #'   columns as there are coordinates values, or a vector of two values with
+    #'   the lower and higher offset of the regular boundaries. When retrieving,
+    #'   a matrix as just described or `NULL` if boundary values have not been
+    #'   set.
     bounds = function(value) {
       if (missing(value)) {
         if (is.matrix(private$.bounds))

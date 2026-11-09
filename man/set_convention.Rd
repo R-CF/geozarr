@@ -25,9 +25,13 @@ is registered at the root of the "attributes" of the GeoZarr array.}
 \item{...}{Optional argument specific to the conventions. Currently supported
 arguments are "external_group": the path to the group, relative to the
 location of the array, that stores any external arrays with coordinate
-values, default is ".." (the same group as the array); and "registration":
-the registration point of the array for use with the "spatial" convention,
-default is "pixel".}
+values, default is ".." (the same group as the array); "geolocation_group":
+the path to the group, relative to the location of the array, where
+geolocation data set with \code{CoordinateSystem$set_geolocation()} is to be
+stored, default is the value of "external_group"; and "registration": the
+registration point of the array for use with the "spatial" convention,
+default is "pixel". The groups for external arrays must exist when the
+arrays are written.}
 }
 \value{
 A \code{list} with the metadata updated with convention attributes.

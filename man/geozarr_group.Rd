@@ -12,6 +12,17 @@ GeoZarr group is a container for other groups and arrays.
 \section{Super classes}{
 \code{\link[zarr:zarr_object]{zarr::zarr_object}} -> \code{\link[zarr:zarr_node]{zarr::zarr_node}} -> \code{\link[zarr:zarr_group]{zarr::zarr_group}} -> \code{geozarr_group}
 }
+\section{Active bindings}{
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{multiscales}}{(read-only) The \link{zarr_convention_multiscales}
+instance with the multiscales layout of this group, or \code{NULL} when the
+group does not declare the "multiscales" convention. A warning is
+given, once, when the \code{multiscales} attribute is not valid; the layout
+is then ignored.}
+  }
+  \if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{

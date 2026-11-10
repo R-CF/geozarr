@@ -9,6 +9,10 @@ geozarr_group <- R6::R6Class('geozarr_group',
   inherit = zarr::zarr_group,
   cloneable = FALSE,
   private = list(
+    # The multiscales agent of this group, FALSE when there is none, NULL when
+    # not yet determined.
+    .multiscales = NULL,
+
     # Print GeoZarr details as part of printing a group.
     print_details = function() {
 
@@ -34,6 +38,28 @@ geozarr_group <- R6::R6Class('geozarr_group',
     initialize = function(name, metadata, parent) {
       super$initialize(name, metadata, parent)
       private$.domain <- 'GeoZarr'
+    }
+  ),
+  active = list(
+    #' @field multiscales (read-only) The [zarr_convention_multiscales]
+    #'   instance with the multiscales layout of this group, or `NULL` when the
+    #'   group does not declare the "multiscales" convention. A warning is
+    #'   given, once, when the `multiscales` attribute is not valid; the layout
+    #'   is then ignored.
+    multiscales = function(value) {
+      if (!missing(value))
+        stop("Can't set the multiscales layout of a group", call. = FALSE)
+
+      if (is.null(private$.multiscales)) {
+        ms <- private$.metadata$attributes$multiscales
+        private$.multiscales <-
+          if (is.null(ms) || !.declares(private$.metadata, 'multiscales')) FALSE
+          else tryCatch(zarr_convention_multiscales$new(ms), error = function(e) {
+            warning('Ignoring "multiscales" of group ', self$path, ': ', conditionMessage(e), call. = FALSE)
+            FALSE
+          })
+      }
+      if (isFALSE(private$.multiscales)) NULL else private$.multiscales
     }
   )
 )

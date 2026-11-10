@@ -79,8 +79,10 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     #' @description This method will create a `geozarr_array` for an array node
     #'   and a `geozarr_group` for a group node with GeoZarr conventions
     #'   declared in its attributes. Either the "spatial" or "cs" convention
-    #'   has to be declared or the Zarr store has to be formatted using XArray
-    #'   or this domain will decline to manage the node.
+    #'   has to be declared, or "multiscales" for a group, or the array has to
+    #'   be in a level of a multiscales group that uses the "spatial"
+    #'   convention, or the Zarr store has to be formatted using XArray, or
+    #'   this domain will decline to manage the node.
     #' @param name The name of the node.
     #' @param metadata List with the metadata of the node.
     #' @param parent The parent node of this new node. May be `NULL` for a root
@@ -88,6 +90,10 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
     #' @return A `geozarr_array` or `geozarr_group` instance if supported,
     #'   `FALSE` otherwise.
     build = function(name, metadata, parent) {
+      # Array in a level of a multiscales group using the `spatial` convention
+      if (!is.null(.multiscales_spatial(name, metadata, parent)))
+        return(geozarr_array$new(name, metadata, parent))
+
       conv <- metadata$attributes$zarr_conventions
       if (is.null(conv)) {
         # Check for XArray
@@ -107,6 +113,10 @@ zarr_domain_geozarr <- R6::R6Class('zarr_domain_geozarr',
         else
           return(geozarr_group$new(name, metadata, parent))
       }
+
+      # A group holding a multiscales layout
+      if (metadata$node_type == 'group' && 'multiscales' %in% matched)
+        return(geozarr_group$new(name, metadata, parent))
 
       # `spatial` convention: array may use parent attributes
       if (metadata$node_type == 'array' && inherits(parent, 'geozarr_group') &&

@@ -375,3 +375,57 @@ geozarr_options <- function(key, value) {
 .declares <- function(meta, name) {
   name %in% vapply(meta$attributes$zarr_conventions, .match_convention, character(1L), USE.NAMES = FALSE)
 }
+
+#' First of a list of attribute lists to have a certain attribute
+#' @param sources A `list` of attribute lists, in order of precedence.
+#' @param name Character string. Name of the attribute.
+#' @return The value of the attribute, or `NULL` if not found.
+#' @noRd
+.first_att <- function(sources, name) {
+  for (s in sources)
+    if (!is.null(s[[name]])) return(s[[name]])
+  NULL
+}
+
+#' Sources of "spatial" attributes for an array in a multiscales level
+#'
+#' The nearest group above the array that holds a multiscales layout is
+#' searched for a level whose asset is the array itself, or the group that
+#' holds the array. The array takes part in the level when the "spatial"
+#' convention is declared on the multiscales group or on the array, and both
+#' names in "spatial:dimensions" are dimensions of the array. Other arrays in a
+#' level group, such as coordinate arrays, do not take part.
+#' @param name Character string. Name of the array.
+#' @param metadata A `list` with the metadata of the array.
+#' @param parent The parent node of the array.
+#' @return A `list` of attribute lists in order of precedence: the array, its
+#'   parent group unless that is the multiscales group, the layout object of
+#'   the level, the multiscales group. `NULL` when the array does not take part
+#'   in a multiscales level.
+#' @noRd
+.multiscales_spatial <- function(name, metadata, parent) {
+  if (metadata$node_type != 'array') return(NULL)
+
+  path <- name
+  node <- parent
+  while (inherits(node, 'zarr_group')) {
+    ms <- if (inherits(node, 'geozarr_group')) node$multiscales
+    if (!is.null(ms)) {
+      i <- match(c(path, if (grepl('/', path, fixed = TRUE)) sub('/[^/]*$', '', path)), ms$assets)
+      i <- i[!is.na(i)]
+      if (!length(i) || !(.declares(node$metadata, 'spatial') || .declares(metadata, 'spatial')))
+        return(NULL)
+
+      src <- Filter(Negate(is.null),
+                    list(metadata$attributes,
+                         if (!identical(parent, node)) parent$metadata$attributes,
+                         ms$layout[[i[1L]]],
+                         node$metadata$attributes))
+      dims <- .first_att(src, 'spatial:dimensions')
+      return(if (length(dims) == 2L && all(dims %in% unlist(metadata$dimension_names))) src)
+    }
+    path <- paste(node$name, path, sep = '/')
+    node <- node$parent
+  }
+  NULL
+}

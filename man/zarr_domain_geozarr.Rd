@@ -49,8 +49,10 @@ to. This instance provides access to all objects in the Zarr store.
   This method will create a \code{geozarr_array} for an array node
 and a \code{geozarr_group} for a group node with GeoZarr conventions
 declared in its attributes. Either the "spatial" or "cs" convention
-has to be declared or the Zarr store has to be formatted using XArray
-or this domain will decline to manage the node.
+has to be declared, or "multiscales" for a group, or the array has to
+be in a level of a multiscales group that uses the "spatial"
+convention, or the Zarr store has to be formatted using XArray, or
+this domain will decline to manage the node.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{zarr_domain_geozarr$build(name, metadata, parent)}

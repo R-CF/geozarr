@@ -282,16 +282,19 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
     # Create a coordinate system using the spatial convention
     build_spatial = function(meta) {
-      # Get spatial attributes from the parent group and merge with local attributes
+      # Sources of spatial attributes, in order of precedence: the array and
+      # its parent group or, for an array in a multiscales level, as given by
+      # .multiscales_spatial()
       parent_atts <- if (is.null(private$.parent)) NULL else private$.parent$metadata$attributes
       atts <- meta$attributes
+      src <- .multiscales_spatial(private$.name, meta, private$.parent) %||% list(atts, parent_atts)
 
       # Extract the parameters and check their validity
       dimension_names <- meta$dimension_names
       if (is.null(dimension_names))
         stop('Required top-level metadata item "dimension_names" not found', call. = FALSE)
 
-      dimensions <- atts$`spatial:dimensions` %||% parent_atts$`spatial:dimensions` # Y,X order
+      dimensions <- .first_att(src, 'spatial:dimensions') # Y,X order
       if (is.null(dimensions))
         stop('Required attribute "spatial:dimensions" not found in metadata', call. = FALSE)
       dims <- length(dimensions)
@@ -302,25 +305,25 @@ geozarr_array <- R6::R6Class('geozarr_array',
       if (any(is.na(dim_order)))
         stop('Attribute "spatial:dimensions" has names not present in the "dimension_names" metadata of the array', call. = FALSE)
 
-      transform_type <- atts$`spatial:transform_type` %||% parent_atts$`spatial:transform_type` %||% 'affine'
+      transform_type <- .first_att(src, 'spatial:transform_type') %||% 'affine'
       if (transform_type != 'affine')
         stop('Only "affine" transformation supported', call. = FALSE)
 
-      transform <- atts$`spatial:transform` %||% parent_atts$`spatial:transform`
+      transform <- .first_att(src, 'spatial:transform')
       if (is.null(transform))
         stop('Required attribute "spatial:transform" not found in metadata', call. = FALSE)
       if (length(transform) != 6L)
         stop('Attribute "spatial:transform" has wrong number of items', call. = FALSE)
 
-      bbox <- atts$`spatial:bbox` %||% parent_atts$`spatial:bbox`
+      bbox <- .first_att(src, 'spatial:bbox')
       if (!is.null(bbox) && length(bbox) != 4L)
         stop('Attribute "spatial:bbox" has wrong number of items', call. = FALSE)
 
-      shape <- atts$`spatial:shape` %||% parent_atts$`spatial:shape`
+      shape <- .first_att(src, 'spatial:shape')
       if (!is.null(shape) && length(shape) != dims)
         stop('Attribute "spatial:shape" has wrong number of items', call. = FALSE)
 
-      registration <- atts$`spatial:registration` %||% parent_atts$`spatial:registration` %||% 'pixel'
+      registration <- .first_att(src, 'spatial:registration') %||% 'pixel'
       if (!(registration %in% c('pixel', 'node')))
         stop('Attribute "spatial:registration" has bad value', call. = FALSE)
 
@@ -420,9 +423,11 @@ geozarr_array <- R6::R6Class('geozarr_array',
       proj_of <- function(a) unproj(a[grepl('^proj:', names(a))])
 
       atts <- private$.metadata$attributes
-      if (is.null(atts$cs))
-        crs <- list(spatial = proj_of(atts) %||% proj_of(private$.parent$metadata$attributes))
-      else {
+      if (is.null(atts$cs)) {
+        src <- .multiscales_spatial(private$.name, private$.metadata, private$.parent) %||%
+               list(atts, private$.parent$metadata$attributes)
+        crs <- list(spatial = Reduce(`%||%`, lapply(src, proj_of)))
+      } else {
         types <- c(planar = 'spatial', vertical = 'vertical', temporal = 'temporal')
         crs_list <- private$cs_crs(private$.metadata)
         crs <- lapply(crs_list, function(c) unproj(c$id))
@@ -558,7 +563,8 @@ geozarr_array <- R6::R6Class('geozarr_array',
     build_coordsys = function() {
       if (is.null(private$.cs)) {
         metadata <- private$.metadata
-        private$.cs <- if (is.null(metadata$attributes$zarr_conventions)) {
+        private$.cs <- if (is.null(metadata$attributes$zarr_conventions) &&
+                           is.null(.multiscales_spatial(private$.name, metadata, private$.parent))) {
           # No explicit convention: XArray Zarr format
           private$build_xarray(metadata)
         } else {

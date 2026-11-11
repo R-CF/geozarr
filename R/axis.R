@@ -117,7 +117,9 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     #' @return A new instance of `CoordinateSystemAxis`.
     copy = function() {
       coordinates <- lapply(private$.coordinates, function(crd) crd$copy())
-      CoordinateSystemAxis$new(self$name, self$abbreviation, coordinates)
+      out <- CoordinateSystemAxis$new(self$name, self$abbreviation, coordinates)
+      out$active_coordinates <- private$.active_coordinates$name
+      out
     },
 
     #' @description Return an axis spanning a smaller coordinate range. This
@@ -137,7 +139,9 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
       else {
         if (!nzchar(name)) name <- self$name
         coordinates <- lapply(private$.coordinates, function(crd) crd$subset(rng))
-        CoordinateSystemAxis$new(name, private$.abbreviation, coordinates)
+        out <- CoordinateSystemAxis$new(name, private$.abbreviation, coordinates)
+        out$active_coordinates <- private$.active_coordinates$name
+        out
       }
     },
 
@@ -174,6 +178,25 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
     coordinates = function(value) {
       if (missing(value))
         private$.active_coordinates
+    },
+
+    #' @field active_coordinates Set or retrieve the name of the coordinate set
+    #'   to use with the axis for printing to the console as well as for
+    #'   processing methods such as `subset()`. When setting, provide the name
+    #'   of the requested coordinates. If the name is not known a warning will
+    #'   be generated and the currently active coordinates stay active. When
+    #'   retrieving, the `Coordinates` instance that is currently active.
+    active_coordinates = function(value) {
+      if (missing(value))
+        private$.active_coordinates
+      else {
+        crd_names <- vapply(private$.coordinates, function(crd) crd$name, character(1L))
+        ndx <- match(value, crd_names, nomatch = 0L)
+        if (ndx > 0L)
+          private$.active_coordinates <- private$.coordinates[[ndx]]
+        else
+          warning('Unknown coordinates "', value, '"', call. = FALSE)
+      }
     },
 
     #' @field length (read-only) Retrieve the length of the axis.

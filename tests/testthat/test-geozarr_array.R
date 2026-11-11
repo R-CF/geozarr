@@ -291,6 +291,17 @@ test_that("XArray dimension without coordinates gets an ordinal axis", {
   expect_identical(axes[[2L]]$coordinates$values, 0:1)
 })
 
+test_that("XArray string dimension coordinates become string coordinates", {
+  fn <- tempfile(fileext = ".zarr")
+  root <- create_zarr(fn)[["/"]]
+  write_plain_array(root, c(15, 25, 35, 45), "lon", "lon")
+  write_plain_array(root, c("model_a", "model_b"), "member", "member")
+  write_plain_array(root, array(as.numeric(1:8), c(4, 2)), "ens", c("lon", "member"), list(coordinates = "lon member"))
+  crd <- open_zarr(fn)[["/ens"]]$coordinate_system$axes$member$coordinates
+  expect_s3_class(crd, "CoordinatesString")
+  expect_identical(crd$values, c("model_a", "model_b"))
+})
+
 test_that("XArray arrays can be subset", {
   a <- open_zarr(xarray_store())[["/tas"]]
   expect_identical(a$subset(X = c(20, 40))$shape, c(2L, 3L))

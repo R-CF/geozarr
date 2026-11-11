@@ -883,8 +883,9 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
 #'
 #' @param values The values to process, a vector.
 #' @returns A `list` with elements "mode" and "values" and optionally "length"
-#'   if the values are regular. If the `storage.mode` is not supported, `NULL`
-#'   is returned.
+#'   if the values are regular.
+#' @details An error is raised if the `storage.mode` of `values` is not
+#'   integer, double or character.
 #' @noRd
 .make_coordinate_values <- function(values) {
   switch(storage.mode(values),
@@ -905,6 +906,6 @@ CoordinatesOrdinal <- R6::R6Class('CoordinatesOrdinal',
       return(list(mode = 'double', values = values))
     },
     'character' = return(list(mode = 'character', values = values)),
-    NULL
+    stop('Coordinate values must be numeric or character, not ', storage.mode(values), call. = FALSE)
   )
 }

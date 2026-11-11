@@ -251,55 +251,72 @@ set_convention <- function(metadata, coord_sys, crs = NULL, ...) {
     cs_direction <- c(X = 'EAST', Y = 'NORTH', Z = 'UP', T = 'FUTURE', OTHER = 'OTHER')
 
     has_external <- FALSE
-    axis_defs <- lapply(axes, function(ax) {
+    # Encode one set of coordinates. External arrays are named after the set
+    # name `ext`, with suffix `_bounds` for the boundary values. The actual
+    # writing to the external arrays should be done in the calling code.
+    coords_def <- function(crd, ext, name = NULL) {
       # Values
-      values <- ax$coordinates$raw
+      values <- crd$raw
 
-      packed <- if (inherits(ax$coordinates, 'CoordinatesTime')) {
+      packed <- if (inherits(crd, 'CoordinatesTime')) {
         # Time coordinates are always held in unpacked form so must check if they are regular
         if (.is_regular(values)) {
           values <- c(values[1L], values[2L] - values[1L])
           TRUE
         } else FALSE
-      } else inherits(ax$coordinates, 'CoordinatesPacked')
+      } else inherits(crd, 'CoordinatesPacked')
 
       values_def <- if (packed)
         cs_conv$values_regular(values[1L], values[2L])
-      else if (ax$length <= GeoZarr.options$max_explicit)
+      else if (crd$length <= GeoZarr.options$max_explicit)
         cs_conv$values_explicit(values)
       else {
-        # External coordinate values: Write coordinate values to an external array.
-        # The name of the external array is the same as the name of the axis. The
-        # actual writing to the external array should be done in the calling code.
         has_external <<- TRUE
-        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', ax$name))
+        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', ext))
       }
 
       # Boundary values
-      bnds <- ax$coordinates$bounds_raw
+      bnds <- crd$bounds_raw
       bnds_def <- if (is.vector(bnds))
         cs_conv$boundaries_regular(bnds[1L], bnds[2L])
       else if (is.matrix(bnds))
-        # External boundary values: Write boundary values to an external array.
-        # The name of the external array is `<axis_name>_bounds`. The
-        # actual writing to the external array should be done in the calling code.
-        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', paste0(ax$name, '_bounds')))
+        cs_conv$values_external(paste0(additional$external_group %||% '..', '/', paste0(ext, '_bounds')))
       else NULL
 
       # Time
-      time_def <- if (inherits(ax$coordinates, 'CoordinatesTime')) {
-        def <- strsplit(ax$coordinates$time$calendar$definition, ' ', fixed = TRUE)[[1L]]
-        cs_conv$time(unit = def[1L], epoch = def[3L], calendar = ax$coordinates$time$calendar$name)
+      time_def <- if (inherits(crd, 'CoordinatesTime')) {
+        def <- strsplit(crd$time$calendar$definition, ' ', fixed = TRUE)[[1L]]
+        cs_conv$time(unit = def[1L], epoch = def[3L], calendar = crd$time$calendar$name)
       } else NULL
 
-      # Coordinates and axis
-      coords_def <- cs_conv$coordinates(values_def, unit = ax$coordinates$unit,
-                                        boundaries = bnds_def, time = time_def)
+      # Attributes of inlined coordinates; those of external coordinates go
+      # with the external array
+      crd_atts <- crd$attributes
+      crd_atts <- if (is.null(values_def$external) && length(crd_atts)) crd_atts
+
+      cs_conv$coordinates(values_def, name = name, unit = crd$unit,
+                          boundaries = bnds_def, time = time_def,
+                          attributes = crd_atts)
+    }
+
+    has_external <- FALSE
+    axis_defs <- lapply(axes, function(ax) {
+      # All sets of coordinates of the axis, in the order of
+      # `coordinates_list` (which `write_external_coordinates()` relies on).
+      # The first set keeps the axis name for its external arrays; the other
+      # sets use their own name, which is then also recorded as the name of
+      # the set.
+      crds <- ax$coordinates_list
+      multi <- length(crds) > 1L
+      defs <- lapply(seq_along(crds), function(k)
+        coords_def(crds[[k]], if (k == 1L) ax$name else crds[[k]]$name,
+                   if (multi) crds[[k]]$name))
+
       abbr <- toupper(ax$abbreviation)
       if (!abbr %in% c('X', 'Y', 'Z', 'T', 'OTHER')) abbr <- 'OTHER'
       direction  <- cs_direction[[abbr]]
       if (abbr == 'OTHER') abbr <- ''
-      cs_conv$axis(list(coords_def), abbreviation = abbr, direction = direction)
+      cs_conv$axis(defs, abbreviation = abbr, direction = direction)
     })
 
     # Do we need the ref convention?

@@ -151,3 +151,98 @@ test_that("create_geozarr_array() puts units and dimension names on the external
   expect_identical(s$z[["/g/y"]]$attribute("units"), "m")
   expect_null(s$z[["/g"]]$metadata$dimension_names)
 })
+
+test_that("write_external_coordinates() puts coordinate attributes on the external array", {
+  local_geozarr_option("max_explicit", 2L)
+  s <- new_group()
+  x <- CoordinateSystemAxis$new("x", "X", CoordinatesPacked$new("x", "EAST", "m", c(15, 10), 3L))
+  y <- CoordinateSystemAxis$new("y", "Y", CoordinatesIrregular$new("y", "NORTH", "m", Yu,
+                                                                   attributes = list(long_name = "Northing")))
+  cs <- CoordinateSystem$new("cs", list(x = x, y = y))
+  meta <- set_convention(define_array("float64", c(3L, 3L))$metadata(), cs)
+  geozarr_array$new("a", meta, s$grp, cs)$write_external_coordinates()
+  expect_identical(s$z[["/g/y"]]$attribute("long_name"), "Northing")
+  expect_identical(s$z[["/g/y"]]$attribute("units"), "m")
+})
+
+test_that("write_external_coordinates() writes additional sets of coordinates", {
+  local_geozarr_option("max_explicit", 2L)
+  s <- new_group()
+  x <- CoordinateSystemAxis$new("x", "X", CoordinatesPacked$new("x", "EAST", "m", c(15, 10), 3L))
+  y <- CoordinateSystemAxis$new("y", "Y", list(CoordinatesPacked$new("y", "NORTH", "m", c(5, 1), 3L),
+                                               CoordinatesString$new("y_label", "OTHER", "1", c("a", "b", "c"))))
+  cs <- CoordinateSystem$new("cs", list(x = x, y = y))
+  meta <- set_convention(define_array("float64", c(3L, 3L))$metadata(), cs)
+  geozarr_array$new("a", meta, s$grp, cs)$write_external_coordinates()
+  expect_identical(s$z[["/g/y_label"]][], c("a", "b", "c"))
+})
+
+# subset(): external arrays ------------------------------------------------------
+
+Y4 <- c(5, 6, 8, 11)  # irregular, long enough to stay external after subsetting
+cs_axes <- function(m) do.call(c, lapply(m$attributes$cs$crs, function(c) c$axes))
+
+subset_source <- function(coord_group = NULL) {
+  s <- new_group()
+  if (identical(coord_group, "../coords")) s$z$add_group("/g", "coords")
+  if (identical(coord_group, "../../coords")) s$z$add_group("/", "coords")
+  conv <- if (!is.null(coord_group)) list(.convention = list(coordinate_group = coord_group))
+  gza <- create_geozarr_array("a", s$grp, c(list(x = list(coordinates = X), y = list(coordinates = Y4)), conv),
+                              "float64")
+  c(s, list(gza = gza))
+}
+
+test_that("subset() puts external arrays in the group of the source, relative to the array", {
+  local_geozarr_option("max_explicit", 2L)
+  src <- subset_source("../coords")
+  sub <- src$gza$subset(y = c(5.5, 12), .name = "s")
+  expect_identical(cs_axes(sub$metadata)$y$coordinates[[1L]]$values$external$ref$node, "../coords/y")
+  expect_identical(sub$zarr[["/coords/y"]][], c(6, 8, 11))
+})
+
+test_that("subset() falls back to the group of the new array above the root", {
+  local_geozarr_option("max_explicit", 2L)
+  src <- subset_source("../../coords")
+  sub <- src$gza$subset(y = c(5.5, 12), .name = "s")
+  expect_identical(cs_axes(sub$metadata)$y$coordinates[[1L]]$values$external$ref$node, "../y")
+  expect_identical(sub$zarr[["/y"]][], c(6, 8, 11))
+})
+
+test_that("subset() keeps a group above its own group when the target is deep enough", {
+  local_geozarr_option("max_explicit", 2L)
+  src <- subset_source("../../coords")
+  z2 <- create_zarr()
+  z2$add_group("/", "h")
+  src$gza$subset(y = c(5.5, 12), .name = "s", .location = z2[["/h"]])
+  expect_identical(z2[["/coords/y"]][], c(6, 8, 11))
+})
+
+test_that("subset() takes the external group from argument .external_group", {
+  local_geozarr_option("max_explicit", 2L)
+  src <- subset_source()
+  sub <- src$gza$subset(y = c(5.5, 12), .name = "s", .location = src$grp, .external_group = "../sub_coords")
+  expect_identical(src$z[["/g/sub_coords/y"]][], c(6, 8, 11))
+})
+
+test_that("subset() into the store of the source can collide with its external arrays", {
+  local_geozarr_option("max_explicit", 2L)
+  src <- subset_source()
+  expect_error(src$gza$subset(y = c(5.5, 12), .name = "s", .location = src$grp),
+               'Incompatible external array "y"')
+})
+
+test_that("subset() without .name errors when external arrays are needed", {
+  local_geozarr_option("max_explicit", 2L)
+  expect_error(subset_source()$gza$subset(y = c(5.5, 12)), "Single-array Zarr store cannot have external arrays")
+})
+
+test_that("subset() without .name works when no external arrays are needed", {
+  sub <- subset_source()$gza$subset(y = c(5.5, 12))
+  expect_identical(sub$shape, c(3L, 3L))
+})
+
+test_that("subset() into an existing group requires .name", {
+  src <- subset_source()
+  expect_error(src$gza$subset(y = c(5.5, 12), .location = src$grp),
+               "A name must be given for an array in an existing Zarr group")
+})

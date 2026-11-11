@@ -70,6 +70,19 @@ geozarr_array <- R6::R6Class('geozarr_array',
     # referenced in a group is resolved and the references in it are rebased
     # to this array. A geolocation object in a CRS object is kept only if the
     # node that defines the CRS object declares the geolocation convention.
+    # The group, relative to this array, of the first external coordinate or
+    # boundary array in the metadata that is in the same store, or NULL if
+    # there is none.
+    external_group = function() {
+      for (crs in private$cs_crs(private$.metadata))
+        for (ax in crs$axes)
+          for (crd in ax$coordinates)
+            for (ref in list(crd$values$external$ref, crd$boundaries$external$ref))
+              if (!is.null(ref) && is.null(ref$uri) && grepl('/', ref$node, fixed = TRUE))
+                return(sub('/[^/]*$', '', ref$node))
+      NULL
+    },
+
     cs_crs = function(meta) {
       array_geo <- .declares(meta, 'geolocation')
       lapply(meta$attributes$cs$crs, function(crs) {
@@ -191,15 +204,18 @@ geozarr_array <- R6::R6Class('geozarr_array',
 
       time <- coord_def$time
       if (is.null(time)) {
-        if (!is.null(cv$length))
+        if (cv$mode == 'character')
+          CoordinatesString$new(name = crd_name, direction = direction, unit = '',
+                                values = cv$values, attributes = attributes)
+        else if (is.null(cv$length))
+          CoordinatesIrregular$new(name = crd_name, direction = direction,
+                                   unit = coord_def$unit %||% '', values = cv$values,
+                                   bounds = bounds, attributes = attributes)
+        else
           CoordinatesPacked$new(name = crd_name, direction = direction,
                                 unit = coord_def$unit %||% '', values = cv$values,
                                 length = cv$length, bounds = bounds,
                                 attributes = attributes)
-        else
-          CoordinatesIrregular$new(name = crd_name, direction = direction,
-                                 unit = coord_def$unit %||% '', values = cv$values,
-                                 bounds = bounds, attributes = attributes)
       } else {
         values <- cv$values
         if (!is.null(cv$length))
@@ -233,7 +249,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
         return(.make_coordinate_values(raw))
       }
 
-      stop('Axis "', dim_name, '": "values" must have one of "regular", "explicit", or "external".', call. = FALSE)
+      stop('Axis "', dim_name, '": "values" must have one of "regular", "explicit", or "external"', call. = FALSE)
     },
 
     # Resolve a `boundaries` object into the bounds representation expected by
@@ -372,7 +388,10 @@ geozarr_array <- R6::R6Class('geozarr_array',
           CoordinatesOrdinal$new(name = crd_name, direction = 'OTHER', shape[i])
         else {
           vals <- .make_coordinate_values(values)
-          if (is.null(vals$length))
+          if (vals$mode == 'character')
+            CoordinatesString$new(name = crd_name, direction = 'OTHER',
+                                  unit = '', values = vals$values)
+          else if (is.null(vals$length))
             CoordinatesIrregular$new(name = crd_name, direction = direction,
                                      unit = units, values = vals$values, bounds = NULL)
           else
@@ -622,6 +641,23 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   Geolocation arrays of the coordinate system are not subset, so the
     #'   result has no geolocation.
     #'
+    #'   Coordinate values that are irregular and long, and irregular boundary
+    #'   values, are written to external arrays next to the new array. Unless
+    #'   argument `.external_group` is given, these go to the same group,
+    #'   relative to the array, as the external arrays of this array, e.g.
+    #'   `../coordinates`; that group is created if it does not exist. If this
+    #'   array has no external arrays, or only external arrays in another
+    #'   store, or if its group would lie above the root of the store of the
+    #'   new array, the external arrays go to the group of the new array.
+    #'   Pitfalls:
+    #'   * External arrays are named after their axis. When the new array is
+    #'   put in the same store as this array, its external arrays may resolve
+    #'   to those of this array. If the subset has different coordinates there,
+    #'   an error is raised; use `.external_group` to put them elsewhere.
+    #'   * Without `.name`, the new array is the only node in its store and
+    #'   cannot have external arrays. An error is raised before anything is
+    #'   written if the subset needs them.
+    #'
     #'   Arguments following `...` must be explicitly named, like
     #'   `.rightmost.closed = TRUE`, to avoid the argument being treated as an
     #'   axis name.
@@ -642,9 +678,9 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   range per axis fall outside of the extent of the axis, the range is
     #'   clipped to the extent of the axis.
     #' @param .name The name of the GeoZarr array to be created. If omitted, an
-    #'   array will be created at the root of a new in-memory Zarr store. The
-    #'   new array can then not have any associated arrays, such as for
-    #'   irregular coordinate values or boundaries.
+    #'   array will be created at the root of a new Zarr store. The new array
+    #'   can then not have any associated arrays, such as for irregular
+    #'   coordinate values or boundaries.
     #' @param .location Optional. If supplied, either an existing [zarr_group]
     #'   in a [zarr] object, or a character string giving the location on a
     #'   local file system where to persist the data. If the argument is a
@@ -654,11 +690,15 @@ geozarr_array <- R6::R6Class('geozarr_array',
     #'   use a location that ends in ".zarr" when providing a location for a new
     #'   store. If the `.location` argument is not given, a `zarr` object is
     #'   created in memory.
+    #' @param .external_group Optional. The group, relative to the new array,
+    #'   where to write its external coordinate and boundary arrays, such as
+    #'   `"../coordinates"`. If omitted, the group is taken from the external
+    #'   arrays of this array; see Details.
     #' @return The new `geozarr_array`, with a subset of data from this GeoZarr
     #'   array, having the axes and attributes of this GeoZarr array. If one or
     #'   more of the selectors in the `...` argument fall entirely outside of
     #'   the range of the axis `NULL` is returned.
-    subset = function(..., .name = NULL, .location = NULL) {
+    subset = function(..., .name = NULL, .location = NULL, .external_group = NULL) {
       if (is.null(private$.cs))
         stop('Cannot subset a GeoZarr array without a coordinate system set', call. = FALSE)
 
@@ -718,9 +758,22 @@ geozarr_array <- R6::R6Class('geozarr_array',
                              utils::packageVersion('geozarr'), '; ', atts$history)
       new_meta$attributes <- atts
 
+      # Group for external arrays: as for this array, unless above the root of
+      # the store of the new array
+      ext <- .external_group
+      if (is.null(ext)) {
+        ext <- private$external_group() %||% '..'
+        parts <- strsplit(ext, '/', fixed = TRUE)[[1L]]
+        ups <- sum(cumprod(parts == '..'))
+        depth <- if (inherits(.location, 'zarr_group'))
+                   length(strsplit(.location$path, '/', fixed = TRUE)[[1L]]) - 1L
+                 else 0L
+        if (ups > depth + 1L) ext <- '..'
+      }
+
       .create_gza(meta = new_meta, cs = cs, data = self$read(selection),
                   name = .name, location = .location,
-                  crs = private$crs_from_metadata(), external_group = '..')
+                  crs = private$crs_from_metadata(), external_group = ext)
     },
 
     #' @description Retrieve the geolocation arrays of this array. The arrays
@@ -878,7 +931,7 @@ geozarr_array <- R6::R6Class('geozarr_array',
                 grp <- private$walk_to_group(path_parts, create_groups)
                 crds <- private$.cs$axes[[axis_name]]$coordinates_list[[j]]
                 values <- if (inherits(crds, 'CoordinatesTime')) crds$offsets else crds$values
-                private$write_or_verify_external(grp, ext_name, values, crds$unit, ext_name)
+                private$write_or_verify_external(grp, ext_name, values, crds$unit, ext_name, crds$attributes)
               }
 
               # Boundary values

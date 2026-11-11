@@ -375,7 +375,11 @@ test_that(".make_coordinate_values() keeps short and irregular values", {
   expect_identical(gz$.make_coordinate_values(c(1, 2, 5)), list(mode = "double", values = c(1, 2, 5)))
   expect_identical(gz$.make_coordinate_values(c("a", "b", "c")),
                    list(mode = "character", values = c("a", "b", "c")))
-  expect_null(gz$.make_coordinate_values(c(TRUE, FALSE, TRUE)))
+})
+
+test_that(".make_coordinate_values() rejects unsupported storage modes", {
+  expect_error(gz$.make_coordinate_values(c(TRUE, FALSE, TRUE)),
+               "Coordinate values must be numeric or character, not logical")
 })
 
 test_that(".make_coordinate_values() keeps irregular integer values", {

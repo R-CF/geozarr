@@ -298,33 +298,45 @@ geozarr_options <- function(key, value) {
 # This internal function takes details and a `name` for a new array to be
 # created and the `location` being a group or location URI  where it needs to
 # go. It returns a geozarr_array instance. The ... contain convention
-# parameters.
+# parameters. Errors are raised before anything is written if the array has
+# no name but needs external arrays. External arrays are written before the
+# data, creating any missing groups.
 .create_gza <- function(meta, cs, data, name = NULL, location, ...) {
   # Set the convention
   meta <- set_convention(meta, cs, ...)
 
+  has_name <- !is.null(name) && nzchar(name)
   if (inherits(location, 'zarr_group')) {
     # Use a group in an existing zarr object
+    if (!has_name)
+      stop('A name must be given for an array in an existing Zarr group', call. = FALSE)
     if (!is.null(location$children[[name]]))
       stop('Group ', location$name, ' already has a node with name ', name, call. = FALSE)
     gza <- geozarr_array$new(name = name, metadata = meta, parent = location, coord_sys = cs)
   } else {
+    if (!has_name && .has_ref(meta$attributes[c('cs', 'geolocation')]))
+      stop('Single-array Zarr store cannot have external arrays for coordinates, boundaries or geolocation: give the array a name', call. = FALSE)
+
     # Create a new zarr object for the array
     z <- zarr::zarr$new(location)
-    if (is.null(name) || !nzchar(name)) {
+    if (!has_name) {
       # Single-array store
       gza <- geozarr_array$new(name = '', metadata = meta, parent = z, coord_sys = cs)
     } else {
       # Array in the root group
       zarr::zarr_group$new(name = '', parent = z)
       gza <- geozarr_array$new(name = name, metadata = meta, parent = z$root, coord_sys = cs)
-     }
+    }
   }
 
+  gza$write_external_coordinates(create_groups = TRUE)
   gza$write(data)
-  gza$write_external_coordinates()
   gza
 }
+
+# TRUE if `x`, a list from parsed JSON, holds a `ref` object anywhere.
+.has_ref <- function(x)
+  is.list(x) && (!is.null(x[["ref"]]) || any(vapply(x, .has_ref, logical(1L))))
 
 #' Resolve a JSON pointer
 #'

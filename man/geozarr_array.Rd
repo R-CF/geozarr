@@ -144,7 +144,12 @@ array, with the range along each axis to extract expressed in
 coordinate values of the domain of each axis.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{geozarr_array$subset(..., .name = NULL, .location = NULL)}
+    \preformatted{geozarr_array$subset(
+  ...,
+  .name = NULL,
+  .location = NULL,
+  .external_group = NULL
+)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -158,9 +163,9 @@ case-sensitive and can be specified in any order. If values for the
 range per axis fall outside of the extent of the axis, the range is
 clipped to the extent of the axis.}
       \item{\code{.name}}{The name of the GeoZarr array to be created. If omitted, an
-array will be created at the root of a new in-memory Zarr store. The
-new array can then not have any associated arrays, such as for
-irregular coordinate values or boundaries.}
+array will be created at the root of a new Zarr store. The new array
+can then not have any associated arrays, such as for irregular
+coordinate values or boundaries.}
       \item{\code{.location}}{Optional. If supplied, either an existing \link[zarr:zarr_group]{zarr_group}
 in a \link[zarr:zarr]{zarr} object, or a character string giving the location on a
 local file system where to persist the data. If the argument is a
@@ -170,6 +175,10 @@ the calling code. As per the Zarr specification, it is recommended to
 use a location that ends in ".zarr" when providing a location for a new
 store. If the \code{.location} argument is not given, a \code{zarr} object is
 created in memory.}
+      \item{\code{.external_group}}{Optional. The group, relative to the new array,
+where to write its external coordinate and boundary arrays, such as
+\code{"../coordinates"}. If omitted, the group is taken from the external
+arrays of this array; see Details.}
     }
     \if{html}{\out{</div>}}
   }
@@ -199,6 +208,25 @@ in argument \code{...} does not reorder the axes in the result.
 
 Geolocation arrays of the coordinate system are not subset, so the
 result has no geolocation.
+
+Coordinate values that are irregular and long, and irregular boundary
+values, are written to external arrays next to the new array. Unless
+argument \code{.external_group} is given, these go to the same group,
+relative to the array, as the external arrays of this array, e.g.
+\code{../coordinates}; that group is created if it does not exist. If this
+array has no external arrays, or only external arrays in another
+store, or if its group would lie above the root of the store of the
+new array, the external arrays go to the group of the new array.
+Pitfalls:
+\itemize{
+\item External arrays are named after their axis. When the new array is
+put in the same store as this array, its external arrays may resolve
+to those of this array. If the subset has different coordinates there,
+an error is raised; use \code{.external_group} to put them elsewhere.
+\item Without \code{.name}, the new array is the only node in its store and
+cannot have external arrays. An error is raised before anything is
+written if the subset needs them.
+}
 
 Arguments following \code{...} must be explicitly named, like
 \code{.rightmost.closed = TRUE}, to avoid the argument being treated as an

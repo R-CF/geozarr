@@ -24,6 +24,13 @@ thus not with the axis.
 
     \item{\code{coordinates}}{(read-only) Retrieve the currently active coordinates.}
 
+    \item{\code{active_coordinates}}{Set or retrieve the name of the coordinate set
+to use with the axis for printing to the console as well as for
+processing methods such as \code{subset()}. When setting, provide the name
+of the requested coordinates. If the name is not known a warning will
+be generated and the currently active coordinates stay active. When
+retrieving, the \code{Coordinates} instance that is currently active.}
+
     \item{\code{length}}{(read-only) Retrieve the length of the axis.}
   }
   \if{html}{\out{</div>}}

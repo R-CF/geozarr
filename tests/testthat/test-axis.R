@@ -79,3 +79,46 @@ test_that("CoordinateSystemAxis subset()", {
   expect_identical(ax$subset("east", c(2L, 4L))$name, "east")
   expect_identical(ax$subset()$length, 18L)
 })
+
+# active_coordinates -----------------------------------------------------------
+
+member_axis <- function()
+  CoordinateSystemAxis$new("member", "OTHER",
+                           list(CoordinatesPacked$new("member", "OTHER", "1", c(1, 1), 3L),
+                                CoordinatesString$new("model", "OTHER", "1", c("a", "b", "c"))))
+
+test_that("active_coordinates selects a set by its name in an unnamed list", {
+  ax <- member_axis()
+  expect_identical(ax$active_coordinates$name, "member")
+  ax$active_coordinates <- "model"
+  expect_identical(ax$active_coordinates$name, "model")
+  expect_identical(ax$coordinates$values, c("a", "b", "c"))
+})
+
+test_that("active_coordinates warns on an unknown name and keeps the active set", {
+  ax <- member_axis()
+  ax$active_coordinates <- "model"
+  expect_warning(ax$active_coordinates <- "nope", 'Unknown coordinates "nope"')
+  expect_identical(ax$active_coordinates$name, "model")
+})
+
+test_that("copy() keeps the active coordinates", {
+  ax <- member_axis()
+  ax$active_coordinates <- "model"
+  expect_identical(ax$copy()$active_coordinates$name, "model")
+})
+
+test_that("subset() keeps the active coordinates", {
+  ax <- member_axis()
+  ax$active_coordinates <- "model"
+  sub <- ax$subset(rng = c(2L, 3L))
+  expect_identical(sub$active_coordinates$name, "model")
+  expect_identical(sub$coordinates$values, c("b", "c"))
+  expect_identical(sub$length, 2L)
+})
+
+test_that("subset() without a range keeps the active coordinates", {
+  ax <- member_axis()
+  ax$active_coordinates <- "model"
+  expect_identical(ax$subset()$active_coordinates$name, "model")
+})

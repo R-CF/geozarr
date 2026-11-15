@@ -5,7 +5,7 @@
 \alias{create_geozarr_array}
 \title{Create a new GeoZarr array}
 \usage{
-create_geozarr_array(name, location, axes, data_type, fill_value)
+create_geozarr_array(name, location, axes, data_type, fill_value, crs = NULL)
 }
 \arguments{
 \item{name}{The name of the GeoZarr array to be created.}
@@ -24,6 +24,12 @@ Details section and the example for the formatting details of the list.}
 array that do not have data assigned. The value of this argument must agree
 with the \code{data_type}. If not provided a default value will be used that is
 specific to the \code{data_type}.}
+
+\item{crs}{Optional. A \code{list} with one or more CRS definitions, in the
+format of the \code{crs} argument of \code{\link[=set_convention]{set_convention()}}: named elements can be
+"compound", "spatial", "vertical" or "temporal", each a \code{list} with one or
+more of the elements "code", "wkt2" or "projjson". An error is thrown if
+the argument is not correctly formatted. By default no CRS is set.}
 }
 \value{
 The new \code{geozarr_array} instance.
@@ -47,8 +53,8 @@ structured as follows:
 \item \code{coordinates}: A vector of coordinate values. The length of the vector
 becomes the length of the corresponding dimension in the array.
 \item \code{boundaries}: Optional. For boundaries that are regular, meaning that the
-lower offset \verb{(-\eqn{\infty}, 0)} for each coordinate is constant and the
-same for the higher offset \verb{(0, \eqn{\infty})}, then a vector of the lower
+lower offset \eqn{(-\infty, 0)}{(-Inf, 0)} for each coordinate is constant and the
+same for the higher offset \eqn{(0, \infty)}{(0, Inf)}, then a vector of the lower
 and higher offset, in that order, may be supplied. Otherwise a matrix has
 to be supplied with as many columns as there are coordinates and the lower
 offsets in row 1 and the higher offsets in row 2.
@@ -66,7 +72,7 @@ correct.
 mandatory, it is highly recommended to include this information. For a
 temporal axis the acceptable values are "second", "minute", "hour", "day"
 and "year", as well as the abbreviation or plural version thereof; if
-omitted, "days" is used. When temporal coordinates are specific as numeric
+omitted, "day" is used. When temporal coordinates are specific as numeric
 offsets, this field is required.
 \item \code{calendar}: Temporal axis only. The name of the calendar to use. This
 package supports all calendars of the \href{https://cfconventions.org/cf-conventions/cf-conventions.html#time-coordinate}{CF Metadata Conventions},
@@ -83,6 +89,12 @@ numeric offsets, this field is required.
 to less fragmentation of the axis into separate chunks compared to lower
 values. If omitted, it is set to 1 for this axis. Typical values are in the
 range of 1 - 3.
+\item \code{attributes}: Optional named \code{list} with the attributes of the
+coordinates of this axis, such as "long_name" or "standard_name". They are
+stored with the coordinates in the \code{cs} attributes of the array or, for
+external coordinates, with the external array. The attributes are only used
+with the "cs" convention. An error is thrown if the value is not a named
+\code{list}.
 }
 
 The top-level list may have an additional element called \code{.convention} that
@@ -105,6 +117,8 @@ coordinate system tied to the top-left corner of the array space. The
 \code{axis} sub-list only requires the \code{coordinates} and \code{abbreviation} fields
 for each of the axes; \code{chunk_weight} will be used when specified, all other
 fields are ignored.
+
+No attributes will be assigned to the axes given that the "spatial"convention has no support for that.
 
 If a \code{.convention} element is present in the top-level \code{axes} list then it
 is searched for a \code{registration} member. Its value is a character string
@@ -142,6 +156,7 @@ exist. If omitted, a value of ".." is used, meaning that any external
 coordinate arrays are placed in the same group as the new array.
 }
 \examples{
+\dontshow{old_cli <- zarr::zarr_options("use_cli"); zarr::zarr_options("use_cli", FALSE)}
 z <- create_zarr()
 grp <- z$add_group("/", "my_data_group")
 ext <- z$add_group("/", "coords")
@@ -152,16 +167,20 @@ gza <- create_geozarr_array(name = "my_data_array", location = grp,
                             boundaries = rbind(seq(from = -180, to = 170, by = 10),
                                                seq(from = -170, to = 180, by = 10)),
                             abbreviation = "X",
-                            unit = "degrees"),
+                            unit = "degree",
+                            attributes = list(long_name = "longitude",
+                                             standard_name = "Longitude")),
          latitude    = list(coordinates = c(-90, -75, -60, -50, -40, -30, -20, -10,
                                             0, 10, 20, 30, 40, 50, 60, 75, 90),
                             abbreviation = "Y",
-                            unit = "degrees"),
+                            unit = "degree",
+                            attributes = list(long_name = "latitude",
+                                              standard_name = "Latitude")),
          time        = list(coordinates = sprintf("2026-\%02d-\%02d",
                                                   rep(1:12, each = 30),
                                                   rep(1:30, times = 12)),
                             abbreviation = "T",
-                            unit = "days",
+                            unit = "day",
                             calendar = "360_day",
                             epoch = "1850-01-01",
                             chunk_weight = 1.5),
@@ -170,4 +189,5 @@ gza <- create_geozarr_array(name = "my_data_array", location = grp,
        )
 z$hierarchy()
 gza
+\dontshow{if (!is.null(old_cli)) zarr::zarr_options("use_cli", old_cli)}
 }

@@ -47,6 +47,25 @@ CoordinateSystemAxis <- R6::R6Class('CoordinateSystemAxis',
         stop('Axis coordinates must be supplied as a list of one or more Coordinates instances', call. = FALSE)
     },
 
+    #' @description Add a set of coordinates to the axis. The new coordinates are
+    #'   not made active.
+    #' @param coordinates An instance of the `Coordinates` class, or any of its
+    #'   descendants, with the same length as the axis and a name that is not
+    #'   yet used by the coordinates of the axis.
+    #' @return Self, invisibly.
+    add_coordinates = function(coordinates) {
+      if (!inherits(coordinates, 'Coordinates'))
+        stop('Argument `coordinates` must be an instance of the Coordinates class or a descendant', call. = FALSE)
+      if (coordinates$length != self$length)
+        stop('The length of the coordinates must be the same as the length of the axis', call. = FALSE)
+      nms <- vapply(private$.coordinates, function(crd) crd$name, character(1L), USE.NAMES = FALSE)
+      if (coordinates$name %in% nms)
+        stop('Coordinates with name "', coordinates$name, '" already exist on the axis', call. = FALSE)
+
+      private$.coordinates <- c(private$.coordinates, setNames(list(coordinates), coordinates$name))
+      invisible(self)
+    },
+
     #' @description Print a summary of the coordinate system axis to the
     #'   console.
     #' @param ... Ignored.

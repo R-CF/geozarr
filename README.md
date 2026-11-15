@@ -22,7 +22,8 @@ coverage](https://codecov.io/gh/R-CF/geozarr/graph/badge.svg)](https://app.codec
 The `geozarr` package implements a set of conventions for geospatial
 data on top of the Zarr specification. It builds on the `zarr` package,
 a native R implementation of the Zarr specification that can read and
-write Zarr v.3 stores in memory, on the local file system and over HTTP.
+write Zarr v.3 stores in memory, on the local file system and online
+over S3 and HTTP.
 
 The following conventions are supported by `geozarr`:
 
@@ -32,6 +33,13 @@ The following conventions are supported by `geozarr`:
   coordinate system for X-Y (image, GIS) data.
 - [proj](https://github.com/zarr-conventions/proj): Reference frame to
   register a coordinate system to Earth.
+- [multiscales](https://github.com/zarr-conventions/multiscales):
+  Multiscale pyramid information for data stored in Zarr groups.
+- [geolocation](https://github.com/R-CF/zarr_convention_geolocation):
+  Arrays with geolocation information for curvi-linear grids.
+
+Additional conventions, implemented by the `zarr` package:
+
 - [uom](https://github.com/clbarnes/zarr-convention-uom):
   Unit-of-measure information for data in a Zarr array.
 - [ref](https://github.com/R-CF/zarr_convention_ref): A standard way to
@@ -179,10 +187,6 @@ GeoZarr is currently under active development and this package is
 similarly in flux. The conventions implemented in this package will
 remain available unless the convention is deprecated due to any reason
 that would recommend against continuing to use the convention.
-
-This package should currently not be used for production environments.
-Things may fail and you are advised to ensure that you have backups of
-all data that you put in a Zarr store with this package.
 
 Like GeoZarr itself, this package is modular and allows for additional
 conventions to be added to this basic implementation. If you have

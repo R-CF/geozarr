@@ -440,3 +440,70 @@ test_that("geolocation() reports a missing boundary array", {
   gza <- geozarr_array$new("chk", set_convention(zarr::define_array("float64", c(4L, 3L))$metadata(), cs), s$root, cs)
   expect_error(gza$geolocation(), 'Boundary array "../nope" not found')
 })
+
+# geozarr_array$set_geolocation() -------------------------------------------------------
+
+# A saved cs-convention array without geolocation, in the root group.
+sg_array <- function(root, name = "pr") {
+  cs <- wg_cs()
+  gza <- geozarr_array$new(name, set_convention(zarr::define_array("float64", c(4L, 3L))$metadata(), cs), root, cs)
+  gza$write(array(as.numeric(1:12), c(4L, 3L)))
+  gza
+}
+sg_set <- function(gza, ...) {
+  gza$set_geolocation("geodetic", lon, lat, c("rlon", "rlat"), c("lon", "lat"),
+                      id = zarr_conv_proj$new(list(code = "EPSG:4326")),
+                      attributes = list(lon_atts, lat_atts), ...)
+}
+
+test_that("set_geolocation() writes the geolocation arrays", {
+  s <- wg_root()
+  gza <- sg_array(s$root)
+  sg_set(gza)
+  expect_equal(s$root$children$lon[], lon)
+  expect_equal(s$root$children$lat[], lat)
+  expect_identical(unlist(s$root$children$lat$metadata$dimension_names), c("rlon", "rlat"))
+})
+
+test_that("set_geolocation() references the arrays and frees the data", {
+  s <- wg_root()
+  gza <- sg_array(s$root)
+  sg_set(gza)
+  cs <- gza$coordinate_system
+  expect_length(cs$geolocation_data, 0L)
+  expect_identical(cs$geolocation$as_list()$geodetic$x$values$ref$node, "../lon")
+  expect_identical(gza$geolocation()$y$name, "lat")
+})
+
+test_that("set_geolocation() persists in the store", {
+  s <- wg_root()
+  sg_set(sg_array(s$root))
+  reopened <- open_zarr(s$fn)[["/pr"]]
+  expect_equal(reopened$geolocation()$x[], lon)
+  expect_equal(reopened$geolocation()$y[], lat)
+})
+
+test_that("set_geolocation() writes to geolocation_group", {
+  s <- wg_root()
+  sg_set(sg_array(s$root), geolocation_group = "../geo")
+  expect_false(is.null(s$root$children$geo$children$lon))
+  expect_null(s$root$children$lon)
+})
+
+test_that("set_geolocation() returns the array invisibly", {
+  s <- wg_root()
+  gza <- sg_array(s$root)
+  expect_invisible(sg_set(gza))
+})
+
+test_that("set_geolocation() requires the cs convention", {
+  gza <- create_geozarr_array("a", create_zarr()$add_group("/", "g"),
+                              list(x = list(coordinates = c(15, 25, 35)), y = list(coordinates = c(75, 65, 55))), "int16")
+  expect_error(gza$set_geolocation("geodetic", lon, lat, c("x", "y"), c("lon", "lat")), '"cs" convention')
+})
+
+test_that("set_geolocation() passes on argument errors", {
+  s <- wg_root()
+  gza <- sg_array(s$root)
+  expect_error(gza$set_geolocation("geodetic", lon, lat, c("rlon", "nope"), c("lon", "lat")), "must name axes")
+})

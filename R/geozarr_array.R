@@ -951,6 +951,82 @@ geozarr_array <- R6::R6Class('geozarr_array',
       }
       self$write_geolocation(create_groups)
       invisible(self)
+    },
+
+    #' @description Add a set of coordinates to an axis of this array, such as a
+    #'   set of labels. The `cs` convention metadata of the array is rebuilt and
+    #'   persisted, and the values of the new coordinates are written to an
+    #'   external array if they are longer than the option
+    #'   `GeoZarr.options$max_explicit`.
+    #'
+    #'   The array must use the `cs` convention: an error is thrown for an array
+    #'   that uses another convention, which cannot represent multiple sets of
+    #'   coordinates. An error is also thrown if the axis is not in the
+    #'   coordinate system of the array, if the coordinates are not of the same
+    #'   length as the axis or if the name of the coordinates is already used on
+    #'   the axis. The array is not modified if an error is thrown.
+    #' @param axis Character string. The name of the axis to add the coordinates
+    #'   to.
+    #' @param coordinates An instance of the `Coordinates` class, or any of its
+    #'   descendants, such as `CoordinatesString`.
+    #' @param external_group Optional. The path to the group, relative to the
+    #'   location of this array, for any external array with the new
+    #'   coordinates. If omitted, the group of any existing external coordinate
+    #'   arrays of this array is used, or the group of the array itself if there
+    #'   are none.
+    #' @param create_groups Logical, default `FALSE`. If `TRUE`, missing groups
+    #'   on the path to the external array are created, see
+    #'   `write_external_coordinates()`.
+    #' @return Self, invisibly.
+    add_coordinates = function(axis, coordinates, external_group = NULL, create_groups = FALSE) {
+      if (is.null(private$.metadata$attributes$cs))
+        stop('Coordinates can only be added to an array that uses the "cs" convention', call. = FALSE)
+      ax <- private$.cs$axes[[axis]]
+      if (is.null(ax))
+        stop('Axis "', axis, '" is not in the coordinate system of the array', call. = FALSE)
+      ax$add_coordinates(coordinates)
+
+      private$.metadata <- set_convention(private$.metadata, private$.cs,
+                                          crs = private$crs_from_metadata(),
+                                          external_group = external_group %||% private$external_group() %||% '..')
+      private$.meta_dirty <- TRUE
+      self$write_external_coordinates(create_groups)
+      self$save()
+      invisible(self)
+    },
+
+    #' @description Set geolocation arrays on this array, such as the longitude
+    #'   and latitude of a curvilinear grid. The metadata of the array is
+    #'   updated, the geolocation arrays are written to the Zarr store and the
+    #'   array is saved.
+    #' @details The array must use the "cs" convention and its coordinate
+    #'   system must have exactly one "X" and one "Y" axis. The arguments
+    #'   `...` are those of `CoordinateSystem$set_geolocation()`, which see for
+    #'   the errors that are thrown. Existing geolocation of the same `kind`
+    #'   is replaced. An error is thrown when the array is the only array in
+    #'   its Zarr store.
+    #' @param ... Arguments passed on to `CoordinateSystem$set_geolocation()`.
+    #' @param geolocation_group Optional. Character string with the group,
+    #'   relative to this array, where the geolocation arrays are written.
+    #'   Defaults to the group of the external coordinate arrays of this array,
+    #'   or `".."`, the group of this array, if there are none.
+    #' @param create_groups Logical, default `FALSE`. If `TRUE`, missing groups
+    #'   on the path to the geolocation arrays are created.
+    #' @return Self, invisibly.
+    set_geolocation = function(..., geolocation_group = NULL, create_groups = FALSE) {
+      if (is.null(private$.metadata$attributes$cs))
+        stop('Geolocation can only be set on an array that uses the "cs" convention', call. = FALSE)
+      private$.cs$set_geolocation(...)
+
+      ext <- private$external_group() %||% '..'
+      private$.metadata <- set_convention(private$.metadata, private$.cs,
+                                          crs = private$crs_from_metadata(),
+                                          external_group = ext,
+                                          geolocation_group = geolocation_group %||% ext)
+      private$.meta_dirty <- TRUE
+      self$write_geolocation(create_groups)
+      self$save()
+      invisible(self)
     }
   ),
   active = list(

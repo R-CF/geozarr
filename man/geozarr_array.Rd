@@ -31,6 +31,8 @@ this array.}
     \item \href{#method-geozarr_array-geolocation}{\code{geozarr_array$geolocation()}}
     \item \href{#method-geozarr_array-write_geolocation}{\code{geozarr_array$write_geolocation()}}
     \item \href{#method-geozarr_array-write_external_coordinates}{\code{geozarr_array$write_external_coordinates()}}
+    \item \href{#method-geozarr_array-add_coordinates}{\code{geozarr_array$add_coordinates()}}
+    \item \href{#method-geozarr_array-set_geolocation}{\code{geozarr_array$set_geolocation()}}
   }
 }
 \if{html}{\out{<details><summary>Inherited methods</summary>
@@ -348,6 +350,98 @@ on the path to the external arrays are created. Only groups below the
 nodes that the path moves up to ("..") can be created.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Self, invisibly.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-add_coordinates"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-add_coordinates}{}}}
+\subsection{\code{geozarr_array$add_coordinates()}}{
+  Add a set of coordinates to an axis of this array, such as a
+set of labels. The \code{cs} convention metadata of the array is rebuilt and
+persisted, and the values of the new coordinates are written to an
+external array if they are longer than the option
+\code{GeoZarr.options$max_explicit}.
+
+The array must use the \code{cs} convention: an error is thrown for an array
+that uses another convention, which cannot represent multiple sets of
+coordinates. An error is also thrown if the axis is not in the
+coordinate system of the array, if the coordinates are not of the same
+length as the axis or if the name of the coordinates is already used on
+the axis. The array is not modified if an error is thrown.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$add_coordinates(
+  axis,
+  coordinates,
+  external_group = NULL,
+  create_groups = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{axis}}{Character string. The name of the axis to add the coordinates
+to.}
+      \item{\code{coordinates}}{An instance of the \code{Coordinates} class, or any of its
+descendants, such as \code{CoordinatesString}.}
+      \item{\code{external_group}}{Optional. The path to the group, relative to the
+location of this array, for any external array with the new
+coordinates. If omitted, the group of any existing external coordinate
+arrays of this array is used, or the group of the array itself if there
+are none.}
+      \item{\code{create_groups}}{Logical, default \code{FALSE}. If \code{TRUE}, missing groups
+on the path to the external array are created, see
+\code{write_external_coordinates()}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Self, invisibly.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-geozarr_array-set_geolocation"></a>}}
+\if{latex}{\out{\hypertarget{method-geozarr_array-set_geolocation}{}}}
+\subsection{\code{geozarr_array$set_geolocation()}}{
+  Set geolocation arrays on this array, such as the longitude
+and latitude of a curvilinear grid. The metadata of the array is
+updated, the geolocation arrays are written to the Zarr store and the
+array is saved.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{geozarr_array$set_geolocation(
+  ...,
+  geolocation_group = NULL,
+  create_groups = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{Arguments passed on to \code{CoordinateSystem$set_geolocation()}.}
+      \item{\code{geolocation_group}}{Optional. Character string with the group,
+relative to this array, where the geolocation arrays are written.
+Defaults to the group of the external coordinate arrays of this array,
+or \code{".."}, the group of this array, if there are none.}
+      \item{\code{create_groups}}{Logical, default \code{FALSE}. If \code{TRUE}, missing groups
+on the path to the geolocation arrays are created.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    The array must use the "cs" convention and its coordinate
+system must have exactly one "X" and one "Y" axis. The arguments
+\code{...} are those of \code{CoordinateSystem$set_geolocation()}, which see for
+the errors that are thrown. Existing geolocation of the same \code{kind}
+is replaced. An error is thrown when the array is the only array in
+its Zarr store.
   }
   \subsection{Returns}{
     Self, invisibly.

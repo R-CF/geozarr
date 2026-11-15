@@ -25,13 +25,18 @@
     * Levels without their own `spatial:transform`. Such a level takes the `spatial:transform` of the multiscales group when there is one, which is wrong for all but the full-resolution level; otherwise opening the store fails.
     * A multiscales group without the "spatial" convention: the layout is available but the arrays are plain Zarr arrays.
     * A non-zero `translation`.
+* `geozarr_array`:
+  * Method `write_external_coordinates()` writes the attributes of the coordinates to the external array.
+  * New method `set_geolocation()` to set geolocation arrays on an array that uses the `cs` convention after it has been created: it sets the geolocation on the coordinate system, updates the metadata, writes the geolocation arrays and saves the array.
+  * New method `add_coordinates()` to add a set of coordinates, such as labels, to an axis of an array that uses the `cs` convention, with new method `CoordinateSystemAxis$add_coordinates()`.
+  * Method `subset()` writes external coordinate and boundary arrays to the same group, relative to the array, as the source array, or to the group given by new argument `.external_group`. It falls back to the group of the new array when the source group would lie above the root of the store, or is in another store.
+  * Method `hierarchy()` will show scalar axes.
+* `create_geozarr_array()` has a new optional `attributes` element in the description of each axis, to set the attributes of the coordinates of the axis. They are stored inline with the coordinates in the `cs` attributes or, for external coordinates, with the external array.
+* `create_geozarr_array()` has a new optional argument `crs` to set the CRS of the new array, in the format of the `crs` argument of `set_convention()`.
 * `set_convention()` writes the attributes of inlined (`regular` or `explicit`) coordinates to the `attributes` field of the `coordinates` construct of the `cs` convention.
-* `geozarr_array$write_external_coordinates()` writes the attributes of the coordinates to the external array.
 * `set_convention()` writes all sets of coordinates of an axis to the `cs` convention, not only the active set. When an axis has more than one set, each set is named; additional sets refer to external arrays by their own name.
-* `geozarr_array$subset()` writes external coordinate and boundary arrays to the same group, relative to the array, as the source array, or to the group given by new argument `.external_group`. It falls back to the group of the new array when the source group would lie above the root of the store, or is in another store.
 * Creating an array without a name (a single-array store) that needs external arrays raises an error before anything is written. External arrays are written before the data of a new array, creating any missing groups.
 * CRS objects defined in a group and referenced from arrays (`cs` convention) are resolved, including JSON pointers into the group metadata. References inside a shared CRS object, such as external coordinate values and geolocation arrays, are resolved relative to the group.
-* `geozarr_array$hierarchy()` will show scalar axes.
 * Implementation of convention `cs` now supports multiple coordinate sets per axis.
 * Fix potential error in selecting attributes to display.
 * Unsupported conventions throw a warning instead of an error.

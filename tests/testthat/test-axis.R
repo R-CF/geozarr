@@ -122,3 +122,20 @@ test_that("subset() without a range keeps the active coordinates", {
   ax$active_coordinates <- "model"
   expect_identical(ax$subset()$active_coordinates$name, "model")
 })
+
+test_that("CoordinateSystemAxis$add_coordinates() adds a set of coordinates", {
+  ax <- CoordinateSystemAxis$new("y", "Y", CoordinatesIrregular$new("y_coordinates", "NORTH", "m", c(5, 6, 8)))
+  lbl <- CoordinatesString$new("labels", "OTHER", "-", c("p", "q", "r"))
+  expect_identical(ax$add_coordinates(lbl), ax)
+  expect_length(ax$coordinates_list, 2L)
+  expect_identical(ax$coordinates_list[["labels"]], lbl)
+  expect_identical(ax$coordinates$name, "y_coordinates") # The new set is not active
+})
+
+test_that("CoordinateSystemAxis$add_coordinates() validates its argument", {
+  ax <- CoordinateSystemAxis$new("y", "Y", CoordinatesIrregular$new("y_coordinates", "NORTH", "m", c(5, 6, 8)))
+  expect_error(ax$add_coordinates("labels"), "instance of the Coordinates class")
+  expect_error(ax$add_coordinates(CoordinatesString$new("labels", "OTHER", "-", c("p", "q"))), "same as the length")
+  expect_error(ax$add_coordinates(CoordinatesString$new("y_coordinates", "OTHER", "-", c("p", "q", "r"))), "already exist")
+  expect_length(ax$coordinates_list, 1L)
+})

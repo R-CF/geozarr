@@ -1,4 +1,4 @@
-# geozarr (development version)
+# geozarr 0.4.0
 
 * Geolocation convention v2.0.0 supported:
   * `x` and `y` hold `values` and optional `boundaries` references. `CoordinateSystem$set_geolocation()` has new arguments `x_bounds`, `y_bounds`, `bounds_dims` and `bounds_names` for the cell vertices, which `geozarr_array$write_geolocation()` writes and `geozarr_array$geolocation()` returns.
